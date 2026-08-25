@@ -130,6 +130,8 @@ public sealed class ConfigUI : IDisposable
         ( "followoutofcombat on/off", "设置脱战时跟随为开或关。" ),
         ( "followtarget", "切换战斗中跟随目标。" ),
         ( "followtarget on/off", "设置战斗中跟随目标为开或关。" ),
+        ( "manualtarget", "切换战斗中手动选目标。" ),
+        ( "manualtarget on/off", "设置战斗中手动选目标为开或关。" ),
         ( "positional X", "跟随目标时切换身位（any, rear, flank, front）。" ),
         ( "maxdistancetarget X", "设置到目标的最大距离（默认 = 2.6）。" ),
         ( "maxdistanceslot X", "设置到槽位玩家的最大距离（默认 = 1）。" ),
