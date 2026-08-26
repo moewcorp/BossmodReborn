@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using BossMod.Components;
 
 namespace BossMod;
 
@@ -16,6 +17,8 @@ public enum AOEIPCShapeType : byte
     TriCone,
     Capsule,
     Custom,
+    Stack,   // ground circle on a stack target (friendly), P1=radius
+    Spread,  // ground circle on a spread target (danger), P1=radius
 }
 
 public sealed class AOEIPCDto
@@ -59,6 +62,45 @@ public static class AOEIPC
                 list.Add(dto);
             }
         }
+
+        // stacks & spreads: GenericStackSpread components draw them as arena outlines, which never
+        // enter DrawnZones (only filled danger zones do), so expose them explicitly here.
+        foreach (var comp in module.Components)
+        {
+            if (comp is not GenericStackSpread ss)
+                continue;
+            foreach (var s in ss.Stacks)
+            {
+                if (!ss.IncludeDeadTargets && s.Target.IsDead)
+                    continue;
+                list.Add(new AOEIPCDto
+                {
+                    ShapeType = (int)AOEIPCShapeType.Stack,
+                    OriginX = s.Target.Position.X,
+                    OriginZ = s.Target.Position.Z,
+                    OriginY = defaultY,
+                    Rotation = 0,
+                    P1 = s.Radius,
+                    IsDanger = true,
+                });
+            }
+            foreach (var sp in ss.Spreads)
+            {
+                if (!ss.IncludeDeadTargets && sp.Target.IsDead)
+                    continue;
+                list.Add(new AOEIPCDto
+                {
+                    ShapeType = (int)AOEIPCShapeType.Spread,
+                    OriginX = sp.Target.Position.X,
+                    OriginZ = sp.Target.Position.Z,
+                    OriginY = defaultY,
+                    Rotation = 0,
+                    P1 = sp.Radius,
+                    IsDanger = true,
+                });
+            }
+        }
+
         var sig = string.Join(",", list.Select(d => $"{(AOEIPCShapeType)d.ShapeType}@({d.OriginX:0},{d.OriginZ:0}){(d.IsDanger ? "*" : "")}"));
         if (list.Count != _lastSentCount || sig != _lastSentSig)
         {
