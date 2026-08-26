@@ -101,6 +101,22 @@ public static class AOEIPC
             }
         }
 
+        // baits: GenericBaitAway also draws them as arena outlines; expose explicitly. ActiveBaits
+        // already applies source-alive / target-dead filtering, mirrors what the arena draws.
+        foreach (var comp in module.Components)
+        {
+            if (comp is not GenericBaitAway ba || ba.OnlyShowOutlines)
+                continue;
+            foreach (var b in ba.ActiveBaits)
+            {
+                var origin = (ba.CenterAtTarget ? b.Target : b.Source).Position + b.Offset;
+                if (ConvertShape(b.Shape, origin, b.Rotation, defaultY) is { } dto)
+                {
+                    list.Add(dto);
+                }
+            }
+        }
+
         var sig = string.Join(",", list.Select(d => $"{(AOEIPCShapeType)d.ShapeType}@({d.OriginX:0},{d.OriginZ:0}){(d.IsDanger ? "*" : "")}"));
         if (list.Count != _lastSentCount || sig != _lastSentSig)
         {
@@ -158,6 +174,70 @@ public static class AOEIPC
                 break;
             default:
                 return null;
+        }
+        return dto;
+    }
+
+    private static AOEIPCDto? ConvertShape(AOEShape shape, WPos origin, Angle rotation, float defaultY)
+    {
+        var dto = new AOEIPCDto
+        {
+            OriginX = origin.X,
+            OriginZ = origin.Z,
+            OriginY = defaultY,
+            IsDanger = true,
+        };
+        switch (shape)
+        {
+            case AOEShapeCircle c:
+                dto.ShapeType = (int)AOEIPCShapeType.Circle;
+                dto.P1 = c.Radius;
+                break;
+            case AOEShapeCone c:
+                dto.ShapeType = (int)AOEIPCShapeType.Cone;
+                dto.P1 = c.Radius;
+                dto.P2 = c.HalfAngle.Rad;
+                dto.Rotation = (rotation + c.DirectionOffset).Rad;
+                break;
+            case AOEShapeDonutSector c:
+                dto.ShapeType = (int)AOEIPCShapeType.DonutSector;
+                dto.P1 = c.InnerRadius;
+                dto.P2 = c.OuterRadius;
+                dto.P3 = c.HalfAngle.Rad;
+                dto.Rotation = (rotation + c.DirectionOffset).Rad;
+                break;
+            case AOEShapeDonut c:
+                dto.ShapeType = (int)AOEIPCShapeType.Donut;
+                dto.P1 = c.InnerRadius;
+                dto.P2 = c.OuterRadius;
+                break;
+            case AOEShapeRect c:
+                dto.ShapeType = (int)AOEIPCShapeType.Rect;
+                dto.P1 = c.LengthFront;
+                dto.P2 = c.HalfWidth;
+                dto.P3 = c.LengthBack;
+                dto.Rotation = (rotation + c.DirectionOffset).Rad;
+                break;
+            case AOEShapeCross c:
+                dto.ShapeType = (int)AOEIPCShapeType.Cross;
+                dto.P1 = c.Length;
+                dto.P2 = c.HalfWidth;
+                dto.Rotation = (rotation + c.DirectionOffset).Rad;
+                break;
+            case AOEShapeTriCone c:
+                dto.ShapeType = (int)AOEIPCShapeType.TriCone;
+                dto.P1 = c.SideLength;
+                dto.P2 = c.HalfAngle.Rad;
+                dto.Rotation = (rotation + c.DirectionOffset).Rad;
+                break;
+            case AOEShapeCapsule c:
+                dto.ShapeType = (int)AOEIPCShapeType.Capsule;
+                dto.P1 = c.Radius;
+                dto.P2 = c.Length;
+                dto.Rotation = (rotation + c.DirectionOffset).Rad;
+                break;
+            default:
+                return null; // ArcCapsule / Custom: not expressible via native omen
         }
         return dto;
     }
