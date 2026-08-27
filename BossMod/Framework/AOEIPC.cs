@@ -19,6 +19,7 @@ public enum AOEIPCShapeType : byte
     Custom,
     Stack,   // ground circle on a stack target (friendly), P1=radius
     Spread,  // ground circle on a spread target (danger), P1=radius
+    Tower,   // ground circle on a tower position (friendly), P1=radius
 }
 
 public sealed class AOEIPCDto
@@ -117,6 +118,28 @@ public static class AOEIPC
             }
         }
 
+        // towers: GenericTowers also draws them as arena outlines; expose explicitly.
+        foreach (var comp in module.Components)
+        {
+            if (comp is GenericTowers tw)
+            {
+                foreach (var t in tw.Towers)
+                {
+                    var radius = t.Shape is AOEShapeCircle c ? c.Radius : 4f;
+                    list.Add(new AOEIPCDto
+                    {
+                        ShapeType = (int)AOEIPCShapeType.Tower,
+                        OriginX = t.Position.X,
+                        OriginZ = t.Position.Z,
+                        OriginY = defaultY,
+                        Rotation = 0,
+                        P1 = radius,
+                        IsDanger = true,
+                    });
+                }
+            }
+        }
+
         var sig = string.Join(",", list.Select(d => $"{(AOEIPCShapeType)d.ShapeType}@({d.OriginX:0},{d.OriginZ:0}){(d.IsDanger ? "*" : "")}"));
         if (list.Count != _lastSentCount || sig != _lastSentSig)
         {
@@ -169,6 +192,10 @@ public static class AOEIPC
                 dto.P2 = zone.P2;
                 break;
             case AOEIPCShapeType.Capsule:
+                dto.P1 = zone.P1;
+                dto.P2 = zone.P2;
+                break;
+            case AOEIPCShapeType.TriCone:
                 dto.P1 = zone.P1;
                 dto.P2 = zone.P2;
                 break;
