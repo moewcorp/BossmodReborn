@@ -140,6 +140,32 @@ public static class AOEIPC
             }
         }
 
+        // shared tankbusters: GenericSharedTankbuster draws the shape only for specific roles
+        // (background fill for non-tanks, outline for tanks), so tanks never see it in
+        // DrawnZones; expose explicitly so every role gets the circle. Non-tank viewers already
+        // drew the fill, skip those to avoid a doubled overlay.
+        foreach (var comp in module.Components)
+        {
+            if (comp is not GenericSharedTankbuster st)
+                continue;
+            var src = SharedSrcField?.GetValue(st) as Actor;
+            var tgt = SharedTgtField?.GetValue(st) as Actor;
+            if (src == null || tgt == null)
+                continue;
+            var origin = st.OriginAtTarget ? tgt.Position : src.Position;
+            var rot = st.OriginAtTarget ? default : Angle.FromDirection(tgt.Position - src.Position);
+            var dto = ConvertShape(st.Shape, origin, rot, defaultY);
+            if (dto == null)
+                continue;
+            if (MiniArena.DrawnZones.Any(z => z.Shape == dto.ShapeType
+                && MathF.Abs(z.Origin.X - dto.OriginX) < 0.01f
+                && MathF.Abs(z.Origin.Z - dto.OriginZ) < 0.01f
+                && MathF.Abs(z.P1 - dto.P1) < 0.01f
+                && MathF.Abs(z.P2 - dto.P2) < 0.01f))
+                continue;
+            list.Add(dto);
+        }
+
         var sig = string.Join(",", list.Select(d => $"{(AOEIPCShapeType)d.ShapeType}@({d.OriginX:0},{d.OriginZ:0}){(d.IsDanger ? "*" : "")}"));
         if (list.Count != _lastSentCount || sig != _lastSentSig)
         {
@@ -152,6 +178,10 @@ public static class AOEIPC
 
     private static int _lastSentCount = -1;
     private static string? _lastSentSig;
+
+    // GenericSharedTankbuster keeps Source/Target protected; read them via cached reflection.
+    private static readonly System.Reflection.FieldInfo? SharedSrcField = typeof(GenericSharedTankbuster).GetField("Source", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+    private static readonly System.Reflection.FieldInfo? SharedTgtField = typeof(GenericSharedTankbuster).GetField("Target", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
     private static AOEIPCDto? ConvertZone(in MiniArena.DrawnZone zone, float defaultY)
     {
