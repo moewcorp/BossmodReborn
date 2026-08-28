@@ -326,34 +326,9 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ZoneRelPoly(RelSimplifiedComplexPolygon poly, uint color)
     {
-        if (poly.Parts.Count != 0)
-        {
-            // decompose the polygon into 10x10 cells (the natural omen resolution) instead of one
-            // fat AABB, so concave shapes like L-shaped reflection zones stay close to the original
-            float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
-            foreach (var part in poly.Parts)
-            {
-                foreach (var v in part.Vertices)
-                {
-                    if (v.X < minX) minX = v.X;
-                    if (v.Z < minZ) minZ = v.Z;
-                    if (v.X > maxX) maxX = v.X;
-                    if (v.Z > maxZ) maxZ = v.Z;
-                }
-            }
-            const float cell = 10f;
-            for (var cx = MathF.Floor(minX / cell) * cell; cx <= maxX; cx += cell)
-            {
-                for (var cz = MathF.Floor(minZ / cell) * cell; cz <= maxZ; cz += cell)
-                {
-                    var local = new WDir(cx, cz);
-                    if (poly.Contains(local))
-                    {
-                        RecordZone(AOEIPCShapeType.Rect, _center + local, default, color, cell * 0.5f, cell * 0.5f, cell * 0.5f);
-                    }
-                }
-            }
-        }
+        // custom vertex polygons are not ported to external renderers (native omens cannot express
+        // them, and grid approximations do not match the actual damage region), so they are only
+        // rendered by BossMod's own arena here.
         Dx11ArenaRenderer.AppendRelPoly(poly, color != default ? color : Colors.AOE);
     }
 

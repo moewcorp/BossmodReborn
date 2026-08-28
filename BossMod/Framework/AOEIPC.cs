@@ -116,20 +116,40 @@ public static class AOEIPC
             foreach (var b in ba.ActiveBaits)
             {
                 var origin = (ba.CenterAtTarget ? b.Target : b.Source).Position + b.Offset;
-                if (isStack && b.Shape is AOEShapeRect rect)
+                if (isStack)
                 {
-                    list.Add(new AOEIPCDto
+                    switch (b.Shape)
                     {
-                        ShapeType = (int)AOEIPCShapeType.FriendlyRect,
-                        OriginX = origin.X,
-                        OriginZ = origin.Z,
-                        OriginY = defaultY,
-                        Rotation = (b.Rotation + rect.DirectionOffset).Rad,
-                        P1 = rect.LengthFront,
-                        P2 = rect.HalfWidth,
-                        P3 = rect.LengthBack,
-                        IsDanger = true, // keep fully visible like Stack
-                    });
+                        case AOEShapeRect rect:
+                            list.Add(new AOEIPCDto
+                            {
+                                ShapeType = (int)AOEIPCShapeType.FriendlyRect,
+                                OriginX = origin.X,
+                                OriginZ = origin.Z,
+                                OriginY = defaultY,
+                                Rotation = (b.Rotation + rect.DirectionOffset).Rad,
+                                P1 = rect.LengthFront,
+                                P2 = rect.HalfWidth,
+                                P3 = rect.LengthBack,
+                                IsDanger = true, // keep fully visible like Stack
+                            });
+                            break;
+                        case AOEShapeCircle circle:
+                            list.Add(new AOEIPCDto
+                            {
+                                ShapeType = (int)AOEIPCShapeType.Stack,
+                                OriginX = origin.X,
+                                OriginZ = origin.Z,
+                                OriginY = defaultY,
+                                P1 = circle.Radius,
+                                IsDanger = true,
+                            });
+                            break;
+                        default:
+                            if (ConvertShape(b.Shape, origin, b.Rotation, defaultY) is { } dto)
+                                list.Add(dto);
+                            break;
+                    }
                 }
                 else if (ConvertShape(b.Shape, origin, b.Rotation, defaultY) is { } dto)
                 {
