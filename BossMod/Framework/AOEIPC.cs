@@ -20,6 +20,7 @@ public enum AOEIPCShapeType : byte
     Stack,   // ground circle on a stack target (friendly), P1=radius
     Spread,  // ground circle on a spread target (danger), P1=radius
     Tower,   // ground circle on a tower position (friendly), P1=radius
+    FriendlyRect, // stack line (LineStack), P1=lenFront P2=lenBack P3=halfWidth
 }
 
 public sealed class AOEIPCDto
@@ -104,14 +105,33 @@ public static class AOEIPC
 
         // baits: GenericBaitAway also draws them as arena outlines; expose explicitly. ActiveBaits
         // already applies source-alive / target-dead filtering, mirrors what the arena draws.
+        // Stack-type baits (LineStack etc.) resolve into friendly mechanics: expose them as the
+        // FriendlyRect omen instead of the danger look, matching how GenericBaitStack draws them
+        // with Colors.Safe.
         foreach (var comp in module.Components)
         {
             if (comp is not GenericBaitAway ba || ba.OnlyShowOutlines)
                 continue;
+            var isStack = comp is GenericBaitStack;
             foreach (var b in ba.ActiveBaits)
             {
                 var origin = (ba.CenterAtTarget ? b.Target : b.Source).Position + b.Offset;
-                if (ConvertShape(b.Shape, origin, b.Rotation, defaultY) is { } dto)
+                if (isStack && b.Shape is AOEShapeRect rect)
+                {
+                    list.Add(new AOEIPCDto
+                    {
+                        ShapeType = (int)AOEIPCShapeType.FriendlyRect,
+                        OriginX = origin.X,
+                        OriginZ = origin.Z,
+                        OriginY = defaultY,
+                        Rotation = (b.Rotation + rect.DirectionOffset).Rad,
+                        P1 = rect.LengthFront,
+                        P2 = rect.HalfWidth,
+                        P3 = rect.LengthBack,
+                        IsDanger = true, // keep fully visible like Stack
+                    });
+                }
+                else if (ConvertShape(b.Shape, origin, b.Rotation, defaultY) is { } dto)
                 {
                     list.Add(dto);
                 }
