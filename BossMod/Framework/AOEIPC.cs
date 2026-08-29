@@ -43,6 +43,7 @@ public sealed class AOEIPCDto
     public float OriginY { get; set; }
     public float Rotation { get; set; } // final rotation in radians, game convention
     public bool IsDanger { get; set; } // drawn with Colors.Danger (about to resolve) vs plain AOE color
+    public int Batch { get; set; } // component index + 1 (0 = module-own drawing); same value for one mechanic batch
 }
 
 public static class AOEIPC
@@ -67,8 +68,10 @@ public static class AOEIPC
 
         // stacks & spreads: GenericStackSpread components draw them as arena outlines, which never
         // enter DrawnZones (only filled danger zones do), so expose them explicitly here.
+        var batch = 0;
         foreach (var comp in module.Components)
         {
+            ++batch;
             if (comp is not GenericStackSpread ss)
                 continue;
             foreach (var s in ss.Stacks)
@@ -84,6 +87,7 @@ public static class AOEIPC
                     Rotation = 0,
                     P1 = s.Radius,
                     IsDanger = true,
+                    Batch = batch,
                 });
             }
             foreach (var sp in ss.Spreads)
@@ -99,6 +103,7 @@ public static class AOEIPC
                     Rotation = 0,
                     P1 = sp.Radius,
                     IsDanger = true,
+                    Batch = batch,
                 });
             }
         }
@@ -107,11 +112,20 @@ public static class AOEIPC
         // already applies source-alive / target-dead filtering, mirrors what the arena draws.
         // Outline-only components are included too so the IPC bridge matches the reflect bridge's
         // always-draw behavior (the native omen renders a filled approximation).
+        batch = 0;
         foreach (var comp in module.Components)
         {
+            ++batch;
             if (comp is not GenericBaitAway ba)
                 continue;
             var isStack = comp is GenericBaitStack;
+            // non-stack baits are filled with the AOE color, so their zone already entered
+            // DrawnZones under this same component batch; skip the explicit copy to avoid drawing
+            // the same overlay twice (mirror of the reflect bridge's AlreadyInDrawnZones).
+            bool AlreadyInDrawnZones(AOEIPCDto dto) => MiniArena.DrawnZones.Any(z => z.Batch == batch
+                && z.Shape == dto.ShapeType
+                && MathF.Abs(z.Origin.X - dto.OriginX) < 0.01f
+                && MathF.Abs(z.Origin.Z - dto.OriginZ) < 0.01f);
             foreach (var b in ba.ActiveBaits)
             {
                 var origin = (ba.CenterAtTarget ? b.Target : b.Source).Position + b.Offset;
@@ -131,6 +145,7 @@ public static class AOEIPC
                                 P2 = rect.HalfWidth,
                                 P3 = rect.LengthBack,
                                 IsDanger = true, // keep fully visible like Stack
+                                Batch = batch,
                             });
                             break;
                         case AOEShapeCircle circle:
@@ -142,24 +157,33 @@ public static class AOEIPC
                                 OriginY = defaultY,
                                 P1 = circle.Radius,
                                 IsDanger = true,
+                                Batch = batch,
                             });
                             break;
                         default:
                             if (ConvertShape(b.Shape, origin, b.Rotation, defaultY) is { } dto)
-                                list.Add(dto);
+                            {
+                                dto.Batch = batch;
+                                if (!AlreadyInDrawnZones(dto))
+                                    list.Add(dto);
+                            }
                             break;
                     }
                 }
                 else if (ConvertShape(b.Shape, origin, b.Rotation, defaultY) is { } dto)
                 {
-                    list.Add(dto);
+                    dto.Batch = batch;
+                    if (!AlreadyInDrawnZones(dto))
+                        list.Add(dto);
                 }
             }
         }
 
         // towers: GenericTowers also draws them as arena outlines; expose explicitly.
+        batch = 0;
         foreach (var comp in module.Components)
         {
+            ++batch;
             if (comp is GenericTowers tw)
             {
                 foreach (var t in tw.Towers)
@@ -173,6 +197,7 @@ public static class AOEIPC
                         Rotation = 0,
                         P1 = TowerCoverRadius(t.Shape),
                         IsDanger = true,
+                        Batch = batch,
                     });
                 }
             }
@@ -182,8 +207,10 @@ public static class AOEIPC
         // (background fill for non-tanks, outline for tanks), so tanks never see it in
         // DrawnZones; expose explicitly so every role gets the circle. Non-tank viewers already
         // drew the fill, skip those to avoid a doubled overlay.
+        batch = 0;
         foreach (var comp in module.Components)
         {
+            ++batch;
             if (comp is not GenericSharedTankbuster st)
                 continue;
             var src = SharedSrcField?.GetValue(st) as Actor;
@@ -195,7 +222,9 @@ public static class AOEIPC
             var dto = ConvertShape(st.Shape, origin, rot, defaultY);
             if (dto == null)
                 continue;
-            if (MiniArena.DrawnZones.Any(z => z.Shape == dto.ShapeType
+            dto.Batch = batch;
+            if (MiniArena.DrawnZones.Any(z => z.Batch == batch
+                && z.Shape == dto.ShapeType
                 && MathF.Abs(z.Origin.X - dto.OriginX) < 0.01f
                 && MathF.Abs(z.Origin.Z - dto.OriginZ) < 0.01f
                 && MathF.Abs(z.P1 - dto.P1) < 0.01f
@@ -244,6 +273,7 @@ public static class AOEIPC
             OriginY = defaultY,
             Rotation = zone.Rotation.Rad,
             IsDanger = zone.IsDanger,
+            Batch = zone.Batch,
         };
         switch ((AOEIPCShapeType)zone.Shape)
         {

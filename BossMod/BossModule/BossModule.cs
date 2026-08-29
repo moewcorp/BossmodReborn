@@ -298,12 +298,14 @@ public abstract class BossModule : IDisposable
     public virtual void DrawArena(int pcSlot, Actor pc, bool haveRisks)
     {
         MiniArena.ResetDrawnZones();
+        Arena.SetBatch(0); // module-own drawing (background/borders/waymarks/party...) batch 0
         // draw background
         DrawArenaBackground(pcSlot, pc);
 
         var count = Components.Count;
         for (var i = 0; i < count; ++i)
         {
+            Arena.SetBatch(i + 1);
             Components[i].DrawArenaBackground(pcSlot, pc);
         }
 
@@ -332,9 +334,11 @@ public abstract class BossModule : IDisposable
         DrawPartyMembers(pcSlot, pc);
 
         // draw foreground
+        Arena.SetBatch(0);
         DrawArenaForeground(pcSlot, pc);
         for (var i = 0; i < count; ++i)
         {
+            Arena.SetBatch(i + 1);
             Components[i].DrawArenaForeground(pcSlot, pc);
         }
 
