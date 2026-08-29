@@ -55,7 +55,7 @@ sealed class SwordDance(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Dummy,
+[ModuleInfo(BossModuleInfo.Maturity.WIP,
     StatesType = typeof(FTME2SwordDancerStates),
     ConfigType = null, // replace null with typeof(FTME2SwordDancerConfig) if applicable
     ObjectIDType = typeof(OID),
