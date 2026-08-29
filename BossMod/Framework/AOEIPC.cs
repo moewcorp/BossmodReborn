@@ -105,12 +105,11 @@ public static class AOEIPC
 
         // baits: GenericBaitAway also draws them as arena outlines; expose explicitly. ActiveBaits
         // already applies source-alive / target-dead filtering, mirrors what the arena draws.
-        // Stack-type baits (LineStack etc.) resolve into friendly mechanics: expose them as the
-        // FriendlyRect omen instead of the danger look, matching how GenericBaitStack draws them
-        // with Colors.Safe.
+        // Outline-only components are included too so the IPC bridge matches the reflect bridge's
+        // always-draw behavior (the native omen renders a filled approximation).
         foreach (var comp in module.Components)
         {
-            if (comp is not GenericBaitAway ba || ba.OnlyShowOutlines)
+            if (comp is not GenericBaitAway ba)
                 continue;
             var isStack = comp is GenericBaitStack;
             foreach (var b in ba.ActiveBaits)
@@ -165,7 +164,6 @@ public static class AOEIPC
             {
                 foreach (var t in tw.Towers)
                 {
-                    var radius = t.Shape is AOEShapeCircle c ? c.Radius : 4f;
                     list.Add(new AOEIPCDto
                     {
                         ShapeType = (int)AOEIPCShapeType.Tower,
@@ -173,7 +171,7 @@ public static class AOEIPC
                         OriginZ = t.Position.Z,
                         OriginY = defaultY,
                         Rotation = 0,
-                        P1 = radius,
+                        P1 = TowerCoverRadius(t.Shape),
                         IsDanger = true,
                     });
                 }
@@ -222,6 +220,19 @@ public static class AOEIPC
     // GenericSharedTankbuster keeps Source/Target protected; read them via cached reflection.
     private static readonly System.Reflection.FieldInfo? SharedSrcField = typeof(GenericSharedTankbuster).GetField("Source", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
     private static readonly System.Reflection.FieldInfo? SharedTgtField = typeof(GenericSharedTankbuster).GetField("Target", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+    private static float TowerCoverRadius(AOEShape shape) => shape switch
+    {
+        AOEShapeCircle c => c.Radius,
+        AOEShapeCone c => c.Radius,
+        AOEShapeDonut d => d.OuterRadius,
+        AOEShapeDonutSector d => d.OuterRadius,
+        AOEShapeRect r => MathF.Max(r.HalfWidth, r.LengthFront + r.LengthBack),
+        AOEShapeCross c => MathF.Max(c.Length, c.HalfWidth),
+        AOEShapeTriCone t => t.SideLength,
+        AOEShapeCapsule c => c.Radius + c.Length,
+        _ => 4f,
+    };
 
     private static AOEIPCDto? ConvertZone(in MiniArena.DrawnZone zone, float defaultY)
     {
