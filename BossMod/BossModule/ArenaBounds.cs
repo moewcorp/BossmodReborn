@@ -34,7 +34,6 @@ public abstract class ArenaBounds(float radius, float mapResolution, float scale
     public float WorldProjectionHoleFillRadius = 0f;
 
     // fields below are used for clipping & drawing borders
-    public float MaxApproxError;
     public RelSimplifiedComplexPolygon Shape;
 
     public float ScreenHalfSize
@@ -45,7 +44,6 @@ public abstract class ArenaBounds(float radius, float mapResolution, float scale
             if (field != value)
             {
                 field = value;
-                MaxApproxError = CurveApprox.ScreenError / value * Radius;
             }
         }
     }
@@ -61,7 +59,7 @@ public sealed class ArenaBoundsCircle : ArenaBounds
 {
     public ArenaBoundsCircle(float Radius, float MapResolution = 0.5f, bool AllowObstacleMap = false, bool AllowDrawing3DArenaBounds = true) : base(Radius, MapResolution, allowObstacleMap: AllowObstacleMap, allowDrawing3DArenaBounds: AllowDrawing3DArenaBounds)
     {
-        Shape = new(CurveApprox.Circle(Radius, MaxApproxError));
+        Shape = new(new Polygon(default, Radius, 128).Contour(default));
         Shape.InitPolygonIndex();
     }
 
