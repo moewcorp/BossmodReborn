@@ -14,6 +14,8 @@ public sealed class RelSimplifiedComplexPolygon(List<RelPolygonWithHoles> parts)
     // constructors for simple polygon
     public RelSimplifiedComplexPolygon(List<WDir> simpleVertices) : this([new RelPolygonWithHoles(simpleVertices)]) { }
 
+    internal PolygonBoundaryIndex2D? ExistingPolygonIndex => _polyIndex;
+
     // build a new polygon by transformation
     public RelSimplifiedComplexPolygon Transform(WDir offset, WDir rotation)
     {

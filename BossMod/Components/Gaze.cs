@@ -10,7 +10,10 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
         Angle forward = default, // if non-zero, treat specified side as 'forward' for hit calculations
         float range = 10000f,
         bool inverted = false,
-        ulong actorID = default, WPos? eyeCenter = null)
+        ulong actorID = default,
+        WPos? eyeCenter = null,
+        int? arenaProjectionLayer = null,
+        bool restrictToArenaProjectionLayer = false)
     {
         public readonly WPos Position = position;
         public readonly DateTime Activation = activation;
@@ -19,18 +22,9 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
         public readonly bool Inverted = inverted;
         public readonly ulong ActorID = actorID;
         public readonly WPos? EyeCenter = eyeCenter; // optional world position where the eye should be drawn
+        public readonly int? ArenaProjectionLayer = arenaProjectionLayer;
+        public readonly bool RestrictToArenaProjectionLayer = restrictToArenaProjectionLayer;
     }
-
-    private const float _eyeOuterH = 10f;
-    private const float _eyeOuterV = 6f;
-    private const float _eyeBorder = 1.15f;
-    private const float _eyeIrisR = 3.25f;
-    private const float _eyePupilR = 1.65f;
-    private const float _eyeHighlightR = 0.72f;
-    private const float _eyeShadowOffsetY = 1.15f;
-    private const uint _eyePupil = 0xFF101010;
-    private const uint _eyeHighlight = 0xF8FFFFFF;
-    private const uint _eyeShadow = 0x50000000;
 
     public abstract ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor);
 
@@ -41,7 +35,8 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
         for (var i = 0; i < len; ++i)
         {
             ref readonly var eye = ref eyes[i];
-            if (actor.Position.InCircle(eye.Position, eye.Range) && HitByEye(ref actor, eye) != eye.Inverted)
+            if (ArenaProjectionLayerParticipantApplies(actor, eye.ArenaProjectionLayer, eye.RestrictToArenaProjectionLayer)
+                && actor.Position.InCircle(eye.Position, eye.Range) && HitByEye(actor, eye) != eye.Inverted)
             {
                 hints.Add(eye.Inverted ? "Face the eye!" : "Turn away from gaze!");
                 break;
@@ -62,11 +57,12 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
         for (var i = 0; i < len; ++i)
         {
             ref readonly var eye = ref eyes[i];
-            var eyePos = eye.Position;
-            if (pos.InCircle(eyePos, eye.Range))
+            var eyepos = eye.Position;
+            if (pos.InCircle(eyepos, eye.Range)
+                && ArenaProjectionLayerApplies(actor, eye.ArenaProjectionLayer, eye.RestrictToArenaProjectionLayer))
             {
                 var inv = eye.Inverted;
-                var direction = inv ? Angle.FromDirection(pos - eyePos) - eye.Forward : Angle.FromDirection(eyePos - pos) - eye.Forward;
+                var direction = inv ? Angle.FromDirection(pos - eyepos) - eye.Forward : Angle.FromDirection(eyepos - pos) - eye.Forward;
 
                 var angle = inv ? 135f.Degrees() : 45f.Degrees();
                 hints.ForbiddenDirections.Add((direction, angle, eye.Activation));
@@ -88,70 +84,68 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
         for (var i = 0; i < len; ++i)
         {
             ref readonly var eye = ref eyes[i];
-            var danger = HitByEye(ref pc, eye) != eye.Inverted;
-            var eyePos = eye.EyeCenter ?? IndicatorWorldPos(eye.Position);
-            DrawEye(eyePos, danger);
-            var eyeF = eye.Forward;
-            if (pc.Position.InCircle(eye.Position, eye.Range))
+            var participantApplies = ArenaProjectionLayerParticipantApplies(pc, eye.ArenaProjectionLayer, eye.RestrictToArenaProjectionLayer);
+            var inverted = eye.Inverted;
+            var danger = participantApplies && HitByEye(pc, eye) != inverted;
+            using (Arena.WorldProjectionLayer(eye.ArenaProjectionLayer, eye.RestrictToArenaProjectionLayer))
             {
-                var (min, max) = eye.Inverted ? (45f, 315f) : (-45f, 45f);
-                Arena.PathArcTo(pcpos, 1f, (rot + eyeF + min.Degrees()).Rad, (rot + eyeF + max.Degrees()).Rad);
-                MiniArena.PathStroke(false, Colors.Enemy);
+                Arena.DrawEye(eye.EyeCenter ?? IndicatorWorldPos(eye.Position), danger, inverted);
+            }
+
+            if (participantApplies && pc.Position.InCircle(eye.Position, eye.Range))
+            {
+                // The eye belongs to its authored mechanic layer, but this facing indicator belongs
+                // to the participant. For unrestricted gazes those can be different physical floors.
+                using (Arena.WorldProjectionLayer(Module.ResolveArenaProjectionLayer(pc)))
+                {
+                    var eyeF = eye.Forward;
+                    var (min, max) = inverted ? (45f, 315f) : (-45f, 45f);
+                    Arena.PathArcTo(pcpos, 1f, (rot + eyeF + min.Degrees()).Rad, (rot + eyeF + max.Degrees()).Rad);
+                    Arena.PathStroke(false, Colors.Enemy);
+                }
             }
         }
     }
 
-    public void DrawEye(WPos eyeCenter, bool danger)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool HitByEye(Actor actor, in Eye eye) => (actor.Rotation + eye.Forward).ToDirection().Dot((eye.Position - actor.Position).Normalized()) >= 0.707107f; // 45-degree
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal WPos IndicatorWorldPos(WPos position)
     {
-        var bodyColor = danger ? Colors.Enemy : Colors.PC;
-        var centerOffset = eyeCenter - Arena.Center;
-
-        // All pieces are analytic screen-space instances and consecutive ScreenAnalytic segments merge into one instanced draw
-        Dx11ArenaRenderer.AppendArenaScreenEye(centerOffset, new Vector2(0f, _eyeShadowOffsetY), _eyeOuterH, _eyeOuterV, _eyeShadow);
-        Dx11ArenaRenderer.AppendArenaScreenEye(centerOffset, _eyeOuterH, _eyeOuterV, Colors.Border);
-        Dx11ArenaRenderer.AppendArenaScreenEye(centerOffset, _eyeOuterH - _eyeBorder, _eyeOuterV - _eyeBorder, bodyColor);
-
-        // the whole eye body is red/green. The inner circles only add depth/readability
-        Dx11ArenaRenderer.AppendArenaScreenCircle(centerOffset, _eyeIrisR, Colors.Border);
-        Dx11ArenaRenderer.AppendArenaScreenCircle(centerOffset, _eyePupilR, _eyePupil);
-        Dx11ArenaRenderer.AppendArenaScreenCircle(centerOffset, new Vector2(-0.9f, -0.9f), _eyeHighlightR, _eyeHighlight);
-    }
-
-    public static bool HitByEye(ref Actor actor, Eye eye) => (actor.Rotation + eye.Forward).ToDirection().Dot((eye.Position - actor.Position).Normalized()) >= 0.707107f; // 45-degree
-
-    internal WPos IndicatorWorldPos(WPos eye)
-    {
-        if (Arena.InBounds(eye))
+        if (Arena.InBounds(position))
         {
-            return eye;
+            return position;
         }
 
-        var delta = eye - Arena.Center;
+        var center = Arena.Center;
+        var delta = position - center;
         var lenSq = delta.LengthSq();
-        if (!(lenSq > 1e-8f))
+        if (lenSq < 1e-8f)
         {
-            return Arena.Center;
+            return center;
         }
 
         var dir = delta / MathF.Sqrt(lenSq);
-        var t = Arena.IntersectRayBounds(Arena.Center, dir);
-        if (!(t >= 0f) || !float.IsFinite(t) || t == float.MaxValue)
-        {
-            return Arena.ClampToBounds(eye);
-        }
+        var t = Arena.IntersectRayBounds(center, dir);
 
         var screenScale = Arena.ScreenHalfSize * Arena.Bounds.InvRadius;
         var marginWorld = Arena.ScreenMarginSize * 0.5f / screenScale;
-        return Arena.Center + (t + marginWorld) * dir;
+        return center + (t + marginWorld) * dir;
     }
 }
 
 // gaze that happens on cast end
 [SkipLocalsInit]
-public class CastGaze(BossModule module, uint aid, bool inverted = false, float range = 10000f, int maxCasts = int.MaxValue) : GenericGaze(module, aid)
+public class CastGaze(BossModule module, uint aid, bool inverted = false, float range = 10000f, int maxCasts = int.MaxValue, float[]? arenaProjectionLayers = null, bool restrictToArenaProjectionLayer = true) : GenericGaze(module, aid)
 {
     public readonly List<Eye> Eyes = [];
     public int MaxCasts = maxCasts; // used for staggered gazes, when showing all active would be pointless
+    public float[]? ArenaProjectionLayers = arenaProjectionLayers;
+    public bool RestrictToArenaProjectionLayer = restrictToArenaProjectionLayer;
+
+    protected int? ResolveArenaProjectionLayer(float y)
+        => ArenaProjectionLayers is { Length: > 0 } layers ? GenericAOEs.IndexOfClosestLayer(layers, y) : null;
 
     public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor)
     {
@@ -169,7 +163,8 @@ public class CastGaze(BossModule module, uint aid, bool inverted = false, float 
         if (spell.Action.ID == WatchedAction)
         {
             var loc = spell.LocXZ;
-            Eyes.Add(new(loc, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID));
+            Eyes.Add(new(loc, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID, IndicatorWorldPos(loc),
+                ResolveArenaProjectionLayer(spell.Location.Y), RestrictToArenaProjectionLayer));
         }
     }
 
@@ -193,7 +188,8 @@ public class CastGaze(BossModule module, uint aid, bool inverted = false, float 
 }
 
 [SkipLocalsInit]
-public class CastGazes(BossModule module, uint[] aids, bool inverted = false, float range = 10000f, int maxCasts = int.MaxValue, int expectedNumCasters = 99) : CastGaze(module, default, maxCasts: maxCasts)
+public class CastGazes(BossModule module, uint[] aids, bool inverted = false, float range = 10000f, int maxCasts = int.MaxValue, int expectedNumCasters = 99, float[]? arenaProjectionLayers = null, bool restrictToArenaProjectionLayer = true)
+    : CastGaze(module, default, maxCasts: maxCasts, arenaProjectionLayers: arenaProjectionLayers, restrictToArenaProjectionLayer: restrictToArenaProjectionLayer)
 {
     protected readonly uint[] AIDs = aids;
     protected readonly int ExpectedNumCasters = expectedNumCasters;
@@ -201,12 +197,14 @@ public class CastGazes(BossModule module, uint[] aids, bool inverted = false, fl
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         var len = AIDs.Length;
+        var aid = spell.Action.ID;
         for (var i = 0; i < len; ++i)
         {
-            if (spell.Action.ID == AIDs[i])
+            if (aid == AIDs[i])
             {
                 var loc = spell.LocXZ;
-                Eyes.Add(new(loc, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID));
+                Eyes.Add(new(loc, Module.CastFinishAt(spell), default, range, inverted, caster.InstanceID, IndicatorWorldPos(loc),
+                    ResolveArenaProjectionLayer(spell.Location.Y), RestrictToArenaProjectionLayer));
                 if (Eyes.Count == ExpectedNumCasters)
                 {
                     SortHelpers.SortEyesByActivation(Eyes);
@@ -235,9 +233,10 @@ public class CastGazes(BossModule module, uint[] aids, bool inverted = false, fl
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
         var len = AIDs.Length;
+        var aid = spell.Action.ID;
         for (var i = 0; i < len; ++i)
         {
-            if (spell.Action.ID == AIDs[i])
+            if (aid == AIDs[i])
             {
                 ++NumCasts;
                 return;
@@ -248,11 +247,16 @@ public class CastGazes(BossModule module, uint[] aids, bool inverted = false, fl
 
 // cast weakpoint component: a number of casts (with supposedly non-intersecting shapes), player should face specific side determined by active status to the caster for aoe he's in
 [SkipLocalsInit]
-public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint statusForward, uint statusBackward, uint statusLeft, uint statusRight) : GenericGaze(module, aid)
+public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint statusForward, uint statusBackward, uint statusLeft, uint statusRight,
+    int? arenaProjectionLayer = null, bool restrictToArenaProjectionLayer = false) : GenericGaze(module, aid)
 {
-    public CastWeakpoint(BossModule module, uint aid, float radius, uint statusForward, uint statusBackward, uint statusLeft, uint statusRight) : this(module, aid, new AOEShapeCircle(radius), statusForward, statusBackward, statusLeft, statusRight) { }
+    public CastWeakpoint(BossModule module, uint aid, float radius, uint statusForward, uint statusBackward, uint statusLeft, uint statusRight,
+        int? arenaProjectionLayer = null, bool restrictToArenaProjectionLayer = false)
+        : this(module, aid, new AOEShapeCircle(radius), statusForward, statusBackward, statusLeft, statusRight, arenaProjectionLayer, restrictToArenaProjectionLayer) { }
     public AOEShape Shape = shape;
     public readonly uint[] Statuses = [statusForward, statusLeft, statusBackward, statusRight]; // 4 elements: fwd, left, back, right
+    public int? ArenaProjectionLayer = arenaProjectionLayer;
+    public bool RestrictToArenaProjectionLayer = restrictToArenaProjectionLayer;
     protected readonly List<Actor> _casters = [];
     private readonly Dictionary<ulong, Angle> _playerWeakpoints = [];
     protected float fallbackTime;
@@ -271,6 +275,10 @@ public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint sta
         for (var i = 0; i < count; ++i)
         {
             var a = _casters[i];
+            if (!ArenaProjectionLayerParticipantApplies(a, ArenaProjectionLayer, RestrictToArenaProjectionLayer))
+            {
+                continue;
+            }
             if (Shape.Check(actor.Position, a.Position, a.CastInfo?.Rotation ?? a.Rotation))
             {
                 if ((a.CastInfo?.RemainingTime ?? fallbackTime) < minRemainingTime)
@@ -283,7 +291,9 @@ public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint sta
 
         if (caster != null && _playerWeakpoints.TryGetValue(actor.InstanceID, out var angle))
         {
-            return new Eye[1] { new(caster.Position, Module.CastFinishAt(caster.CastInfo), angle, inverted: true) };
+            var loc = caster.Position.Quantized();
+            return new Eye[1] { new(loc, Module.CastFinishAt(caster.CastInfo), angle, inverted: true, eyeCenter: IndicatorWorldPos(loc),
+                arenaProjectionLayer: ArenaProjectionLayer, restrictToArenaProjectionLayer: RestrictToArenaProjectionLayer) };
         }
 
         return [];
@@ -329,7 +339,8 @@ public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint sta
         var len = eyes.Length;
         for (var i = 0; i < len; ++i)
         {
-            if (!HitByEye(ref actor, eyes[i]))
+            ref readonly var eye = ref eyes[i];
+            if (ArenaProjectionLayerParticipantApplies(actor, eye.ArenaProjectionLayer, eye.RestrictToArenaProjectionLayer) && !HitByEye(actor, eye))
             {
                 hints.Add("Face open weakpoint to eye!");
                 return;

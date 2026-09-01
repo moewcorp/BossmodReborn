@@ -88,7 +88,7 @@ sealed class MeteorImpactCharge(BossModule module) : Components.GenericAOEs(modu
                     Arena.PathArcTo(target.Position, 2f, (rot + 90f.Degrees()).Rad, (rot - 90f.Degrees()).Rad);
                     Arena.PathLineTo(source.Position - norm);
                     Arena.PathLineTo(source.Position + norm);
-                    MiniArena.PathStroke(true, _playerStates[slot].NonClipping ? Colors.Safe : default, thickness);
+                    Arena.PathStroke(true, _playerStates[slot].NonClipping ? Colors.Safe : default, thickness);
                     Arena.AddLine(source.Position, target.Position, _playerStates[slot].Stretched ? Colors.Safe : default, thickness);
                 }
             }

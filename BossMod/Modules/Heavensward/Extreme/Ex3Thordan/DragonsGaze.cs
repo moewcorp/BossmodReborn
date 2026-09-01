@@ -20,7 +20,8 @@ sealed class DragonsGaze(BossModule module) : Components.GenericGaze(module)
     {
         if (spell.Action.ID is (uint)AID.DragonsGaze or (uint)AID.DragonsGlory)
         {
-            _eyes.Add(new(spell.LocXZ, Module.CastFinishAt(spell)));
+            var loc = spell.LocXZ;
+            _eyes.Add(new(loc, Module.CastFinishAt(spell), eyeCenter: IndicatorWorldPos(loc)));
             _posHint = default;
         }
     }
