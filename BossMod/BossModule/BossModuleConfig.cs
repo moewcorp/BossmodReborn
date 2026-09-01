@@ -24,10 +24,10 @@ public sealed class BossModuleConfig : ConfigNode
     public bool ShowDemo = false;
 
     // radar window settings
-    [PropertyDisplay("Enable radar")]
+    [PropertyDisplay("Enable radar", separator: true)]
     public bool Enable = true;
 
-    [PropertyDisplay("Enable projecting radar into the 3D world", separator: true)]
+    [PropertyDisplay("Enable projecting radar into the 3D world")]
     public bool ProjectRadarInto3DWorld = false;
 
     [PropertyDisplay("Include drawing arena outline into the 3D world", tooltip: "If projecting the radar into the 3D world is enabled, the outline can also be drawn")]
