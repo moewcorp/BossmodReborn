@@ -27,6 +27,27 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("启用雷达")]
     public bool Enable = true;
 
+    [PropertyDisplay("将雷达投影到 3D 世界中")]
+    public bool ProjectRadarInto3DWorld = false;
+
+    [PropertyDisplay("在 3D 世界中绘制场地轮廓", tooltip: "如果启用将雷达投影到 3D 世界，则也可以绘制轮廓")]
+    public bool EnableArenaOutlineIn3DWorld = true;
+
+    [PropertyDisplay("允许在 3D 世界中绘制文本和图标广告牌", tooltip: "如果启用将雷达投影到 3D 世界，则也可以绘制广告牌")]
+    public bool EnableTextIconBillboards = true;
+
+    [PropertyDisplay("广告牌高度偏移", tooltip: "广告牌应出现在地面上方多少 yalms。包括视线、文本和图标。")]
+    [PropertySlider(0f, 20f, Speed = 0.1f, Logarithmic = true)]
+    public float BillboardHeightOffset = 5f;
+
+    [PropertyDisplay("文本广告牌字体大小", tooltip: "更改 3D 世界广告牌的文本大小")]
+    [PropertySlider(17f, 250f, Speed = 0.5f, Logarithmic = true)]
+    public float TextBillboardFontSize = 110f;
+
+    [PropertyDisplay("图标广告牌字体大小", tooltip: "更改 3D 世界广告牌的图标大小")]
+    [PropertySlider(17f, 250f, Speed = 0.5f, Logarithmic = true)]
+    public float IconBillboardFontSize = 110f;
+
     [PropertyDisplay("锁定雷达和提示窗口的移动和鼠标交互")]
     public bool Lock = false;
 
