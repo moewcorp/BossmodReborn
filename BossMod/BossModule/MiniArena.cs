@@ -15,21 +15,23 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     // shapes drawn as filled danger zones on the mini-map this frame; collected for external
     // renderers (e.g. NyaDraw) that reproduce the mini-map instead of consuming AOEInstance data.
     // IsDanger = drawn with Colors.Danger (about to resolve), false = plain Colors.AOE.
+    // IsFriendly = drawn with Colors.SafeFromAOE (share/safe zone players must stand in).
     // Batch = component index + 1 (0 = module-own drawing); lets the consumer tell which zones
     // belong to the same mechanic batch, so stepping-alpha never dims an unrelated component's
     // zones just because another component's danger zone happens to be nearby.
-    public readonly record struct DrawnZone(int Shape, WPos Origin, Angle Rotation, float P1, float P2, float P3, bool IsDanger, int Batch);
+    public readonly record struct DrawnZone(int Shape, WPos Origin, Angle Rotation, float P1, float P2, float P3, bool IsDanger, int Batch, bool IsFriendly);
     public static readonly List<DrawnZone> DrawnZones = [];
     public static void ResetDrawnZones() => DrawnZones.Clear();
     private int _batch;
     public void SetBatch(int b) => _batch = b;
     private void RecordZone(AOEIPCShapeType shape, WPos origin, Angle rotation, uint color, float p1 = 0, float p2 = 0, float p3 = 0)
     {
-        // default color = standard AOE fill; Danger = about-to-resolve highlight. Any other explicit
-        // color (melee-range indicator, safe zones, waymark helpers...) is not a danger zone.
-        if (color != default && color != Colors.AOE && color != Colors.Danger)
+        // default color = standard AOE fill; Danger = about-to-resolve highlight; SafeFromAOE =
+        // a safe zone players must stand in (e.g. GenericWildCharge rects, Ex7Zeromus SableThread).
+        // Any other explicit color (melee-range indicator, waymark helpers...) is not a mechanic.
+        if (color != default && color != Colors.AOE && color != Colors.Danger && color != Colors.SafeFromAOE)
             return;
-        DrawnZones.Add(new((int)shape, origin, rotation, p1, p2, p3, color == Colors.Danger, _batch));
+        DrawnZones.Add(new((int)shape, origin, rotation, p1, p2, p3, color == Colors.Danger, _batch, color == Colors.SafeFromAOE));
     }
 
     public static readonly BossModuleConfig Config = Service.Config.Get<BossModuleConfig>();

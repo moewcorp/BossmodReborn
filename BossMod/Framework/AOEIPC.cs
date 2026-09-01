@@ -43,6 +43,7 @@ public sealed class AOEIPCDto
     public float OriginY { get; set; }
     public float Rotation { get; set; } // final rotation in radians, game convention
     public bool IsDanger { get; set; } // drawn with Colors.Danger (about to resolve) vs plain AOE color
+    public bool IsFriendly { get; set; } // drawn with Colors.SafeFromAOE (share/safe zone players must stand in)
     public int Batch { get; set; } // component index + 1 (0 = module-own drawing); same value for one mechanic batch
 }
 
@@ -273,6 +274,7 @@ public static class AOEIPC
             OriginY = defaultY,
             Rotation = zone.Rotation.Rad,
             IsDanger = zone.IsDanger,
+            IsFriendly = zone.IsFriendly,
             Batch = zone.Batch,
         };
         switch ((AOEIPCShapeType)zone.Shape)
