@@ -23,7 +23,7 @@ public sealed class BossModuleMainWindow : UIWindow
     public override void PreOpenCheck()
     {
         var showZoneModule = ShowZoneModule();
-        IsOpen = BossModuleManager.Config.Enable && (_mgr.LoadedModules.Count > 0 || showZoneModule);
+        IsOpen = BossModuleManager.Config.EnableRadar && (_mgr.LoadedModules.Count > 0 || showZoneModule);
         ShowCloseButton = _mgr.ActiveModule != null && !showZoneModule;
         WindowName = (showZoneModule ? $"Zone module ({_zmm.ActiveModule?.GetType().Name})" : _mgr.ActiveModule != null ? $"Boss module ({_mgr.ActiveModule.GetType().Name})" : "Loaded boss modules") + _windowID;
         Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
@@ -44,7 +44,7 @@ public sealed class BossModuleMainWindow : UIWindow
             DrawMovementHints(_mgr.ActiveModule.CalculateMovementHintsForRaidMember(PartyState.PlayerSlot, pc), pc.PosRot.Y);
         }
 
-        if (!BossModuleManager.Config.Enable && BossModuleManager.Config.ProjectRadarInto3DWorld)
+        if (!BossModuleManager.Config.EnableRadar && BossModuleManager.Config.ProjectRadarInto3DWorld)
         {
             var module = _mgr.ActiveModule;
             if (module == null)
@@ -144,6 +144,7 @@ public sealed class BossModuleMainWindow : UIWindow
     public void RecenterWindow()
     {
         _shouldRecenter = true;
+        MiniArena.Config.RadarResize = true;
     }
 
     private bool ShowZoneModule() => BossModuleManager.Config.ShowGlobalHints && !BossModuleManager.Config.HintsInSeparateWindow && _mgr.ActiveModule?.StateMachine.ActivePhase == null && (_zmm.ActiveModule?.WantDrawHints() ?? false);
