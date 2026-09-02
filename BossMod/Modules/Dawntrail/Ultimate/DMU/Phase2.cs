@@ -1,4 +1,4 @@
-﻿namespace BossMod.Dawntrail.Ultimate.DMU;
+namespace BossMod.Dawntrail.Ultimate.DMU;
 
 sealed class UltimateEmbrace(BossModule module) : Components.CastSharedTankbuster(module, (uint)AID.UltimateEmbrace, 5f);
 
@@ -744,10 +744,10 @@ sealed class ForsakenSolverSet1(BossModule module) : BossComponent(module)
             }
             else if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Kroxy_Rinon_Melee_Flex)
             {
-                var toCenter = (Arena.Center - sePosition).Normalized();
+                var toCenter = (center - posSE).Normalized();
                 if (assignment is PartyRolesConfig.Assignment.M1 or PartyRolesConfig.Assignment.M2 or PartyRolesConfig.Assignment.R1 or PartyRolesConfig.Assignment.R2)
                 {
-                    Arena.ZoneCircleOutline(posSE + 4.5f * toCenter -toCenter.OrthoR()), 1.0f, colourCircle, 2.0f);
+                    Arena.ZoneCircleOutline(posSE + 4.5f * toCenter - toCenter.OrthoR(), 1.0f, colourCircle, 2.0f);
                 }
             }
         }
@@ -950,7 +950,7 @@ sealed class ForsakenSolverSet2(BossModule module) : BossComponent(module)
                     }
                     else if (dmuConfig.P2Forsaken == DMUConfig.P2ForsakenStrategy.Meow_DN_ZENITH_Markers)
                     {
-                        Arena.ZoneCircleOutline(towerSE + toCenter.Rotate(-82f.Degrees() * 7.07f, 0.75f, Colors.Safe, 1.0f);
+                        Arena.ZoneCircleOutline(towerSE + toCenter.Rotate(-82f.Degrees()) * 7.07f, 0.75f, Colors.Safe, 1.0f);
                     }
                 }
                 else if (assignment is PartyRolesConfig.Assignment.M1 or PartyRolesConfig.Assignment.M2)
