@@ -5,6 +5,8 @@ namespace BossMod;
 [ConfigDisplay(Name = "Boss模块和雷达", Order = 1)]
 public sealed class BossModuleConfig : ConfigNode
 {
+    public bool RadarResize;
+
     public override void DrawCustom(UITree tree, WorldState ws)
     {
         if (ImGui.Button("重置窗口位置"))
@@ -24,8 +26,8 @@ public sealed class BossModuleConfig : ConfigNode
     public bool ShowDemo = false;
 
     // radar window settings
-    [PropertyDisplay("启用雷达")]
-    public bool Enable = true;
+    [PropertyDisplay("启用雷达", separator: true)]
+    public bool EnableRadar = true;
 
     [PropertyDisplay("将雷达投影到 3D 世界中")]
     public bool ProjectRadarInto3DWorld = false;
