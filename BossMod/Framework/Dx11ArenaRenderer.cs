@@ -915,10 +915,23 @@ public static unsafe partial class Dx11ArenaRenderer
     private static ID3D11RenderTargetView* _worldOverlayOutputRenderTarget;
     private static ID3D11ShaderResourceView* _worldOverlayOutputView;
     private static WorldOverlayNode? _worldOverlayNode;
-    private static int _worldOverlayWidth;
-    private static int _worldOverlayHeight;
+    // Backing textures are capacity-sized rather than exact framebuffer-sized. Keeping the largest
+    // recent allocation avoids feeding FFXIV/D3D11 a new pair of full-screen textures on every resize.
+    private static int _worldOverlayCapacityWidth;
+    private static int _worldOverlayCapacityHeight;
     private static int _worldOverlayBaseFrame = -1;
     private static bool _worldOverlayLastSucceeded;
+
+    // Full-screen overlay targets are expensive and native Texture destruction can be delayed. During
+    // an interactive window resize, wait until the requested framebuffer size has remained unchanged
+    // for several submitted frames before allocating another pair of full-screen targets. While the
+    // size is unstable, world packets use their existing non-overlay fallback path.
+    private const int WorldOverlayResizeStableFrames = 6;
+    private const int WorldOverlayCapacityAlignment = 256;
+    private static int _worldOverlayPendingWidth;
+    private static int _worldOverlayPendingHeight;
+    private static int _worldOverlayPendingStableFrames;
+    private static int _worldOverlayPendingLastSubmitFrame = -1;
 
     // Stable world-render settings. Scene depth hides line/curve pixels behind world geometry. Native
     // UI ordering is handled structurally by WorldOverlayNode's background layer, never inferred from
@@ -968,6 +981,15 @@ public static unsafe partial class Dx11ArenaRenderer
     private static ID3D11Buffer* _customSdfConstantBuffer;
     private static ID3D11Buffer* _zoneWaveConstantBuffer;
     private static readonly long ZoneWaveEpoch = Stopwatch.GetTimestamp();
+
+    // Retryable resource creation can fail every frame while the device is under pressure. Log the first
+    // failure immediately, then at most once every five seconds until the resource recovers.
+    private static readonly long D3D11RetryFailureLogIntervalTicks = 5L * Stopwatch.Frequency;
+    private static long _lastQuadIndexBufferFailureLogTimestamp;
+    private static long _lastStencilTargetFailureLogTimestamp;
+    private static long _lastUploadVertexBufferFailureLogTimestamp;
+    private static long _lastWorldOverlayFailureLogTimestamp;
+    private static long _lastSceneDepthViewFailureLogTimestamp;
     // Shared immutable 0,1,2 / 0,2,3 quad indices. Stroke/world-line/analytic/outline/text VS paths only need four unique corners
     private static ID3D11Buffer* _quadIndexBuffer;
     private static int _stencilWidth;
@@ -1125,6 +1147,10 @@ public static unsafe partial class Dx11ArenaRenderer
             ID3D11DeviceContext* context = null;
             _device->GetImmediateContext(&context);
             _context = context;
+            if (_context == null)
+            {
+                Service.Logger.Error("DX11 renderer: ID3D11Device.GetImmediateContext returned null during initialization");
+            }
 
             if (_context != null && CreateShadersAndLayouts() && CreateStencilStates() && CreateArenaSdfPipelineResources() && CreateArenaFontResources())
             {
@@ -1135,7 +1161,9 @@ public static unsafe partial class Dx11ArenaRenderer
             }
         }
 
-        // Initialization failed. Keep the gate closed and release whatever was created.
+        // Initialization failed. Keep the gate closed and release whatever was created. The failing
+        // D3D creation helper logs its HRESULT/device-removed reason before control reaches here.
+        Service.Logger.Error("DX11 renderer initialization failed; renderer remains disabled for this generation");
         Shutdown();
     }
 
@@ -1187,6 +1215,7 @@ public static unsafe partial class Dx11ArenaRenderer
             Release(ref _sceneInfoView);
             _sceneInfoViewIdentity = 0;
             ReleaseWorldOverlayResources();
+            ResetWorldOverlayResizeDebounce();
             Release(ref _analyticInputLayout);
             Release(ref _textInputLayout);
             Release(ref _worldTextInputLayout);
@@ -1290,6 +1319,11 @@ public static unsafe partial class Dx11ArenaRenderer
             _zoneWaveUploadFrame = -1;
             _stencilWidth = 0;
             _stencilHeight = 0;
+            _lastQuadIndexBufferFailureLogTimestamp = 0;
+            _lastStencilTargetFailureLogTimestamp = 0;
+            _lastUploadVertexBufferFailureLogTimestamp = 0;
+            _lastWorldOverlayFailureLogTimestamp = 0;
+            _lastSceneDepthViewFailureLogTimestamp = 0;
             _arenaStencilKey = 0L;
             _arenaStencilMaskQueued = false;
             _renderedStencilKey = 0L;
@@ -3702,6 +3736,27 @@ public static unsafe partial class Dx11ArenaRenderer
     private static bool SameWorldProjectedSdfConstants(in WorldProjectedSdfConstants a, in WorldProjectedSdfConstants b)
         => a.ShapeSdfMap == b.ShapeSdfMap && a.ArenaSdfMap == b.ArenaSdfMap && a.Flags == b.Flags;
 
+    private static string FormatHResult(HRESULT hr) => $"0x{(uint)(int)hr:X8}";
+
+    private static void LogD3D11Failure(string operation, HRESULT hr, string? details = null)
+    {
+        var removedReason = _device != null ? _device->GetDeviceRemovedReason() : default;
+        var suffix = string.IsNullOrEmpty(details) ? string.Empty : $", {details}";
+        Service.Log($"DX11 renderer: {operation} failed: HRESULT={FormatHResult(hr)}, deviceRemovedReason={FormatHResult(removedReason)}{suffix}");
+    }
+
+    private static void LogD3D11FailureThrottled(ref long lastTimestamp, string operation, HRESULT hr, string? details = null)
+    {
+        var now = Stopwatch.GetTimestamp();
+        if (lastTimestamp != 0 && now - lastTimestamp < D3D11RetryFailureLogIntervalTicks)
+        {
+            return;
+        }
+
+        lastTimestamp = now;
+        LogD3D11Failure(operation, hr, details);
+    }
+
     private static void UploadZoneWaveConstants(int submitFrame)
     {
         // All packets submitted by one ImGui frame should share a phase. Besides avoiding tiny visual
@@ -3736,75 +3791,71 @@ public static unsafe partial class Dx11ArenaRenderer
         samplerDesc.MaxLOD = float.MaxValue;
 
         ID3D11SamplerState* sampler = null;
-        _device->CreateSamplerState(&samplerDesc, &sampler);
-
+        var samplerHr = _device->CreateSamplerState(&samplerDesc, &sampler);
+        if (samplerHr < 0 || sampler == null)
+        {
+            LogD3D11Failure("CreateSamplerState(arena SDF sampler)", samplerHr);
+            return false;
+        }
         _arenaSdfSampler = sampler;
 
+        if (!CreateDynamicConstantBuffer((uint)sizeof(OutlineSdfConstants), "outline SDF constants", out _outlineSdfConstantBuffer) ||
+            !CreateDynamicConstantBuffer((uint)sizeof(OutlineSdfConstants), "custom SDF constants", out _customSdfConstantBuffer) ||
+            !CreateDynamicConstantBuffer((uint)sizeof(ZoneWaveConstants), "zone-wave constants", out _zoneWaveConstantBuffer) ||
+            !CreateDynamicConstantBuffer((uint)sizeof(WorldProjectedSdfConstants), "world-projected SDF constants", out _worldProjectedSdfConstantBuffer) ||
+            !CreateDynamicConstantBuffer((uint)sizeof(WorldLineConstants), "world-line constants", out _worldLineConstantBuffer) ||
+            !CreateDynamicConstantBuffer((uint)(MaxWorldLineTransforms * sizeof(WorldLineTransform)), "world-line transforms", out _worldLineTransformBuffer))
+        {
+            return false;
+        }
+
+        // The quad index buffer is the only startup resource we deliberately allow to be transiently
+        // unavailable. Actor triangles use non-indexed draws, so publishing the renderer lets those
+        // remain visible while RenderBatchCallback retries this allocation on subsequent frames.
+        _ = EnsureQuadIndexBuffer();
+        return true;
+    }
+
+    private static bool CreateDynamicConstantBuffer(uint byteWidth, string name, out ID3D11Buffer* buffer)
+    {
+        buffer = null;
         D3D11_BUFFER_DESC desc = default;
-        desc.ByteWidth = (uint)sizeof(OutlineSdfConstants);
-        desc.Usage = (D3D11_USAGE)2; // DYNAMIC
-        desc.BindFlags = 0x4u; // CONSTANT_BUFFER
-        desc.CPUAccessFlags = 0x10000u; // WRITE
-        ID3D11Buffer* buffer = null;
-        _device->CreateBuffer(&desc, null, &buffer);
+        desc.ByteWidth = byteWidth;
+        desc.Usage = (D3D11_USAGE)2; // D3D11_USAGE_DYNAMIC
+        desc.BindFlags = 0x4u; // D3D11_BIND_CONSTANT_BUFFER
+        desc.CPUAccessFlags = 0x10000u; // D3D11_CPU_ACCESS_WRITE
 
-        _outlineSdfConstantBuffer = buffer;
+        ID3D11Buffer* created = null;
+        var hr = _device->CreateBuffer(&desc, null, &created);
+        if (hr < 0 || created == null)
+        {
+            LogD3D11Failure($"CreateBuffer({name})", hr, $"bytes={byteWidth}");
+            return false;
+        }
 
-        ID3D11Buffer* customBuffer = null;
-        _device->CreateBuffer(&desc, null, &customBuffer);
+        buffer = created;
+        return true;
+    }
 
-        _customSdfConstantBuffer = customBuffer;
-
-        D3D11_BUFFER_DESC zoneWaveDesc = default;
-        zoneWaveDesc.ByteWidth = (uint)sizeof(ZoneWaveConstants);
-        zoneWaveDesc.Usage = (D3D11_USAGE)2;
-        zoneWaveDesc.BindFlags = 0x4u;
-        zoneWaveDesc.CPUAccessFlags = 0x10000u;
-        ID3D11Buffer* zoneWaveBuffer = null;
-        _device->CreateBuffer(&zoneWaveDesc, null, &zoneWaveBuffer);
-        _zoneWaveConstantBuffer = zoneWaveBuffer;
-
-        D3D11_BUFFER_DESC projectedSdfDesc = default;
-        projectedSdfDesc.ByteWidth = (uint)sizeof(WorldProjectedSdfConstants);
-        projectedSdfDesc.Usage = (D3D11_USAGE)2;
-        projectedSdfDesc.BindFlags = 0x4u;
-        projectedSdfDesc.CPUAccessFlags = 0x10000u;
-        ID3D11Buffer* projectedSdfBuffer = null;
-        _device->CreateBuffer(&projectedSdfDesc, null, &projectedSdfBuffer);
-        _worldProjectedSdfConstantBuffer = projectedSdfBuffer;
-
-        D3D11_BUFFER_DESC worldLineDesc = default;
-        worldLineDesc.ByteWidth = (uint)sizeof(WorldLineConstants);
-        worldLineDesc.Usage = (D3D11_USAGE)2;
-        worldLineDesc.BindFlags = 0x4u;
-        worldLineDesc.CPUAccessFlags = 0x10000u;
-        ID3D11Buffer* worldLineBuffer = null;
-        _device->CreateBuffer(&worldLineDesc, null, &worldLineBuffer);
-
-        _worldLineConstantBuffer = worldLineBuffer;
-
-        D3D11_BUFFER_DESC worldTransformDesc = default;
-        worldTransformDesc.ByteWidth = (uint)(MaxWorldLineTransforms * sizeof(WorldLineTransform));
-        worldTransformDesc.Usage = (D3D11_USAGE)2;
-        worldTransformDesc.BindFlags = 0x4u;
-        worldTransformDesc.CPUAccessFlags = 0x10000u;
-        ID3D11Buffer* worldTransformBuffer = null;
-        _device->CreateBuffer(&worldTransformDesc, null, &worldTransformBuffer);
-
-        _worldLineTransformBuffer = worldTransformBuffer;
+    private static bool EnsureQuadIndexBuffer()
+    {
+        if (_quadIndexBuffer != null)
+        {
+            return true;
+        }
+        if (_device == null)
+        {
+            return false;
+        }
 
         // One shared index buffer serves both ordinary single quads and procedural WorldCurve runs.
-        // Each generated curve line owns four unique VS vertex ids but six triangle-list indices:
-        // 0,1,2,0,2,3; 4,5,6,4,6,7; ...
-        // Existing quad draws use the first six indices unchanged. WorldCurve draws consume a longer
-        // prefix, allowing the post-transform cache to reuse two vertices per generated line
+        // Build it with immutable initial data in the CreateBuffer call so a transient creation failure
+        // never leaves a null resource passed to UpdateSubresource.
         var quadIndexCount = MaxIndexedWorldCurveLines * 6;
-        D3D11_BUFFER_DESC quadIndexDesc = default;
-        quadIndexDesc.ByteWidth = (uint)(quadIndexCount * sizeof(uint));
-        quadIndexDesc.Usage = 0; // D3D11_USAGE_DEFAULT
-        quadIndexDesc.BindFlags = 0x2u; // D3D11_BIND_INDEX_BUFFER
-        ID3D11Buffer* quadIndexBuffer = null;
-        _device->CreateBuffer(&quadIndexDesc, null, &quadIndexBuffer);
+        D3D11_BUFFER_DESC desc = default;
+        desc.ByteWidth = (uint)(quadIndexCount * sizeof(uint));
+        desc.Usage = 0; // D3D11_USAGE_DEFAULT
+        desc.BindFlags = 0x2u; // D3D11_BIND_INDEX_BUFFER
 
         var quadIndices = ArrayPool<uint>.Shared.Rent(quadIndexCount);
         try
@@ -3822,14 +3873,28 @@ public static unsafe partial class Dx11ArenaRenderer
             }
 
             fixed (uint* indices = quadIndices)
-                _context->UpdateSubresource((ID3D11Resource*)quadIndexBuffer, 0u, null, indices, 0u, 0u);
+            {
+                D3D11_SUBRESOURCE_DATA initialData = default;
+                initialData.pSysMem = indices;
+
+                ID3D11Buffer* created = null;
+                var hr = _device->CreateBuffer(&desc, &initialData, &created);
+                if (hr < 0 || created == null)
+                {
+                    LogD3D11FailureThrottled(ref _lastQuadIndexBufferFailureLogTimestamp,
+                        "CreateBuffer(shared quad index buffer)", hr, $"bytes={desc.ByteWidth}, indices={quadIndexCount}");
+                    return false;
+                }
+
+                _lastQuadIndexBufferFailureLogTimestamp = 0;
+                _quadIndexBuffer = created;
+                return true;
+            }
         }
         finally
         {
             ArrayPool<uint>.Shared.Return(quadIndices);
         }
-        _quadIndexBuffer = quadIndexBuffer;
-        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -5609,7 +5674,7 @@ public static unsafe partial class Dx11ArenaRenderer
             // If the native layer cannot allocate during startup/device pressure, keep world
             // primitives visible as an ordinary background draw for this frame. They remain free of
             // the particle-corrupted alpha mask even in this degraded path.
-            if (packet.WorldOverlayTarget && !EnsureWorldOverlayResources(packet.FramebufferWidth, packet.FramebufferHeight))
+            if (packet.WorldOverlayTarget && !EnsureWorldOverlayResources(packet.FramebufferWidth, packet.FramebufferHeight, packet.SubmitFrame))
                 packet.WorldOverlayTarget = false;
 
             var uploadBytes = packet.UploadBytes;
@@ -5648,6 +5713,13 @@ public static unsafe partial class Dx11ArenaRenderer
                 packet.StrokeInstanceCount != 0 || packet.WorldLineCount != 0 || packet.WorldCurveCount != 0 || packet.WorldProjectedArrowCount != 0 || packet.WorldProjectedShapeCount != 0 || packet.NeedsStencil;
             if (usesIndexedQuad)
             {
+                // A transient startup allocation failure must not permanently disable every indexed
+                // primitive until plugin reload. Retry lazily on each frame that actually needs it.
+                if (!EnsureQuadIndexBuffer())
+                {
+                    return;
+                }
+
                 _context->IAGetIndexBuffer(&oldIndexBuffer, &oldIndexFormat, &oldIndexOffset);
                 _context->IASetIndexBuffer(_quadIndexBuffer, (DXGI_FORMAT)42 /* R32_UINT */, 0u);
                 indexStateCaptured = true;
@@ -6833,8 +6905,16 @@ public static unsafe partial class Dx11ArenaRenderer
 
         ID3D11Buffer* created = null;
         var hr = _device->CreateBuffer(&desc, null, &created);
+        if (hr < 0 || created == null)
+        {
+            LogD3D11FailureThrottled(ref _lastUploadVertexBufferFailureLogTimestamp,
+                "CreateBuffer(dynamic upload vertex buffer)", hr, $"bytes={byteWidth}");
+            return false;
+        }
+
+        _lastUploadVertexBufferFailureLogTimestamp = 0;
         buffer = created;
-        return hr >= 0 && created != null;
+        return true;
     }
 
     private static bool EnsureStencilTarget(int width, int height)
@@ -6843,12 +6923,13 @@ public static unsafe partial class Dx11ArenaRenderer
         {
             return true;
         }
+        if (_device == null || width <= 0 || height <= 0)
+        {
+            return false;
+        }
 
-        Release(ref _stencilView);
-        _stencilWidth = 0;
-        _stencilHeight = 0;
-        _renderedStencilKey = 0L;
-
+        // Create the replacement first. If allocation fails under transient device/VRAM pressure,
+        // leave the previous target intact rather than publishing a null DSV or dereferencing a null texture.
         D3D11_TEXTURE2D_DESC desc = default;
         desc.Width = (uint)width;
         desc.Height = (uint)height;
@@ -6861,15 +6942,30 @@ public static unsafe partial class Dx11ArenaRenderer
         desc.BindFlags = 0x40u; // D3D11_BIND_DEPTH_STENCIL
 
         ID3D11Texture2D* texture = null;
-        _device->CreateTexture2D(&desc, null, &texture);
+        var hr = _device->CreateTexture2D(&desc, null, &texture);
+        if (hr < 0 || texture == null)
+        {
+            LogD3D11FailureThrottled(ref _lastStencilTargetFailureLogTimestamp,
+                "CreateTexture2D(arena stencil target)", hr, $"size={width}x{height}, format=D24_UNORM_S8_UINT");
+            return false;
+        }
 
         ID3D11DepthStencilView* view = null;
-        _device->CreateDepthStencilView((ID3D11Resource*)texture, null, &view);
-        texture->Release(); // view owns its own resource reference
+        hr = _device->CreateDepthStencilView((ID3D11Resource*)texture, null, &view);
+        texture->Release(); // the view takes its own resource reference on success
+        if (hr < 0 || view == null)
+        {
+            LogD3D11FailureThrottled(ref _lastStencilTargetFailureLogTimestamp,
+                "CreateDepthStencilView(arena stencil target)", hr, $"size={width}x{height}");
+            return false;
+        }
 
+        _lastStencilTargetFailureLogTimestamp = 0;
+        Release(ref _stencilView);
         _stencilView = view;
         _stencilWidth = width;
         _stencilHeight = height;
+        _renderedStencilKey = 0L;
         return true;
     }
 
@@ -7114,17 +7210,28 @@ public static unsafe partial class Dx11ArenaRenderer
         textureDesc.BindFlags = 0x8u; // D3D11_BIND_SHADER_RESOURCE
 
         ID3D11Texture2D* texture = null;
+        HRESULT hr;
         fixed (byte* pixels = rgbaTopDown)
         {
             D3D11_SUBRESOURCE_DATA initialData = default;
             initialData.pSysMem = pixels;
             initialData.SysMemPitch = (uint)(width * 4);
-            _device->CreateTexture2D(&textureDesc, &initialData, &texture);
+            hr = _device->CreateTexture2D(&textureDesc, &initialData, &texture);
+        }
+        if (hr < 0 || texture == null)
+        {
+            LogD3D11Failure("CreateTexture2D(arena font atlas)", hr, $"size={width}x{height}, bytes={rgbaByteCount}");
+            return false;
         }
 
         ID3D11ShaderResourceView* view = null;
-        _device->CreateShaderResourceView((ID3D11Resource*)texture, null, &view);
+        hr = _device->CreateShaderResourceView((ID3D11Resource*)texture, null, &view);
         texture->Release();
+        if (hr < 0 || view == null)
+        {
+            LogD3D11Failure("CreateShaderResourceView(arena font atlas)", hr, $"size={width}x{height}");
+            return false;
+        }
 
         _arenaFontAtlasView = view;
         _arenaTextGlyphs = textGlyphs;
@@ -7295,13 +7402,19 @@ public static unsafe partial class Dx11ArenaRenderer
         var len = bytecode.Length;
         if (len == 0)
         {
+            Service.Log($"DX11 renderer: embedded vertex shader resource is missing or empty: {fileName}");
             return false;
         }
 
         fixed (byte* pBytecode = bytecode)
         {
             ID3D11VertexShader* created = null;
-            _device->CreateVertexShader(pBytecode, (nuint)len, null, &created);
+            var hr = _device->CreateVertexShader(pBytecode, (nuint)len, null, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure($"CreateVertexShader({fileName})", hr, $"bytecodeBytes={len}");
+                return false;
+            }
             shader = created;
             return true;
         }
@@ -7312,8 +7425,9 @@ public static unsafe partial class Dx11ArenaRenderer
         shader = null;
         var bytecode = LoadShaderBytecode(fileName);
         var len = bytecode?.Length ?? 0;
-        if (bytecode != null && len == 0)
+        if (bytecode == null || len == 0)
         {
+            Service.Log($"DX11 renderer: embedded pixel shader resource is missing or empty: {fileName}");
             return false;
         }
 
@@ -7321,6 +7435,11 @@ public static unsafe partial class Dx11ArenaRenderer
         {
             ID3D11PixelShader* created = null;
             var hr = _device->CreatePixelShader(pBytecode, (nuint)len, null, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure($"CreatePixelShader({fileName})", hr, $"bytecodeBytes={len}");
+                return false;
+            }
             shader = created;
             return true;
         }
@@ -7371,7 +7490,11 @@ public static unsafe partial class Dx11ArenaRenderer
             };
 
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(elements, 3u, pBytecode, (nuint)vsBytecode.Length, &created);
+            var hr = _device->CreateInputLayout(elements, 3u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(mesh)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
     }
@@ -7400,7 +7523,11 @@ public static unsafe partial class Dx11ArenaRenderer
             elements[8] = InstanceElement((sbyte*)pTexcoord, 3u, (DXGI_FORMAT)42, 56u);  // R32_UINT flags
 
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(elements, 9u, pBytecode, (nuint)vsBytecode.Length, &created);
+            var hr = _device->CreateInputLayout(elements, 9u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(stroke)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
 
@@ -7438,6 +7565,10 @@ public static unsafe partial class Dx11ArenaRenderer
 
             ID3D11InputLayout* created = null;
             var hr = _device->CreateInputLayout(elements, 5u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(world line)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
 
@@ -7476,7 +7607,11 @@ public static unsafe partial class Dx11ArenaRenderer
             elements[6] = InstanceElement((sbyte*)pTexcoord, 4u, (DXGI_FORMAT)42, 44u); // uint kind/segments
 
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(elements, 7u, pBytecode, (nuint)vsBytecode.Length, &created);
+            var hr = _device->CreateInputLayout(elements, 7u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(world curve)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
 
@@ -7514,7 +7649,11 @@ public static unsafe partial class Dx11ArenaRenderer
             elements[5] = InstanceElement((sbyte*)pColor, 0u, (DXGI_FORMAT)28, 40u);    // RGBA8
 
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(elements, 6u, pBytecode, (nuint)vsBytecode.Length, &created);
+            var hr = _device->CreateInputLayout(elements, 6u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(world projected arrow)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
 
@@ -7557,7 +7696,11 @@ public static unsafe partial class Dx11ArenaRenderer
             elements[10] = InstanceElement((sbyte*)pTexcoord, 7u, (DXGI_FORMAT)16, 96u); // float2 wave origin XZ
 
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(elements, 11u, pBytecode, (nuint)vsBytecode.Length, &created);
+            var hr = _device->CreateInputLayout(elements, 11u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(world projected shape)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
 
@@ -7637,7 +7780,11 @@ public static unsafe partial class Dx11ArenaRenderer
             };
 
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(elements, 5u, pBytecode, (nuint)vsBytecode.Length, &created);
+            var hr = _device->CreateInputLayout(elements, 5u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(text)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
     }
@@ -7663,7 +7810,11 @@ public static unsafe partial class Dx11ArenaRenderer
             elements[5] = InstanceElement((sbyte*)pTexcoord, 2u, (DXGI_FORMAT)41, 56u); // outline px
 
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(elements, 6u, pBytecode, (nuint)vsBytecode.Length, &created);
+            var hr = _device->CreateInputLayout(elements, 6u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(world text)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
 
@@ -7699,7 +7850,11 @@ public static unsafe partial class Dx11ArenaRenderer
             elements[5] = InstanceElement((sbyte*)pColor, 0u, (DXGI_FORMAT)28, 48u);     // color RGBA8
 
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(elements, 6u, pBytecode, (nuint)vsBytecode.Length, &created);
+            var hr = _device->CreateInputLayout(elements, 6u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(analytic)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
 
@@ -7736,7 +7891,11 @@ public static unsafe partial class Dx11ArenaRenderer
             e[7] = Inst((sbyte*)pCol, 0u, (DXGI_FORMAT)28, 64u, 0u);
             e[8] = Inst((sbyte*)pCol, 1u, (DXGI_FORMAT)28, 68u, 0u);
             ID3D11InputLayout* created = null;
-            _device->CreateInputLayout(e, 9u, pBytecode, (nuint)vsBytecode.Length, &created);
+            var hr = _device->CreateInputLayout(e, 9u, pBytecode, (nuint)vsBytecode.Length, &created);
+            if (hr < 0 || created == null)
+            {
+                LogD3D11Failure("CreateInputLayout(outline shape)", hr, $"bytecodeBytes={vsBytecode.Length}");
+            }
             layout = created;
         }
     }
@@ -7744,28 +7903,48 @@ public static unsafe partial class Dx11ArenaRenderer
     private static D3D11_INPUT_ELEMENT_DESC Inst(sbyte* semantic, uint index, DXGI_FORMAT format, uint offset, uint slot)
         => new() { SemanticName = semantic, SemanticIndex = index, Format = format, InputSlot = slot, AlignedByteOffset = offset, InputSlotClass = (D3D11_INPUT_CLASSIFICATION)1, InstanceDataStepRate = 1 };
 
-    private static bool EnsureWorldOverlayResources(int width, int height)
+    private static bool EnsureWorldOverlayResources(int width, int height, int submitFrame)
     {
         var node = _worldOverlayNode;
         if (node == null || !node.IsAttached || width <= 0 || height <= 0)
         {
             return false;
         }
-        if (_worldOverlayBaseTexture != null && _worldOverlayBaseRenderTarget != null && _worldOverlayBaseView != null &&
-            _worldOverlayOutputTexture != null && _worldOverlayOutputRenderTarget != null && _worldOverlayOutputView != null &&
-            _worldOverlayWidth == width && _worldOverlayHeight == height)
+
+        var haveResources = _worldOverlayBaseTexture != null && _worldOverlayBaseRenderTarget != null && _worldOverlayBaseView != null &&
+            _worldOverlayOutputTexture != null && _worldOverlayOutputRenderTarget != null && _worldOverlayOutputView != null;
+
+        // The backing textures are allowed to be larger than the current framebuffer. AtkUldPart's
+        // Width/Height select the visible top-left portion of the texture, so a smaller window can use
+        // the existing allocation without stretching the old framebuffer or reallocating anything.
+        if (haveResources && width <= _worldOverlayCapacityWidth && height <= _worldOverlayCapacityHeight)
         {
+            node.SetDisplaySize(width, height);
+            ResetWorldOverlayResizeDebounce();
             return true;
         }
 
-        if (!CreateWorldOverlayTexture(width, height, out var baseTexture, out var baseRenderTarget, out var baseView))
+        // Growth is the only reason to replace an existing allocation. Keep the old GPU resources
+        // alive while the requested size is still changing so shrinking back within capacity is free.
+        // Hide the native image during this short fallback period to avoid displaying stale content.
+        if (!WorldOverlaySizeSettled(width, height, submitFrame))
         {
-            node.ReleaseTexture();
-            ReleaseWorldOverlayResources();
+            if (haveResources)
+            {
+                node.SetDisplaySize(0, 0);
+            }
             return false;
         }
 
-        var outputWrapper = node.CreateTexture(width, height);
+        var allocationWidth = GrowWorldOverlayCapacity(width, _worldOverlayCapacityWidth);
+        var allocationHeight = GrowWorldOverlayCapacity(height, _worldOverlayCapacityHeight);
+
+        if (!CreateWorldOverlayTexture(allocationWidth, allocationHeight, out var baseTexture, out var baseRenderTarget, out var baseView))
+        {
+            return false;
+        }
+
+        var outputWrapper = node.CreateTexture(allocationWidth, allocationHeight);
         var outputTexture = outputWrapper != null ? (ID3D11Texture2D*)outputWrapper->D3D11Texture2D : null;
         var outputView = outputWrapper != null ? (ID3D11ShaderResourceView*)outputWrapper->D3D11ShaderResourceView : null;
         if (outputWrapper == null || outputTexture == null || outputView == null)
@@ -7777,30 +7956,33 @@ public static unsafe partial class Dx11ArenaRenderer
             {
                 outputWrapper->DecRef();
             }
-            node.ReleaseTexture();
-            ReleaseWorldOverlayResources();
             return false;
         }
 
-        // Hold renderer-side references independently from the native Texture wrapper owned by the node
-        // This makes resize and plugin teardown safe regardless of which owner releases first.
+        // Hold renderer-side references independently from the native Texture wrapper owned by the node.
         outputTexture->AddRef();
         outputView->AddRef();
         ID3D11RenderTargetView* outputRenderTarget = null;
-        if (_device->CreateRenderTargetView((ID3D11Resource*)outputTexture, null, &outputRenderTarget) < 0 || outputRenderTarget == null)
+        var outputRtvHr = _device->CreateRenderTargetView((ID3D11Resource*)outputTexture, null, &outputRenderTarget);
+        if (outputRtvHr < 0 || outputRenderTarget == null)
         {
+            LogD3D11FailureThrottled(ref _lastWorldOverlayFailureLogTimestamp,
+                "CreateRenderTargetView(world overlay output)", outputRtvHr, $"allocation={allocationWidth}x{allocationHeight}, display={width}x{height}");
             outputView->Release();
             outputTexture->Release();
             outputWrapper->DecRef();
             Release(ref baseView);
             Release(ref baseRenderTarget);
             Release(ref baseTexture);
-            node.ReleaseTexture();
-            ReleaseWorldOverlayResources();
             return false;
         }
 
+        // SetTexture consumes outputWrapper and releases the node's previous wrapper. The display size
+        // remains the real framebuffer size even though the new texture may include capacity headroom.
         node.SetTexture(outputWrapper, width, height);
+
+        // Only after the replacement is complete do we release the renderer-side references to the
+        // previous allocation. This keeps failure paths non-destructive and makes resize recovery cheap.
         ReleaseWorldOverlayResources();
         _worldOverlayBaseTexture = baseTexture;
         _worldOverlayBaseRenderTarget = baseRenderTarget;
@@ -7808,10 +7990,56 @@ public static unsafe partial class Dx11ArenaRenderer
         _worldOverlayOutputTexture = outputTexture;
         _worldOverlayOutputRenderTarget = outputRenderTarget;
         _worldOverlayOutputView = outputView;
-        _worldOverlayWidth = width;
-        _worldOverlayHeight = height;
+        _worldOverlayCapacityWidth = allocationWidth;
+        _worldOverlayCapacityHeight = allocationHeight;
         _worldOverlayBaseFrame = -1;
         return true;
+    }
+
+    private static int GrowWorldOverlayCapacity(int requested, int current)
+    {
+        // Align upward instead of allocating the exact window size. A small amount of headroom prevents
+        // a one-pixel or small incremental resize from immediately creating another texture generation.
+        var target = Math.Max(requested, current);
+        var alignment = WorldOverlayCapacityAlignment;
+        return (target + alignment - 1) / alignment * alignment;
+    }
+
+    private static bool WorldOverlaySizeSettled(int width, int height, int submitFrame)
+    {
+        if (_worldOverlayPendingWidth != width || _worldOverlayPendingHeight != height)
+        {
+            _worldOverlayPendingWidth = width;
+            _worldOverlayPendingHeight = height;
+            _worldOverlayPendingStableFrames = 1;
+            _worldOverlayPendingLastSubmitFrame = submitFrame;
+            return WorldOverlayResizeStableFrames <= 1;
+        }
+
+        if (_worldOverlayPendingLastSubmitFrame != submitFrame)
+        {
+            _worldOverlayPendingLastSubmitFrame = submitFrame;
+            if (_worldOverlayPendingStableFrames < WorldOverlayResizeStableFrames)
+            {
+                ++_worldOverlayPendingStableFrames;
+            }
+        }
+
+        if (_worldOverlayPendingStableFrames < WorldOverlayResizeStableFrames)
+        {
+            return false;
+        }
+
+        ResetWorldOverlayResizeDebounce();
+        return true;
+    }
+
+    private static void ResetWorldOverlayResizeDebounce()
+    {
+        _worldOverlayPendingWidth = 0;
+        _worldOverlayPendingHeight = 0;
+        _worldOverlayPendingStableFrames = 0;
+        _worldOverlayPendingLastSubmitFrame = -1;
     }
 
     private static bool CreateWorldOverlayTexture(int width, int height, out ID3D11Texture2D* texture, out ID3D11RenderTargetView* renderTarget, out ID3D11ShaderResourceView* view)
@@ -7831,26 +8059,36 @@ public static unsafe partial class Dx11ArenaRenderer
         desc.BindFlags = 0x28u; // D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET
 
         ID3D11Texture2D* createdTexture = null;
-        if (_device->CreateTexture2D(&desc, null, &createdTexture) < 0 || createdTexture == null)
+        var textureHr = _device->CreateTexture2D(&desc, null, &createdTexture);
+        if (textureHr < 0 || createdTexture == null)
         {
+            LogD3D11FailureThrottled(ref _lastWorldOverlayFailureLogTimestamp,
+                "CreateTexture2D(world overlay base)", textureHr, $"size={width}x{height}, format=B8G8R8A8_UNORM");
             return false;
         }
 
         ID3D11RenderTargetView* createdRenderTarget = null;
-        if (_device->CreateRenderTargetView((ID3D11Resource*)createdTexture, null, &createdRenderTarget) < 0 || createdRenderTarget == null)
+        var rtvHr = _device->CreateRenderTargetView((ID3D11Resource*)createdTexture, null, &createdRenderTarget);
+        if (rtvHr < 0 || createdRenderTarget == null)
         {
+            LogD3D11FailureThrottled(ref _lastWorldOverlayFailureLogTimestamp,
+                "CreateRenderTargetView(world overlay base)", rtvHr, $"size={width}x{height}");
             createdTexture->Release();
             return false;
         }
 
         ID3D11ShaderResourceView* createdView = null;
-        if (_device->CreateShaderResourceView((ID3D11Resource*)createdTexture, null, &createdView) < 0 || createdView == null)
+        var srvHr = _device->CreateShaderResourceView((ID3D11Resource*)createdTexture, null, &createdView);
+        if (srvHr < 0 || createdView == null)
         {
+            LogD3D11FailureThrottled(ref _lastWorldOverlayFailureLogTimestamp,
+                "CreateShaderResourceView(world overlay base)", srvHr, $"size={width}x{height}");
             createdRenderTarget->Release();
             createdTexture->Release();
             return false;
         }
 
+        _lastWorldOverlayFailureLogTimestamp = 0;
         texture = createdTexture;
         renderTarget = createdRenderTarget;
         view = createdView;
@@ -7860,14 +8098,14 @@ public static unsafe partial class Dx11ArenaRenderer
     private static void PresentWorldOverlay(int width, int height, int submitFrame)
     {
         _worldOverlayLastSucceeded = false;
-        if (!EnsureWorldOverlayResources(width, height))
+        if (!EnsureWorldOverlayResources(width, height, submitFrame))
         {
             return;
         }
 
         if (_worldOverlayBaseFrame != submitFrame)
         {
-            float* transparent = stackalloc float[4];
+            var transparent = stackalloc float[4];
             transparent[0] = transparent[1] = transparent[2] = transparent[3] = 0f;
             _context->ClearRenderTargetView(_worldOverlayBaseRenderTarget, transparent);
             _worldOverlayBaseFrame = submitFrame;
@@ -7880,7 +8118,7 @@ public static unsafe partial class Dx11ArenaRenderer
         ID3D11VertexShader* oldVertexShader = null;
         ID3D11PixelShader* oldPixelShader = null;
         ID3D11ShaderResourceView* oldInputView = null;
-        float* oldBlendFactor = stackalloc float[4];
+        var oldBlendFactor = stackalloc float[4];
         uint oldSampleMask = 0;
         uint oldStencilRef = 0;
 
@@ -7963,8 +8201,8 @@ public static unsafe partial class Dx11ArenaRenderer
         Release(ref _worldOverlayBaseView);
         Release(ref _worldOverlayBaseRenderTarget);
         Release(ref _worldOverlayBaseTexture);
-        _worldOverlayWidth = 0;
-        _worldOverlayHeight = 0;
+        _worldOverlayCapacityWidth = 0;
+        _worldOverlayCapacityHeight = 0;
         _worldOverlayBaseFrame = -1;
         _worldOverlayLastSucceeded = false;
     }
@@ -8019,10 +8257,13 @@ public static unsafe partial class Dx11ArenaRenderer
             var hr = _device->CreateShaderResourceView((ID3D11Resource*)texture, &nativeDesc, &newView);
             if (hr < 0 || newView == null)
             {
+                LogD3D11FailureThrottled(ref _lastSceneDepthViewFailureLogTimestamp,
+                    "CreateShaderResourceView(scene depth)", hr, $"format={(uint)srvFormat}, textureIdentity=0x{identity:X}");
                 ReleaseSceneDepthResource();
                 return false;
             }
 
+            _lastSceneDepthViewFailureLogTimestamp = 0;
             Release(ref _sceneDepthView);
             _sceneDepthView = newView;
             _sceneDepthTextureIdentity = identity;
@@ -8139,7 +8380,12 @@ public static unsafe partial class Dx11ArenaRenderer
         desc.BackFace = face;
 
         ID3D11DepthStencilState* created = null;
-        _device->CreateDepthStencilState(&desc, &created);
+        var hr = _device->CreateDepthStencilState(&desc, &created);
+        if (hr < 0 || created == null)
+        {
+            LogD3D11Failure($"CreateDepthStencilState(arena stencil {(write ? "write" : "test")})", hr);
+            return false;
+        }
         state = created;
         return true;
     }
@@ -8154,7 +8400,12 @@ public static unsafe partial class Dx11ArenaRenderer
         desc.StencilEnable = BOOL.FALSE;
 
         ID3D11DepthStencilState* created = null;
-        _device->CreateDepthStencilState(&desc, &created);
+        var hr = _device->CreateDepthStencilState(&desc, &created);
+        if (hr < 0 || created == null)
+        {
+            LogD3D11Failure("CreateDepthStencilState(stencil disabled)", hr);
+            return false;
+        }
         state = created;
         return true;
     }

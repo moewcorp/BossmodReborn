@@ -61,6 +61,10 @@ sealed class Camera
     // identity transform after each batch
     private readonly List<Dx11ArenaRenderer.WorldLineTransform> _worldTransforms = [Dx11ArenaRenderer.WorldLineTransform.Identity];
 
+    // The native world overlay only needs an empty present when transitioning from content to idle.
+    // Once cleared, stop queueing presents entirely so an unused overlay cannot participate in window-resize churn.
+    private bool _worldOverlayHadContent;
+
     public unsafe void Update()
     {
         var controlCamera = CameraManager.Instance()->GetActiveCamera();
@@ -86,10 +90,18 @@ sealed class Camera
         var viewport = ImGuiHelpers.MainViewport;
         if (_worldPrimitiveRuns.Count == 0)
         {
-            Dx11ArenaRenderer.QueueWorldOverlayPresent(ImGui.GetBackgroundDrawList(), viewport.Size);
+            // Preserve the old stale-content clearing behavior, but only once after the last frame
+            // that actually submitted world primitives. If the overlay was never used (for example,
+            // 3D projection is disabled), this path now allocates/presents nothing at all.
+            if (_worldOverlayHadContent)
+            {
+                Dx11ArenaRenderer.QueueWorldOverlayPresent(ImGui.GetBackgroundDrawList(), viewport.Size);
+                _worldOverlayHadContent = false;
+            }
             return;
         }
 
+        _worldOverlayHadContent = true;
         var batchStarted = false;
         try
         {
