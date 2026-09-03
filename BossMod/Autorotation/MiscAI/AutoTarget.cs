@@ -5,7 +5,7 @@ namespace BossMod.Autorotation.MiscAI;
 
 public sealed class AutoTarget(RotationModuleManager manager, Actor player) : RotationModule(manager, player)
 {
-    public enum Track { General, Retarget, QuestBattle, DeepDungeon, EpicEcho, Hunt, FATE, TreasureHunt, Everything, CollectFATE, Treasure, MaxTargets, Zodiac }
+    public enum Track { General, Retarget, QuestBattle, DeepDungeon, EpicEcho, Hunt, FATE, TreasureHunt, Everything, CollectFATE, Treasure, MaxTargets, Zodiac, Foray }
     public enum GeneralStrategy { Aggressive, Passive }
     public enum RetargetStrategy { NoTarget, Hostiles, Always, Never }
     public enum Flag { Disabled, Enabled }
@@ -63,6 +63,10 @@ public sealed class AutoTarget(RotationModuleManager manager, Actor player) : Ro
         res.DefineInt(Track.MaxTargets, "Maximum targets to pull (0 = no max)", minValue: 0, maxValue: 30, uiPriority: -130);
 
         res.Define(Track.Zodiac).As<Flag>("Zodiac", "Prioritize mobs in the current Zodiac Book", renderer: typeof(DefaultOffRenderer), uiPriority: -95)
+            .AddOption(Flag.Disabled)
+            .AddOption(Flag.Enabled);
+
+        res.Define(Track.Foray).As<Flag>("Foray", "Prioritize Foray module targets (eg. Bozja, Occult Crescent)", renderer: typeof(DefaultOffRenderer), uiPriority: -105)
             .AddOption(Flag.Disabled)
             .AddOption(Flag.Enabled);
         return res;
@@ -170,6 +174,12 @@ public sealed class AutoTarget(RotationModuleManager manager, Actor player) : Ro
 
         var targetZodiac = strategy.Option(Track.Zodiac).As<Flag>() == Flag.Enabled;
 
+        var targetForay = strategy.Option(Track.Foray).As<Flag>() == Flag.Enabled && Bossmods.ActiveModule is
+        {
+            Info.Category: BossModuleInfo.Category.Foray
+        };
+        var forayPrimaryActor = targetForay ? Bossmods.ActiveModule!.PrimaryActor.OID : default;
+
         // first deal with pulling new enemies
         foreach (var target in Hints.PotentialTargets)
         {
@@ -200,6 +210,12 @@ public sealed class AutoTarget(RotationModuleManager manager, Actor player) : Ro
             }
 
             if (targetZodiac && IsRelicTarget(target.Actor))
+            {
+                prioritize(target, 0);
+                continue;
+            }
+
+            if (targetForay && forayPrimaryActor != default && target.Actor.OID == forayPrimaryActor)
             {
                 prioritize(target, 0);
                 continue;

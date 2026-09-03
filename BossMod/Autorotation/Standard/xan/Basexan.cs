@@ -323,11 +323,11 @@ public abstract class Basexan<AID, TraitID, TValues>(RotationModuleManager manag
         P targetPrio(Actor potentialTarget)
         {
             var numForbidden = 0;
-            var pottargets = Hints.PotentialTargets;
-            var count = pottargets.Count;
+            var forbiddentargets = Hints.ForbiddenTargetsSpan;
+            var count = forbiddentargets.Length;
             for (var i = 0; i < count; ++i)
             {
-                var enemy = pottargets[i];
+                var enemy = forbiddentargets[i];
                 if (isInAOE(potentialTarget, enemy.Actor))
                 {
                     ++numForbidden;

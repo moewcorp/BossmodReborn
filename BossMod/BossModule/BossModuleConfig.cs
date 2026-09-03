@@ -5,6 +5,8 @@ namespace BossMod;
 [ConfigDisplay(Name = "Boss modules and radar", Order = 1)]
 public sealed class BossModuleConfig : ConfigNode
 {
+    public bool RadarResize;
+
     public override void DrawCustom(UITree tree, WorldState ws)
     {
         if (ImGui.Button("Recenter Window"))
@@ -25,7 +27,7 @@ public sealed class BossModuleConfig : ConfigNode
 
     // radar window settings
     [PropertyDisplay("Enable radar", separator: true)]
-    public bool Enable = true;
+    public bool EnableRadar = true;
 
     [PropertyDisplay("Enable projecting radar into the 3D world")]
     public bool ProjectRadarInto3DWorld = false;

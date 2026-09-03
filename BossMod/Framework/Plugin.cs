@@ -565,19 +565,23 @@ public sealed class Plugin : IAsyncDalamudPlugin
 
     private static bool ToggleRadar(string[] messageData)
     {
-        var config = Service.Config.Get<BossModuleConfig>();
+        // Use existing config. Having two streams open to one config causes problems.
+        var config = MiniArena.Config;
 
         if (messageData.Length == 1)
-            config.Enable = !config.Enable;
+            config.EnableRadar = !config.EnableRadar;
         else
         {
             switch (messageData[1].ToUpperInvariant())
             {
                 case "ON":
-                    config.Enable = true;
+                    config.EnableRadar = true;
                     break;
                 case "OFF":
-                    config.Enable = false;
+                    config.EnableRadar = false;
+                    break;
+                case "RESET":
+                    Service.BossModWindow?.RecenterWindow();
                     break;
                 default:
                     Service.ChatGui.Print($"[BMR] Unknown radar command: {messageData[1]}");
@@ -586,7 +590,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         }
 
         config.Modified.Fire();
-        Service.Log($"Radar is now {(config.Enable ? "enabled" : "disabled")}");
+        Service.Log($"Radar is now {(config.EnableRadar ? "enabled" : "disabled")}");
         return true;
     }
 }

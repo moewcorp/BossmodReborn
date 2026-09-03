@@ -428,11 +428,11 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
     private bool TargetIsForbidden(ulong actorId)
     {
-        var priorityTargets = autorot.Hints.PriorityTargetsSpan;
-        var len = priorityTargets.Length;
+        var forbiddenTargets = autorot.Hints.ForbiddenTargetsSpan;
+        var len = forbiddenTargets.Length;
         for (var i = 0; i < len; ++i)
         {
-            var e = priorityTargets[i];
+            var e = forbiddenTargets[i];
             if (e.Actor.InstanceID == actorId)
             {
                 return true;

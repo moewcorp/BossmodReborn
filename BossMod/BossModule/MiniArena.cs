@@ -13,6 +13,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
 {
     public static readonly BossModuleConfig Config = Service.Config.Get<BossModuleConfig>();
     private WPos _center = center;
+    private Vector2 _currentWindowSize = new (400, 900);
 
     public WPos Center
     {
@@ -116,7 +117,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     private readonly List<WorldPathCommand> _worldPathCommands = [with(32)];
     private static MiniArena? _worldPathOwner;
 
-    // Actor markers normally sit directly under a known actor. 
+    // Actor markers normally sit directly under a known actor.
     // ActorProjected deliberately opts back into the bounds' WorldProjectionHeight because its
     // destination marker is usually not underneath an actor. A zero bounds/layer height overrides
     // the shallow marker band as well so reference-plane projection remains arena-wide.
@@ -125,7 +126,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     private const float WorldOutlineUnit = 0.08f;
     // 3D arena-rim Dimensions
     private const float WorldArenaRimHeight = 0.35f;
-    // Keep the lower rail slightly above the provisional reference plane. This avoids fighting the scene depth of a coplanar floor while 
+    // Keep the lower rail slightly above the provisional reference plane. This avoids fighting the scene depth of a coplanar floor while
     // still reading visually as the arena's ground contact edge
     private const float WorldArenaRimBaseLift = 0.075f;
     private const float WorldArenaRimSupportSpacing = 2.0f;
@@ -136,6 +137,41 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
     public WPos ClampToBounds(WPos position) => _center + _bounds.ClampToBounds(position - _center);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float IntersectRayBounds(WPos rayOrigin, in WDir rayDir) => _bounds.IntersectRay(rayOrigin - _center, rayDir);
+
+    public void SetWindowSize(Vector2 fullSize)
+    {
+        var resize = new Vector2(400, 900);
+
+        if (Config.RadarResize)
+        {
+            // Resize the radar arena back to original value also.
+            Config.ArenaScale = 1.0f;
+
+            _currentWindowSize = resize;
+            Config.RadarResize = false;
+        }
+        else
+        {
+            _currentWindowSize = ImGui.GetWindowSize();
+        }
+        var requiredWindowSize = Vector2.Max(fullSize, _currentWindowSize);
+        ImGui.SetWindowSize(requiredWindowSize, ImGuiCond.Always);
+    }
+
+    // Right click anywhere on mini radar window to recenter and resize.
+    public void DrawContextMenu()
+    {
+        // Opens context menu on right mouse click of the mini radar
+        if (ImGui.BeginPopupContextWindow("MyWindowContext", ImGuiPopupFlags.MouseButtonRight))
+        {
+            if (ImGui.MenuItem("Recenter and Resize Radar"))
+            {
+                Service.BossModWindow?.RecenterWindow();
+            }
+            ImGui.EndPopup();
+        }
+    }
+
 
     // prepare for drawing - set up internal state, clip rect etc.
     public void Begin(Angle cameraAzimuth, Actor primaryActor, Actor player, bool draw2D = true)
@@ -238,9 +274,10 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
 
             var centerOffset = new Vector2(screenMarginSize + Config.SlackForRotations * screenHalfSize);
             var fullSize = 2f * centerOffset;
-            var currentWindowSize = ImGui.GetWindowSize();
-            var requiredWindowSize = Vector2.Max(fullSize, currentWindowSize);
-            ImGui.SetWindowSize(requiredWindowSize);
+
+            SetWindowSize(fullSize);
+            DrawContextMenu();
+
             var cursor = ImGui.GetCursorScreenPos();
             ImGui.Dummy(fullSize);
 
@@ -278,7 +315,7 @@ public sealed class MiniArena(WPos center, ArenaBounds bounds)
                 Dx11ArenaRenderer.AppendArenaBackground(Colors.Background);
             }
         }
-        // Make the current player's authored floor (or its shared disjoint-island group) the 2D stencil. 
+        // Make the current player's authored floor (or its shared disjoint-island group) the 2D stencil.
         // Explicit mechanic scopes may switch to one physical floor without changing the transform.
         if (layeredBounds != null && _frameArenaProjectionLayer is int currentLayer)
         {
