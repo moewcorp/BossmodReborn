@@ -197,7 +197,7 @@ public sealed class Polygon(WPos center, float radius, int edges, Angle rotation
 
         for (var i = 0; i < edges; ++i)
         {
-            var (sin, cos) = ((float, float))Math.SinCos(i * angleIncrement + initialRotation);
+            var (sin, cos) = MathF.SinCos(i * angleIncrement + initialRotation);
             vertices[i] = new(radius * sin + offsetX, radius * cos + offsetZ);
         }
         return result;
@@ -279,7 +279,7 @@ public sealed class ConeV(WPos center, float radius, Angle centerDir, Angle half
 
         for (var i = 0; i < e1; ++i)
         {
-            var (sin, cos) = ((float, float))Math.SinCos(startAngle + i * angleIncrement);
+            var (sin, cos) = MathF.SinCos(startAngle + i * angleIncrement);
             vertices[i] = new(radius * sin + offsetX, radius * cos + offsetZ);
         }
         vertices[e1] = offset;
@@ -320,7 +320,7 @@ public sealed class DonutSegmentV(WPos center, float innerRadius, float outerRad
 
         for (var i = 0; i < n; ++i)
         {
-            var (sin, cos) = ((float, float))Math.SinCos(startAngle + i * angleIncrement);
+            var (sin, cos) = MathF.SinCos(startAngle + i * angleIncrement);
             vertices[i] = new(outerRadius * sin + offsetX, outerRadius * cos + offsetZ);
             vertices[indexInner - i] = new(innerRadius * sin + offsetX, innerRadius * cos + offsetZ);
         }
@@ -360,7 +360,7 @@ public sealed class DonutV(WPos center, float innerRadius, float outerRadius, in
 
         for (var i = 0; i < edges; ++i)
         {
-            var (sin, cos) = ((float, float))Math.SinCos(i * angleIncrement + initialRotation);
+            var (sin, cos) = MathF.SinCos(i * angleIncrement + initialRotation);
 
             vertices[i] = new(outerRadius * sin + offsetX, outerRadius * cos + offsetZ);
             vertices[indexInner - i] = new(innerRadius * sin + offsetX, innerRadius * cos + offsetZ);
@@ -388,7 +388,7 @@ public sealed class Ellipse(WPos center, float halfWidth, float halfHeight, int 
     {
         var edges = Edges;
         var angleIncrement = Angle.DoublePI / edges;
-        var (sinRotation, cosRotation) = ((float, float))Math.SinCos(Rotation.Rad);
+        var (sinRotation, cosRotation) = MathF.SinCos(Rotation.Rad);
         var result = new List<WDir>(edges);
         CollectionsMarshal.SetCount(result, edges);
         var vertices = CollectionsMarshal.AsSpan(result);
@@ -400,7 +400,7 @@ public sealed class Ellipse(WPos center, float halfWidth, float halfHeight, int 
 
         for (var i = 0; i < edges; ++i)
         {
-            var (sin, cos) = ((float, float))Math.SinCos(i * angleIncrement);
+            var (sin, cos) = MathF.SinCos(i * angleIncrement);
             var x = halfWidth * cos;
             var y = halfHeight * sin;
             vertices[i] = new(x * cosRotation - y * sinRotation + offsetX, x * sinRotation + y * cosRotation + offsetZ);
@@ -433,14 +433,14 @@ public sealed class Capsule(WPos center, float halfHeight, float halfWidth, int 
         var vertices = CollectionsMarshal.AsSpan(result);
 
         var angleIncrement = MathF.PI / edges;
-        var (sinRot, cosRot) = ((float, float))Math.SinCos(Rotation.Rad);
+        var (sinRot, cosRot) = MathF.SinCos(Rotation.Rad);
         var offset = Center - center;
         var offsetX = offset.X;
         var offsetZ = offset.Z;
 
         for (var i = 0; i <= edges; ++i)
         {
-            var (sin, cos) = ((float, float))Math.SinCos(i * angleIncrement);
+            var (sin, cos) = MathF.SinCos(i * angleIncrement);
 
             var x = HalfWidth * cos;
             var z = HalfWidth * sin + HalfHeight;

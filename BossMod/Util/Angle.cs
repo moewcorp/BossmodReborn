@@ -22,7 +22,7 @@ public readonly struct Angle(float rad)
     public static Angle FromDirection(WDir dir) => new(MathF.Atan2(dir.X, dir.Z));
     public readonly WDir ToDirection()
     {
-        var (sin, cos) = ((float, float))Math.SinCos(Rad);
+        var (sin, cos) = MathF.SinCos(Rad);
         return new(sin, cos);
     }
 
