@@ -166,23 +166,9 @@ sealed class DarkCurrent(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
-StatesType = typeof(FTME3NecrophobiaStates),
-ConfigType = null, // replace null with typeof(NecrophobiaConfig) if applicable
-ObjectIDType = typeof(OID),
-ActionIDType = typeof(AID), // replace null with typeof(AID) if applicable
-StatusIDType = typeof(SID), // replace null with typeof(SID) if applicable
-TetherIDType = typeof(TetherID), // replace null with typeof(TetherID) if applicable
-IconIDType = typeof(IconID), // replace null with typeof(IconID) if applicable
-PrimaryActorOID = (uint)OID.Necrophobia,
-Contributors = "gynorhino",
-Expansion = BossModuleInfo.Expansion.Dawntrail,
-Category = BossModuleInfo.Category.Foray,
-GroupType = BossModuleInfo.GroupType.TheForkedTowerMagic,
-GroupID = 1114u,
-NameID = 14503u,
-SortOrder = 3,
-PlanLevel = 100)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.Necrophobia, Contributors = "gynorhino",
+    Category = BossModuleInfo.Category.Foray, GroupType = BossModuleInfo.GroupType.TheForkedTowerMagicExtreme,
+    GroupID = 1114u, NameID = 14503u, SortOrder = 3, PlanLevel = 100)]
 [SkipLocalsInit]
 public sealed class FTME3Necrophobia(WorldState ws, Actor primary) : BossModule(ws, primary, new(100f, 800f), new ArenaBoundsCircle(24f))
 {

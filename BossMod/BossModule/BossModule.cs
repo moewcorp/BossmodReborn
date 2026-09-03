@@ -5,7 +5,6 @@ namespace BossMod;
 
 // base for boss modules - provides all the common features, so that look is standardized
 // by default, module activates (transitions to phase 0) whenever "primary" actor becomes both targetable and in combat (this is how we detect 'pull') - though this can be overridden if needed
-[SkipLocalsInit]
 public abstract class BossModule : IDisposable
 {
     public readonly WorldState WorldState;
@@ -104,7 +103,10 @@ public abstract class BossModule : IDisposable
             ReportError(null, $"State {StateMachine.ActiveState?.ID:X}: Activating a component of type {typeof(T)} when another of the same type is already active; old one is deactivated automatically");
             DeactivateComponent<T>();
         }
-        var comp = New<T>.Create(this);
+        if (!GeneratedRegistries.TryCreateBossComponent<T>(this, out var comp))
+        {
+            throw new InvalidOperationException($"Boss component {typeof(T).FullName} was not registered by BossMod.SourceGen");
+        }
         Components.Add(comp);
 
         // execute callbacks for existing state
@@ -180,7 +182,7 @@ public abstract class BossModule : IDisposable
         Arena = new(center, bounds);
         OnlyLoadIfTargetable = onlyLoadIfTargetable;
         Info = BossModuleRegistry.FindByOID(primary.OID);
-        StateMachine = Info != null ? ((StateMachineBuilder)Activator.CreateInstance(Info.StatesType, this)!).Build() : new([]);
+        StateMachine = Info?.StateMachineFactory(this) ?? new([]);
 
         _subscriptions = new
         (

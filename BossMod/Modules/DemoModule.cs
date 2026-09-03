@@ -2,7 +2,7 @@
 
 public sealed class DemoModule : BossModule
 {
-    private sealed class DemoComponent(BossModule module) : BossComponent(module)
+    internal sealed class DemoComponent(BossModule module) : BossComponent(module)
     {
         public override void AddHints(int slot, Actor actor, TextHints hints)
         {

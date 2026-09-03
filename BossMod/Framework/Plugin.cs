@@ -11,6 +11,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 
+[module: SkipLocalsInit]
 namespace BossMod;
 
 public sealed class Plugin : IAsyncDalamudPlugin
@@ -261,15 +262,15 @@ public sealed class Plugin : IAsyncDalamudPlugin
     {
         var defaultConfig = ColorConfig.DefaultConfig;
         var currentConfig = Service.Config.Get<ColorConfig>();
-        var fields = typeof(ColorConfig).GetFields(BindingFlags.Public | BindingFlags.Instance);
-
-        for (var i = 0; i < fields.Length; ++i)
+        var fields = GeneratedConfigMetadata.Get<ColorConfig>().Fields;
+        var len = fields.Length;
+        for (var i = 0; i < len; ++i)
         {
-            ref var field = ref fields[i];
-            var value = field.GetValue(defaultConfig);
+            var field = fields[i];
+            var value = field.Getter(defaultConfig);
             if (value is Color or Color[])
             {
-                field.SetValue(currentConfig, value);
+                field.Setter(currentConfig, value);
             }
         }
 

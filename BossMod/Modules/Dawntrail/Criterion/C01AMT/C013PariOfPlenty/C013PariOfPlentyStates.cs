@@ -1,9 +1,9 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C013PariOfPlenty;
 
 [SkipLocalsInit]
-sealed class PariOfPlentyStates : StateMachineBuilder
+sealed class C013PariOfPlentyStates : StateMachineBuilder
 {
-    public PariOfPlentyStates(BossModule module) : base(module)
+    public C013PariOfPlentyStates(BossModule module) : base(module)
     {
         DeathPhase(default, SinglePhase);
     }

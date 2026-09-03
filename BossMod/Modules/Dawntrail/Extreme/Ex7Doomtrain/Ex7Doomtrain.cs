@@ -12,13 +12,6 @@ sealed class ElectrayShort(BossModule module) : Components.SimpleAOEs(module, (u
 sealed class LightningBurst(BossModule module) : Components.BaitAwayIcon(module, 5f, (uint)IconID.LightningBurst, (uint)AID.LightningBurst, 5.6f, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP,
-StatesType = typeof(Ex7DoomtrainStates),
-ConfigType = null, // replace null with typeof(DoomtrainConfig) if applicable
-ObjectIDType = typeof(OID),
-ActionIDType = typeof(AID),
-StatusIDType = typeof(SID),
-TetherIDType = null,
-IconIDType = typeof(IconID),
 PrimaryActorOID = (uint)OID.Doomtrain,
 Contributors = "Malediktus, Xaenalt",
 Expansion = BossModuleInfo.Expansion.Dawntrail,

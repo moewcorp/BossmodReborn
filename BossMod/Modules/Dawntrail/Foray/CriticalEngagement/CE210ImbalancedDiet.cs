@@ -118,23 +118,7 @@ sealed class CE210ImbalancedDietStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified,
-    StatesType = typeof(CE210ImbalancedDietStates),
-    ConfigType = null, // replace null with typeof(ImbalancedDietConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID), // replace null with typeof(AID) if applicable
-    StatusIDType = null, // replace null with typeof(SID) if applicable
-    TetherIDType = null, // replace null with typeof(TetherID) if applicable
-    IconIDType = null, // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.Algol,
-    Contributors = "Gynorhino",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.CriticalEngagement,
-    GroupID = 1093u,
-    NameID = 54u,
-    SortOrder = 6,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.Algol, Contributors = "Gynorhino", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1093u, NameID = 54u)]
 [SkipLocalsInit]
 public sealed class CE210ImbalancedDiet(WorldState ws, Actor primary) : BossModule(ws, primary, new WPos(765f, 0f).Quantized(), new ArenaBoundsCircle(24f))
 {

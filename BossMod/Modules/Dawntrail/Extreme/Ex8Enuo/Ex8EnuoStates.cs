@@ -1,4 +1,4 @@
-﻿namespace BossMod.Modules.Dawntrail.Extreme.Ex8Enuo;
+﻿namespace BossMod.Dawntrail.Extreme.Ex8Enuo;
 
 [SkipLocalsInit]
 
@@ -82,7 +82,6 @@ sealed class Ex8EnuoStates : StateMachineBuilder
         DimensionZero(id + 0x22, 7f); //? timing unknown
         Meteorain(id + 0x23, 7f); //? timing unknown
         Meteorain(id + 0x24, 7f); //? timing unknown
-
     }
 
     private void Meteorain(uint id, float delay)

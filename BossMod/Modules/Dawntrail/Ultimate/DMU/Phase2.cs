@@ -547,12 +547,12 @@ sealed class ForsakenBaitsCone(BossModule module) : Components.GenericBaitAway(m
     }
 }
 
-sealed class ForsakenBaitsBossClones(BossModule module) : Components.UniformStackSpread(module, 5f, 5f)
+sealed class ForsakenBaitsBossClones(DMU module) : Components.UniformStackSpread(module, 5f, 5f)
 {
     private readonly List<Actor> clones = []; // Also includes the boss since he will cast the same spell
     private readonly List<Actor> baiters = []; // List of players currently baiting - prevents dupes
     private readonly List<Actor> _clones = module.Enemies((uint)OID.P2KefkaHelpers);
-    private readonly Actor bossP2 = ((DMU)module).BossP2()!;
+    private readonly Actor bossP2 = module.BossP2()!;
     private int NumCasts = 0;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
@@ -1097,7 +1097,7 @@ sealed class WingsOfDestructionTB(BossModule module) : Components.GenericBaitAwa
     }
 }
 
-sealed class Trine(BossModule module) : Components.GenericAOEs(module, (uint)AID.Trine)
+sealed class Trine(DMU module) : Components.GenericAOEs(module, (uint)AID.Trine)
 {
     private readonly List<AOEInstance> aoes = [];
     private readonly List<Actor> triangles = [];
@@ -1105,7 +1105,7 @@ sealed class Trine(BossModule module) : Components.GenericAOEs(module, (uint)AID
     private const float halfradius = 5.77350269189626f * 0.5f;
     private readonly AOEShapeCircle circle = new(6f);
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
-    private readonly Actor bossP2 = ((DMU)module).BossP2()!;
+    private readonly Actor bossP2 = module.BossP2()!;
 
     public override void OnActorCreated(Actor actor)
     {

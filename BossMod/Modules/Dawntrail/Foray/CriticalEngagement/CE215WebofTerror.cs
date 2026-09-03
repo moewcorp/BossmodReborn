@@ -322,27 +322,10 @@ sealed class CE215WebofTerrorStates : StateMachineBuilder
             .ActivateOnEnter<Conformity>()
             .ActivateOnEnter<ConformityAdds>()
             .ActivateOnEnter<BedrockUplift>();
-            //.ActivateOnEnter<Debug>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed,
-    StatesType = typeof(CE215WebofTerrorStates),
-    ConfigType = null, // replace null with typeof(WebofTerrorConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID),
-    StatusIDType = typeof(SID),
-    TetherIDType = typeof(TetherID),
-    IconIDType = null, // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.CrescentArachne,
-    Contributors = "gynorhino",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.CriticalEngagement,
-    GroupID = 1093u,
-    NameID = 55u,
-    SortOrder = 7,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.CrescentArachne, Contributors = "gynorhino", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1093u, NameID = 55u)]
 [SkipLocalsInit]
 public sealed class CE215WebofTerror(WorldState ws, Actor primary) : BossModule(ws, primary, new(170f, -136f), new ArenaBoundsCircle(20f))
 {

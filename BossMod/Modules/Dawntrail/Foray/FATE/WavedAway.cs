@@ -181,23 +181,8 @@ sealed class WavedAwayStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed,
-    StatesType = typeof(WavedAwayStates),
-    ConfigType = null, // replace null with typeof(ArchKelpieConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID), // replace null with typeof(AID) if applicable
-    StatusIDType = null, // replace null with typeof(SID) if applicable
-    TetherIDType = null, // replace null with typeof(TetherID) if applicable
-    IconIDType = null, // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.ArchKelpie,
-    Contributors = "Equilius",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.ForayFATE,
-    GroupID = 1093u,
-    NameID = 2077u,
-    SortOrder = 6,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.ArchKelpie, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.ForayFATE,
+    GroupID = 1093u, NameID = 2077u, SortOrder = 6)]
 [SkipLocalsInit]
 public sealed class WavedAway : OpenWorldFate
 {

@@ -1,6 +1,5 @@
 namespace BossMod;
 
-[SkipLocalsInit]
 public abstract class Shape
 {
     public const float MaxApproxError = CurveApprox.ScreenError;
@@ -11,7 +10,6 @@ public abstract class Shape
     public RelSimplifiedComplexPolygon ToPolygon(WPos center) => new((List<RelPolygonWithHoles>)[new(Contour(center))]);
 }
 
-[SkipLocalsInit]
 public sealed class Circle(WPos center, float radius) : Shape
 {
     public WPos Center = center;
@@ -26,7 +24,7 @@ public sealed class Circle(WPos center, float radius) : Shape
 }
 
 // for custom polygons defined by an IReadOnlyList of vertices
-[SkipLocalsInit]
+
 public sealed class PolygonCustom(WPos[] vertices) : Shape
 {
     public readonly WPos[] Vertices = vertices;
@@ -59,7 +57,6 @@ public sealed class PolygonCustom(WPos[] vertices) : Shape
     }
 }
 
-[SkipLocalsInit]
 public sealed class PolygonCustomRel(WDir[] vertices) : Shape
 {
     public readonly WDir[] Vertices = vertices;
@@ -79,7 +76,6 @@ public sealed class PolygonCustomRel(WDir[] vertices) : Shape
     }
 }
 
-[SkipLocalsInit]
 public sealed class Donut(WPos center, float innerRadius, float outerRadius) : Shape
 {
     public WPos Center = center;
@@ -95,7 +91,7 @@ public sealed class Donut(WPos center, float innerRadius, float outerRadius) : S
 }
 
 // for rectangles defined by a center, halfwidth, halfheight and optionally rotation
-[SkipLocalsInit]
+
 public class Rectangle(WPos center, float halfWidth, float halfHeight, Angle rotation = default) : Shape
 {
     public WPos Center = center;
@@ -125,7 +121,7 @@ public class Rectangle(WPos center, float halfWidth, float halfHeight, Angle rot
 }
 
 // for rectangles defined by a start point, end point and halfwidth
-[SkipLocalsInit]
+
 public sealed class RectangleSE(WPos Start, WPos End, float HalfWidth) : Rectangle(
     center: new((Start.X + End.X) * Half, (Start.Z + End.Z) * Half),
     halfWidth: HalfWidth,
@@ -133,10 +129,8 @@ public sealed class RectangleSE(WPos Start, WPos End, float HalfWidth) : Rectang
     rotation: new Angle(MathF.Atan2(End.X - Start.X, End.Z - Start.Z))
 );
 
-[SkipLocalsInit]
 public sealed class Square(WPos Center, float HalfSize, Angle Rotation = default) : Rectangle(Center, HalfSize, HalfSize, Rotation);
 
-[SkipLocalsInit]
 public sealed class Cross(WPos center, float length, float halfWidth, Angle rotation = default) : Shape
 {
     public WPos Center = center;
@@ -178,7 +172,7 @@ public sealed class Cross(WPos center, float length, float halfWidth, Angle rota
 }
 
 // for polygons with edge count number of lines of symmetry, eg. pentagons, hexagons and octagons
-[SkipLocalsInit]
+
 public sealed class Polygon(WPos center, float radius, int edges, Angle rotation = default) : Shape
 {
     public WPos Center = center;
@@ -213,7 +207,7 @@ public sealed class Polygon(WPos center, float radius, int edges, Angle rotation
 }
 
 // for cones defined by radius, start angle and end angle
-[SkipLocalsInit]
+
 public class Cone(WPos center, float radius, Angle startAngle, Angle endAngle) : Shape
 {
     public WPos Center = center;
@@ -230,11 +224,11 @@ public class Cone(WPos center, float radius, Angle startAngle, Angle endAngle) :
 }
 
 // for cones defined by radius, direction and half angle
-[SkipLocalsInit]
+
 public sealed class ConeHA(WPos Center, float Radius, Angle CenterDir, Angle HalfAngle) : Cone(Center, Radius, CenterDir - HalfAngle, CenterDir + HalfAngle);
 
 // for donut segments defined by inner and outer radius, direction, start angle and end angle
-[SkipLocalsInit]
+
 public class DonutSegment(WPos center, float innerRadius, float outerRadius, Angle startAngle, Angle endAngle) : Shape
 {
     public WPos Center = center;
@@ -252,12 +246,12 @@ public class DonutSegment(WPos center, float innerRadius, float outerRadius, Ang
 }
 
 // for donut segments defined by inner and outer radius, direction and half angle
-[SkipLocalsInit]
+
 public sealed class DonutSegmentHA(WPos Center, float InnerRadius, float OuterRadius, Angle CenterDir, Angle HalfAngle) : DonutSegment(Center, InnerRadius, OuterRadius,
 CenterDir - HalfAngle, CenterDir + HalfAngle);
 
 // Approximates a cone with a customizable number of edges for the circle arc - with 1 edge this turns into a triangle, 2 edges result in a parallelogram
-[SkipLocalsInit]
+
 public sealed class ConeV(WPos center, float radius, Angle centerDir, Angle halfAngle, int edges) : Shape
 {
     public WPos Center = center;
@@ -296,7 +290,7 @@ public sealed class ConeV(WPos center, float radius, Angle centerDir, Angle half
 }
 
 // Approximates a donut segment with a customizable number of edges per circle arc
-[SkipLocalsInit]
+
 public sealed class DonutSegmentV(WPos center, float innerRadius, float outerRadius, Angle centerDir, Angle halfAngle, int edges) : Shape
 {
     public WPos Center = center;
@@ -338,7 +332,7 @@ public sealed class DonutSegmentV(WPos center, float innerRadius, float outerRad
 }
 
 // Approximates a donut with a customizable number of edges per circle arc
-[SkipLocalsInit]
+
 public sealed class DonutV(WPos center, float innerRadius, float outerRadius, int edges, Angle rotation = default) : Shape
 {
     public WPos Center = center;
@@ -381,7 +375,7 @@ public sealed class DonutV(WPos center, float innerRadius, float outerRadius, in
 }
 
 // Approximates an ellipse with a customizable number of edges
-[SkipLocalsInit]
+
 public sealed class Ellipse(WPos center, float halfWidth, float halfHeight, int edges, Angle rotation = default) : Shape
 {
     public WPos Center = center;
@@ -419,7 +413,7 @@ public sealed class Ellipse(WPos center, float halfWidth, float halfHeight, int 
 
 // Capsule shape defined by center, halfheight, halfwidth (radius), rotation, and number of edges. in this case the halfheight is the distance from capsule center to semicircle centers,
 // the edges are per semicircle
-[SkipLocalsInit]
+
 public sealed class Capsule(WPos center, float halfHeight, float halfWidth, int edges, Angle rotation = default) : Shape
 {
     public WPos Center = center;
