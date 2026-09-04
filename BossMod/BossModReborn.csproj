@@ -97,6 +97,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BossMod.SourceGen\BossMod.SourceGen.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="DefaultRotationPresets.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

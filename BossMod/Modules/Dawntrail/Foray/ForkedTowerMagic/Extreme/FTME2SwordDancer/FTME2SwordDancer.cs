@@ -55,23 +55,9 @@ sealed class SwordDance(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
-    StatesType = typeof(FTME2SwordDancerStates),
-    ConfigType = null, // replace null with typeof(FTME2SwordDancerConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID), // replace null with typeof(AID) if applicable
-    StatusIDType = typeof(SID), // replace null with typeof(SID) if applicable
-    TetherIDType = typeof(TetherID), // replace null with typeof(TetherID) if applicable
-    IconIDType = null, // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.SwordDancer,
-    Contributors = "gynorhino",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.TheForkedTowerMagic,
-    GroupID = 1114u,
-    NameID = 14820u,
-    SortOrder = 2,
-    PlanLevel = 100)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.SwordDancer, Contributors = "gynorhino",
+    Category = BossModuleInfo.Category.Foray, GroupType = BossModuleInfo.GroupType.TheForkedTowerMagicExtreme, GroupID = 1114u,
+    NameID = 14820u, SortOrder = 2, PlanLevel = 100)]
 [SkipLocalsInit]
 public sealed class FTME2SwordDancer(WorldState ws, Actor primary) : BossModule(ws, primary, new(600f, 704f), new ArenaBoundsCircle(24f))
 {

@@ -393,23 +393,7 @@ sealed class CE201ABeastUnleashedStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified,
-    StatesType = typeof(CE201ABeastUnleashedStates),
-    ConfigType = null, // replace null with typeof(ABeastUnleashedConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID),
-    StatusIDType = null, // replace null with typeof(SID) if applicable
-    TetherIDType = null, // replace null with typeof(TetherID) if applicable
-    IconIDType = null, // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.AtlasCarbuncle,
-    Contributors = "gynorhino",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.CriticalEngagement,
-    GroupID = 1093u,
-    NameID = 56u,
-    SortOrder = 8,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.AtlasCarbuncle, Contributors = "gynorhino", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1093u, NameID = 56u)]
 [SkipLocalsInit]
 public sealed class CE201ABeastUnleashed(WorldState ws, Actor primary) : BossModule(ws, primary, new(238f, 352f), new ArenaBoundsSquare(20f))
 {

@@ -195,23 +195,7 @@ sealed class CE212ManyMouthstoFeedStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed,
-    StatesType = typeof(CE212ManyMouthstoFeedStates),
-    ConfigType = null, // replace null with typeof(ManyMouthstoFeedConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID), // replace null with typeof(AID) if applicable
-    StatusIDType = null, // replace null with typeof(SID) if applicable
-    TetherIDType = null, // replace null with typeof(TetherID) if applicable
-    IconIDType = null, // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.Pelekys,
-    Contributors = "gynorhino",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.CriticalEngagement,
-    GroupID = 1093u,
-    NameID = 49u,
-    SortOrder = 1,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.Pelekys, Contributors = "gynorhino", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1093u, NameID = 49u)]
 [SkipLocalsInit]
 public sealed class CE212ManyMouthstoFeed(WorldState ws, Actor primary) : BossModule(ws, primary, new(-870f, -560f), new ArenaBoundsCircle(25f))
 {

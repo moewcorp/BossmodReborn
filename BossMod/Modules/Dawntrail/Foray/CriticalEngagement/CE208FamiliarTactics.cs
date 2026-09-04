@@ -30,15 +30,15 @@ public enum AID : uint
 [SkipLocalsInit]
 sealed class AncientAeroIII(BossModule module) : Components.RaidwideCast(module, (uint)AID.AncientAeroIII);
 [SkipLocalsInit]
-sealed class SpinningSweep(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpinningSweep, new AOEShapeCone(40.0f, 60.0f.Degrees()));
+sealed class SpinningSweep(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SpinningSweep, new AOEShapeCone(40f, 60f.Degrees()));
 [SkipLocalsInit]
-sealed class InspiritedCrosswinds(BossModule module) : Components.SimpleAOEs(module, (uint)AID.InspiritedCrosswinds, new AOEShapeCross(60.0f, 4.0f));
+sealed class InspiritedCrosswinds(BossModule module) : Components.SimpleAOEs(module, (uint)AID.InspiritedCrosswinds, new AOEShapeCross(60f, 4f));
 [SkipLocalsInit]
-sealed class InspiritedHurricaneCross(BossModule module) : Components.SimpleAOEs(module, (uint)AID.InspiritedHurricaneCross, new AOEShapeCross(60.0f, 5.0f));
+sealed class InspiritedHurricaneCross(BossModule module) : Components.SimpleAOEs(module, (uint)AID.InspiritedHurricaneCross, new AOEShapeCross(60f, 5f));
 [SkipLocalsInit]
 sealed class InspiritedHurricaneCircleCyclone(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.InspiritedHurricaneCircle, (uint)AID.InspiritedCyclone], 12f);
 [SkipLocalsInit]
-sealed class AncientAero(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AncientAero, new AOEShapeRect(70.0f, 3.0f));
+sealed class AncientAero(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AncientAero, new AOEShapeRect(70f, 3f));
 
 [SkipLocalsInit]
 sealed class UnbowedSpirit(BossModule module) : Components.GenericAOEs(module)
@@ -128,23 +128,7 @@ sealed class CE208FamiliarTacticsStates : StateMachineBuilder
 }
 
 //TODO: Needs extended moving AOE support- once implemented can be moved to Verified after testing
-[ModuleInfo(BossModuleInfo.Maturity.Contributed,
-    StatesType = typeof(CE208FamiliarTacticsStates),
-    ConfigType = null, // replace null with typeof(ElmGigasConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID),
-    StatusIDType = null, // replace null with typeof(SID) if applicable
-    TetherIDType = null, // replace null with typeof(TetherID) if applicable
-    IconIDType = null, // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.ElmGigas,
-    Contributors = "Equilius",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.CriticalEngagement,
-    GroupID = 1093u,
-    NameID = 58u,
-    SortOrder = 10,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.ElmGigas, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1093u, NameID = 58u)]
 [SkipLocalsInit]
 public sealed class CE208FamiliarTactics : BossModule
 {

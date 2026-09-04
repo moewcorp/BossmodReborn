@@ -39,7 +39,7 @@ public static class UIStrategyValue
             StrategyTarget.PartyByAssignment => ((PartyRolesConfig.Assignment)value.TargetParam).ToString(),
             StrategyTarget.PartyWithLowestHP => PreviewParam((StrategyPartyFiltering)value.TargetParam),
             StrategyTarget.EnemyWithHighestPriority => $"{(StrategyEnemySelection)value.TargetParam}",
-            StrategyTarget.EnemyByOID => $"{(moduleInfo?.ObjectIDType != null ? Enum.ToObject(moduleInfo.ObjectIDType, (uint)value.TargetParam).ToString() : "???")} (0x{value.TargetParam:X})",
+            StrategyTarget.EnemyByOID => $"{(moduleInfo?.ObjectIDType != null ? GeneratedEnumMetadata.ValueByRaw(moduleInfo.ObjectIDType, (uint)value.TargetParam).ToString() : "???")} (0x{value.TargetParam:X})",
             StrategyTarget.PointWaymark => $"{(Waymark)value.TargetParam}",
             _ => ""
         };
@@ -186,7 +186,7 @@ public static class UIStrategyValue
             case StrategyTarget.EnemyByOID:
                 if (moduleInfo?.ObjectIDType != null)
                 {
-                    var v = (Enum)Enum.ToObject(moduleInfo.ObjectIDType, (uint)value.TargetParam);
+                    var v = GeneratedEnumMetadata.ValueByRaw(moduleInfo.ObjectIDType, (uint)value.TargetParam);
                     if (UICombo.Enum("OID", ref v))
                     {
                         value.TargetParam = (int)(uint)(object)v;
@@ -288,7 +288,7 @@ public class RendererFactory
         return inst.DrawValue(context, config, ref value);
     }
 
-    private IStrategyRenderer Get(Type t) => _dict.TryGetValue(t, out var r) ? r : (_dict[t] = (IStrategyRenderer)Activator.CreateInstance(t)!);
+    private IStrategyRenderer Get(Type t) => _dict.TryGetValue(t, out var r) ? r : (_dict[t] = GeneratedFactories.CreateStrategyRenderer(t));
 }
 
 public interface IStrategyRenderer
@@ -315,7 +315,7 @@ public class TrackRenderer : IStrategyRenderer
     {
         string print(int ix) => config.Options[ix].DisplayName.Length > 0
             ? config.Options[ix].DisplayName
-            : UICombo.EnumString((Enum)config.OptionEnum.GetEnumValues().GetValue(ix)!);
+            : UICombo.EnumString((Enum)GeneratedEnumMetadata.Values(config.OptionEnum).GetValue(ix)!);
         bool filter(int ix) => (config.Options[ix].Context & context) != StrategyContext.None;
 
         return UICombo.EnumIndex(

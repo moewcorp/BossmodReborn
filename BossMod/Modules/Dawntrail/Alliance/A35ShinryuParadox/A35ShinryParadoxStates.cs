@@ -114,7 +114,7 @@ sealed class A35ShinryuParadoxStates : StateMachineBuilder
     {
         ActorTargetable(id, _module.BossP2M, true, delay, "Boss reappears")
             .DeactivateOnEnter<FloorAOEs>()
-            .DeactivateOnEnter<P2ArenaChange>()
+            .DeactivateOnExit<P2ArenaChange>()
             .DeactivateOnEnter<StarflareP1>()
             .SetHint(StateMachine.StateHint.DowntimeEnd);
 

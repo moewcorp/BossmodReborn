@@ -9,7 +9,6 @@ namespace BossMod;
 //                       rotation 0 corresponds to South, and increases counterclockwise (so East is +pi/2, North is pi, West is -pi/2)
 // - camera azimuth 0 correpsonds to camera looking North and increases counterclockwise
 // - screen coordinates - X points left to right, Y points top to bottom
-[SkipLocalsInit]
 public sealed class MiniArena(WPos center, ArenaBounds bounds)
 {
     // shapes drawn as filled danger zones on the mini-map this frame; collected for external

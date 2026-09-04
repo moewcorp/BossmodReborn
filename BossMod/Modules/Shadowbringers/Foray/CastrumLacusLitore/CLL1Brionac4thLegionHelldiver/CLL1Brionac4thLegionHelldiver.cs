@@ -145,17 +145,15 @@ sealed class DetermineArena(BossModule module) : BossComponent(module)
     }
 }
 
-sealed class BossHealths(BossModule module) : BossComponent(module)
+sealed class BossHealths(CLL1Brionac4thLegionHelldiver module) : BossComponent(module)
 {
-    private readonly Actor BossHelldiver = ((CLL1Brionac4thLegionHelldiver)module).BossHellDiver!;
-
     public override void AddGlobalHints(GlobalHints hints)
     {
-        hints.Add($"Top: {Module.PrimaryActor.HPRatio * 100f:f1}%, Bottom: {BossHelldiver.HPRatio * 100f:f1}%");
+        hints.Add($"Top: {Module.PrimaryActor.HPRatio * 100f:f1}%, Bottom: {module.BossHellDiver?.HPRatio * 100f:f1}%");
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CastrumLacusLitore, GroupID = 735, NameID = 9436)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "The Combat Reborn Team (Malediktus)", GroupType = BossModuleInfo.GroupType.CastrumLacusLitore, GroupID = 735u, NameID = 9436u)]
 public sealed class CLL1Brionac4thLegionHelldiver : BossModule
 {
     public CLL1Brionac4thLegionHelldiver(WorldState ws, Actor primary) : base(ws, primary, ArenaCenterBottom, ArenaBottom)

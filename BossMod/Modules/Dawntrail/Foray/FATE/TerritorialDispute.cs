@@ -47,17 +47,8 @@ sealed class TerritorialDisputeStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed,
-    StatesType = typeof(TerritorialDisputeStates),
-    ConfigType = null, // replace null with typeof(RuinHoundConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID), // replace null with typeof(AID) if applicable
-    StatusIDType = null, // replace null with typeof(SID) if applicable
-    TetherIDType = null, // replace null with typeof(TetherID) if applicable
-    IconIDType = null, // replace null with typeof(IconID) if applicable
     PrimaryActorOID = (uint)OID.RuinHound,
     Contributors = "Equilius",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
     GroupType = BossModuleInfo.GroupType.ForayFATE,
     GroupID = 1093u,
     NameID = 2080u,

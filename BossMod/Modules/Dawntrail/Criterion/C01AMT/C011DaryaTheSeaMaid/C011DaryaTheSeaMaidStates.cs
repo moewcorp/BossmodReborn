@@ -1,9 +1,9 @@
 ﻿namespace BossMod.Dawntrail.Criterion.C01AMT.C011DaryaTheSeaMaid;
 
 [SkipLocalsInit]
-sealed class DaryaTheSeaMaidStates : StateMachineBuilder
+sealed class C011DaryaTheSeaMaidStates : StateMachineBuilder
 {
-    public DaryaTheSeaMaidStates(BossModule module) : base(module)
+    public C011DaryaTheSeaMaidStates(BossModule module) : base(module)
     {
         DeathPhase(default, SinglePhase);
     }

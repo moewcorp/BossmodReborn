@@ -37,13 +37,13 @@ public sealed class ModuleViewer : IDisposable
         _ws = ws;
 
         const uint defaultIcon = 61762u;
-        var expansionNames = Enum.GetNames<BossModuleInfo.Expansion>();
+        var expansionNames = GeneratedEnumMetadata.Names<BossModuleInfo.Expansion>();
         for (var i = 0; i < (int)BossModuleInfo.Expansion.Count; ++i)
         {
             _expansions[i] = (expansionNames[i], defaultIcon);
         }
 
-        var categoryNames = Enum.GetNames<BossModuleInfo.Category>();
+        var categoryNames = GeneratedEnumMetadata.Names<BossModuleInfo.Category>();
         for (var i = 0; i < (int)BossModuleInfo.Category.Count; ++i)
         {
             _categories[i] = (categoryNames[i], defaultIcon);
@@ -387,8 +387,10 @@ public sealed class ModuleViewer : IDisposable
                 return (new("The Dalriada", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.TheForkedTowerBlood:
                 return (new("The Forked Tower: Blood", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
-            case BossModuleInfo.GroupType.TheForkedTowerMagic:
-                return (new("The Forked Tower: Magic", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
+            case BossModuleInfo.GroupType.TheForkedTowerMagicNormal:
+                return (new("The Forked Tower: Magic (Normal)", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
+            case BossModuleInfo.GroupType.TheForkedTowerMagicExtreme:
+                return (new("The Forked Tower: Magic (Extreme)", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.ForayFATE:
                 groupId |= module.GroupID;
                 var fateRowBozjaSkirmish = Service.LuminaRow<Fate>(module.NameID)!.Value;

@@ -137,23 +137,7 @@ sealed class CE207DoubleTroubleStates : StateMachineBuilder
 }
 
 //TODO: Add AI Hint to move closer to the middle of the cleaves to make dodging easier- can be marked as verified after implemented
-[ModuleInfo(BossModuleInfo.Maturity.Verified,
-    StatesType = typeof(CE207DoubleTroubleStates),
-    ConfigType = null, // replace null with typeof(ConjuredCalofisteriConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID),
-    StatusIDType = typeof(SID),
-    TetherIDType = null, // replace null with typeof(TetherID) if applicable
-    IconIDType = null, // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.ConjuredCalofisteri,
-    Contributors = "Equilius",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.CriticalEngagement,
-    GroupID = 1093u,
-    NameID = 50u,
-    SortOrder = 2,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Verified, PrimaryActorOID = (uint)OID.ConjuredCalofisteri, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1093u, NameID = 50u)]
 [SkipLocalsInit]
 public sealed class CE207DoubleTrouble : BossModule
 {

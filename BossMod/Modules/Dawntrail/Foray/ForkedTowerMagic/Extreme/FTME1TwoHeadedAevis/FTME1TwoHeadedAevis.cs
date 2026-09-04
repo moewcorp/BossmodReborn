@@ -201,23 +201,8 @@ sealed class ArcaneRevelation(BossModule module) : Components.GenericAOEs(module
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
-    StatesType = typeof(FTME1TwoHeadedAevisStates),
-    ConfigType = null, // replace null with typeof(FTME1TwoHeadedAevisConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID),
-    StatusIDType = typeof(SID),
-    TetherIDType = typeof(TetherID),
-    IconIDType = typeof(IconID),
-    PrimaryActorOID = (uint)OID.TwoHeadedAevis,
-    Contributors = "gynorhino",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.TheForkedTowerMagic,
-    GroupID = 1114u,
-    NameID = 14490u,
-    SortOrder = 1,
-    PlanLevel = 100)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.TwoHeadedAevis, Contributors = "gynorhino", Category = BossModuleInfo.Category.Foray,
+    GroupType = BossModuleInfo.GroupType.TheForkedTowerMagicExtreme, GroupID = 1114u, NameID = 14490u, SortOrder = 1, PlanLevel = 100)]
 [SkipLocalsInit]
 public sealed class FTME1TwoHeadedAevis(WorldState ws, Actor primary) : BossModule(ws, primary, new(-900f, 700f), new ArenaBoundsSquare(20f))
 {

@@ -1,7 +1,6 @@
 namespace BossMod;
 
 // information relevant for AI decision making process for a specific player
-[SkipLocalsInit]
 public sealed class AIHints
 {
     public class Enemy(Actor actor, int priority, bool shouldBeTanked)

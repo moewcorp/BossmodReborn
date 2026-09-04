@@ -1,4 +1,4 @@
-﻿namespace BossMod.Modules.Dawntrail.Extreme.Ex8Enuo;
+﻿namespace BossMod.Dawntrail.Extreme.Ex8Enuo;
 
 sealed class GazeOfTheVoidAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GazeOfTheVoid2, new AOEShapeCone(40f, 22.5f.Degrees()), 7); // This is the easy part!
 

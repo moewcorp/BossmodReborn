@@ -38,22 +38,6 @@ class KindleFlameStackIcon(BossModule module) : Components.StackTogether(module,
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
-    StatesType = typeof(PariOfPlentyStates),
-    ConfigType = null, // replace null with typeof(PariOfPlentyConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID),
-    StatusIDType = typeof(SID),
-    TetherIDType = typeof(TetherID),
-    IconIDType = typeof(IconID),
-    PrimaryActorOID = (uint)OID.PariOfPlenty,
-    Contributors = "Equilius",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.VariantCriterion,
-    GroupType = BossModuleInfo.GroupType.CFC,
-    GroupID = 1079u,
-    NameID = 14274u,
-    SortOrder = 3,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.PariOfPlenty, Contributors = "Equilius", Category = BossModuleInfo.Category.VariantCriterion, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1079u, NameID = 14274u)]
 [SkipLocalsInit]
-public sealed class PariOfPlenty(WorldState ws, Actor primary) : BossModule(ws, primary, new(-760f, -805f), new ArenaBoundsSquare(20f));
+public sealed class C013PariOfPlenty(WorldState ws, Actor primary) : BossModule(ws, primary, new(-760f, -805f), new ArenaBoundsSquare(20f));

@@ -2,7 +2,6 @@
 
 namespace BossMod;
 
-[SkipLocalsInit]
 public sealed class BossModuleHintsWindow : UIWindow
 {
     private readonly BossModuleManager _mgr;

@@ -310,23 +310,7 @@ sealed class CE211LostontheWindStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed,
-    StatesType = typeof(CE211LostontheWindStates),
-    ConfigType = null, // replace null with typeof(LostontheWindConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID),
-    StatusIDType = null, // replace null with typeof(SID) if applicable
-    TetherIDType = null, // replace null with typeof(TetherID) if applicable
-    IconIDType = null, // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.Abductor,
-    Contributors = "Equilius",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.CriticalEngagement,
-    GroupID = 1093u,
-    NameID = 61u,
-    SortOrder = 13,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.Abductor, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CriticalEngagement, GroupID = 1093u, NameID = 61u)]
 [SkipLocalsInit]
 public sealed class CE211LostontheWind(WorldState ws, Actor primary) : BossModule(ws, primary, new WPos(-150f, -860f).Quantized(), new ArenaBoundsCircle(24f))
 {

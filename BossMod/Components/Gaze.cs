@@ -1,7 +1,6 @@
 namespace BossMod.Components;
 
 // generic gaze/weakpoint component, allows customized 'eye' position
-[SkipLocalsInit]
 public abstract class GenericGaze(BossModule module, uint aid = default) : CastCounter(module, aid)
 {
     public readonly struct Eye(
@@ -136,7 +135,6 @@ public abstract class GenericGaze(BossModule module, uint aid = default) : CastC
 }
 
 // gaze that happens on cast end
-[SkipLocalsInit]
 public class CastGaze(BossModule module, uint aid, bool inverted = false, float range = 10000f, int maxCasts = int.MaxValue, float[]? arenaProjectionLayers = null, bool restrictToArenaProjectionLayer = true) : GenericGaze(module, aid)
 {
     public readonly List<Eye> Eyes = [];
@@ -187,7 +185,6 @@ public class CastGaze(BossModule module, uint aid, bool inverted = false, float 
     }
 }
 
-[SkipLocalsInit]
 public class CastGazes(BossModule module, uint[] aids, bool inverted = false, float range = 10000f, int maxCasts = int.MaxValue, int expectedNumCasters = 99, float[]? arenaProjectionLayers = null, bool restrictToArenaProjectionLayer = true)
     : CastGaze(module, default, maxCasts: maxCasts, arenaProjectionLayers: arenaProjectionLayers, restrictToArenaProjectionLayer: restrictToArenaProjectionLayer)
 {
@@ -246,7 +243,6 @@ public class CastGazes(BossModule module, uint[] aids, bool inverted = false, fl
 }
 
 // cast weakpoint component: a number of casts (with supposedly non-intersecting shapes), player should face specific side determined by active status to the caster for aoe he's in
-[SkipLocalsInit]
 public class CastWeakpoint(BossModule module, uint aid, AOEShape shape, uint statusForward, uint statusBackward, uint statusLeft, uint statusRight,
     int? arenaProjectionLayer = null, bool restrictToArenaProjectionLayer = false) : GenericGaze(module, aid)
 {

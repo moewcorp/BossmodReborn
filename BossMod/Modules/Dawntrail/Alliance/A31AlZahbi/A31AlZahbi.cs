@@ -147,19 +147,7 @@ sealed class A31AlZahbiStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed,
-    StatesType = typeof(A31AlZahbiStates),
-    ConfigType = null,
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID),
-    Contributors = "Xan, ported by wen",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Alliance,
-    GroupType = BossModuleInfo.GroupType.CFC,
-    GroupID = 1117u,
-    NameID = 14834u,
-    SortOrder = 2,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, Contributors = "Xan, ported by wen", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1117u, NameID = 14834u)]
 
 /*
  * This one is different because there isn't one mob exactly that is the boss.  To get around this

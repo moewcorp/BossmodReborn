@@ -1,7 +1,6 @@
 ﻿namespace BossMod.Components;
 
 // generic 'concentric aoes' component - a sequence of aoes (typically cone then donuts) with same origin and increasing size
-[SkipLocalsInit]
 public class ConcentricAOEs(BossModule module, AOEShape[] shapes, bool showall = false, double riskyWithSecondsLeft = default) : GenericAOEs(module)
 {
     public struct Sequence

@@ -1144,10 +1144,11 @@ sealed class P3BlizzardBaits(BossModule module) : Components.SimpleAOEs(module, 
     }
 }
 
-sealed class P3Blizzard(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true, onlyShowOutlines: true)
+sealed class P3Blizzard(DMU module) : Components.GenericBaitAway(module, centerAtTarget: true, onlyShowOutlines: true)
 {
     private Actor? boss = null;
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
+    private readonly Actor kefkaBoss = module.BossP3()!;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
@@ -1188,12 +1189,6 @@ sealed class P3Blizzard(BossModule module) : Components.GenericBaitAway(module, 
 
         if (NumCasts >= 16)
         { // TODO remove this when adding hints array
-            return;
-        }
-
-        var kefkaBoss = ((DMU)Module).BossP3();
-        if (kefkaBoss == null)
-        {
             return;
         }
 

@@ -1,6 +1,5 @@
 ﻿namespace BossMod.Dawntrail.Foray.ForkedTowerMagic.Extreme.FTME4Index;
 
-[SkipLocalsInit]
 sealed class ArenaChange(BossModule module) : BossComponent(module)
 {
     public override void OnMapEffect(byte index, uint state)
@@ -9,19 +8,21 @@ sealed class ArenaChange(BossModule module) : BossComponent(module)
         {
             switch (state)
             {
-                case 0x00020001:
-                    Arena.Bounds = FTME4Index.OmniElementsBounds;
-                    Arena.Center = FTME4Index.OmniElementsCenter;
+                case 0x00020001u:
+                    var arenaFull = Normal.FTMN4Index.FTMN4Index.BuildFullArena();
+                    Arena.Bounds = arenaFull.arena;
+                    Arena.Center = arenaFull.center;
                     break;
-                case 0x00080004:
-                    Arena.Bounds = FTME4Index.InitialBounds;
-                    Arena.Center = FTME4Index.InitialCenter;
+                case 0x00080004u:
+                    var arenaInitial = Normal.FTMN4Index.FTMN4Index.BuildInitialArena();
+                    Arena.Bounds = arenaInitial.arena;
+                    Arena.Center = arenaInitial.center;
                     break;
             }
         }
     }
 }
-[SkipLocalsInit]
+
 sealed class OmniElementPanels(BossModule module) : BossComponent(module)
 {
     // spawns elemental panels with rotation 0, 60, 120
@@ -65,8 +66,9 @@ sealed class OmniElementPanels(BossModule module) : BossComponent(module)
                 lightning && actor.OID == (uint)OID.OmniElementThunder
                 )
             {
-                sd.Add(new SDCone(FTME4Index.OmniElementsCenter, 30f, rotation, 30f.Degrees()));
-                sd.Add(new SDCone(FTME4Index.OmniElementsCenter, 30f, rotation + 180f.Degrees(), 30f.Degrees()));
+                var center = Arena.Center;
+                sd.Add(new SDCone(center, 30f, rotation, 30f.Degrees()));
+                sd.Add(new SDCone(center, 30f, rotation + 180f.Degrees(), 30f.Degrees()));
             }
         }
 
@@ -99,7 +101,6 @@ sealed class OmniElementPanels(BossModule module) : BossComponent(module)
 #endif
 }
 
-[SkipLocalsInit]
 sealed class AllMightyFlames(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.SpreadTankbuster, (uint)AID.AllMightyFlames, 6f, 5.1f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -113,7 +114,7 @@ sealed class AllMightyFlames(BossModule module) : Components.SpreadFromIcon(modu
         }
     }
 }
-[SkipLocalsInit]
+
 sealed class AllConsumingFlames(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.Spread, (uint)AID.AllConsumingFlames, 6f, 5.1f)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -164,7 +165,7 @@ sealed class AllKnowingFlames(BossModule module) : Components.GenericAOEs(module
         }
     }
 }
-[SkipLocalsInit]
+
 sealed class QuadrilogyOfImplements(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly List<AOEInstance> _aoes = [];
@@ -326,21 +327,21 @@ sealed class QuadrilogyOfImplements(BossModule module) : Components.GenericAOEs(
         hints.Add(string.Join(" -> ", _mechs));
     }
 }
-[SkipLocalsInit]
+
 sealed class RomeosBallad(BossModule module) : Components.SimpleAOEs(module, (uint)AID.RomeosBallad1, 15f)
 {
     private readonly Predict _predict = module.FindComponent<Predict>()!;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _predict.ActiveAOEs(slot, actor).Length != 0 ? [] : base.ActiveAOEs(slot, actor);
 }
-[SkipLocalsInit]
+
 sealed class Aim(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Aim1, 11f)
 {
     private readonly Predict _predict = module.FindComponent<Predict>()!;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _predict.ActiveAOEs(slot, actor).Length != 0 ? [] : base.ActiveAOEs(slot, actor);
 }
-[SkipLocalsInit]
+
 sealed class SealedImplements(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly Predict _predict = module.FindComponent<Predict>()!;
@@ -391,7 +392,7 @@ sealed class SealedImplements(BossModule module) : Components.GenericAOEs(module
     }
 #endif
 }
-[SkipLocalsInit]
+
 sealed class ElementIII(BossModule module) : Components.GenericAOEs(module)
 {
     // 8s between icon appear to resolve
@@ -475,7 +476,7 @@ sealed class ElementIII(BossModule module) : Components.GenericAOEs(module)
         }
     }
 }
-[SkipLocalsInit]
+
 sealed class ElementaryChemistryPlatform(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ElementaryChemistryPlatform, new AOEShapeRect(15f, 7.5f))
 {
     // arena change happens slightly after cast, remoe AOE on arena change
@@ -491,7 +492,7 @@ sealed class ElementaryChemistryPlatform(BossModule module) : Components.SimpleA
         }
     }
 }
-[SkipLocalsInit]
+
 sealed class SummonBombs(BossModule module) : Components.Adds(module, (uint)OID.SummonedBomb)
 {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -503,7 +504,7 @@ sealed class SummonBombs(BossModule module) : Components.Adds(module, (uint)OID.
             var h = hints.PotentialTargets[i];
             if (h.Actor.OID == (uint)OID.SummonedBomb)
             {
-                if (h.Actor.DistanceToPoint(FTME4Index.OmniElementsCenter) <= 13f)
+                if (h.Actor.DistanceToPoint(Arena.Center) <= 13f)
                 {
                     h.Priority = 2;
                 }
@@ -515,7 +516,7 @@ sealed class SummonBombs(BossModule module) : Components.Adds(module, (uint)OID.
         }
     }
 }
-[SkipLocalsInit]
+
 sealed class SummonBirds(BossModule module) : Components.Adds(module, (uint)OID.SummonedBird)
 {
     private readonly SummonBombs _bombs = module.FindComponent<SummonBombs>()!;
@@ -529,7 +530,7 @@ sealed class SummonBirds(BossModule module) : Components.Adds(module, (uint)OID.
         }
     }
 }
-[SkipLocalsInit]
+
 sealed class BladeBlitz(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Bladeblitz, new AOEShapeRect(15f, 4f), riskyWithSecondsLeft: 3d)
 {
     // group by activation time
@@ -574,54 +575,12 @@ sealed class BladeBlitz(BossModule module) : Components.SimpleAOEs(module, (uint
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
-    StatesType = typeof(FTME4IndexStates),
-    ConfigType = null, // replace null with typeof(FTME1TwoHeadedAevisConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID), // replace null with typeof(AID) if applicable
-    StatusIDType = typeof(SID), // replace null with typeof(SID) if applicable
-    TetherIDType = typeof(TetherID), // replace null with typeof(TetherID) if applicable
-    IconIDType = typeof(IconID), // replace null with typeof(IconID) if applicable
-    PrimaryActorOID = (uint)OID.Index,
-    Contributors = "gynorhino",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Foray,
-    GroupType = BossModuleInfo.GroupType.TheForkedTowerMagic,
-    GroupID = 1114u,
-    NameID = 14717u,
-    SortOrder = 4,
-    PlanLevel = 100)]
-[SkipLocalsInit]
-public sealed class FTME4Index(WorldState ws, Actor primary) : BossModule(ws, primary, InitialCenter, InitialBounds)
+[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.Index, Contributors = "gynorhino", Expansion = BossModuleInfo.Expansion.Dawntrail,  GroupType = BossModuleInfo.GroupType.TheForkedTowerMagicExtreme, GroupID = 1114u, NameID = 14717u, PlanLevel = 100)]
+public sealed class FTME4Index : BossModule
 {
-    // pulled from normal mode; check replay if arena any different in EX
-    // points using material id 0x00007004
-    private static readonly WPos[] _arenaInitialPos = [
-        new(7.50198f, -615.00610f),new(7.49990f, -600.00012f),new(-7.50010f, -600.00012f),new(-7.50079f, -600.00067f),
-        new(-7.50276f, -615.00580f),new(-15.00425f, -628.00012f),new(-27.99880f, -635.50494f),new(-20.49879f, -648.49530f),
-        new(-7.50275f, -640.99445f),new(7.50200f, -640.99408f),new(20.49863f, -648.49530f),new(27.99863f, -635.50494f),
-        new(15.00408f, -628.00012f),new(15.00408f, -628.00012f)];
+    public FTME4Index(WorldState ws, Actor primary) : this(ws, primary, Normal.FTMN4Index.FTMN4Index.BuildInitialArena()) { }
 
-    private static readonly WPos[] _arenaFullPos = [
-        new(27.99862f, -620.49530f),new(20.49862f, -607.50494f),new(7.50198f, -615.00610f),new(7.49990f, -600.00012f),
-        new(-7.50010f, -600.00012f),new(-7.50079f, -600.00067f),new(-7.50276f, -615.00580f),new(-20.49881f, -607.50494f),
-        new(-27.99881f, -620.49530f),new(-15.00425f, -628.00012f),new(-27.99880f, -635.50494f),new(-20.49879f, -648.49530f),
-        new(-7.50275f, -640.99445f),new(-7.50076f, -656.00049f),new(0.73911f, -656.00031f),new(7.49962f, -656.00043f),
-        new(7.49992f, -656.00012f),new(7.50200f, -640.99408f),new(20.49863f, -648.49530f),new(27.99863f, -635.50494f),
-        new(15.00408f, -628.00012f),new(15.00408f, -628.00012f)];
-
-    //private static readonly WPos[] _innerHexPos = [new(-2.88752f, -623.00104f), new(0.62856f, -623.00043f), new(2.88607f, -623.00067f), new(5.77356f, -628.00012f), new(2.88633f, -633.00024f), new(-2.88692f, -633.00024f), new(-5.77374f, -628.00012f)];
-    private static readonly WPos[] _innerHexPos = [new(-3f, -623f), new(3f, -623f), new(6f, -628f), new(3f, -633f), new(-3f, -633f), new(-6f, -628f)];
-
-    private static readonly PolygonCustom[] _arenaInitial = [new(_arenaInitialPos)];
-    private static readonly PolygonCustom[] _arenaFull = [new(_arenaFullPos)];
-    private static readonly PolygonCustom[] _innerHex = [new(_innerHexPos)];
-
-    public static WPos InitialCenter = new(0f, -624.25f);
-    public static readonly ArenaBoundsCustom InitialBounds = new(_arenaInitial, _innerHex, Offset: -1f);
-
-    public static WPos OmniElementsCenter = new(0f, -628f);
-    public static readonly ArenaBoundsCustom OmniElementsBounds = new(_arenaFull, _innerHex, Offset: -1f);
+    private FTME4Index(WorldState ws, Actor primary, (WPos center, ArenaBoundsCustom arena) a) : base(ws, primary, a.center, a.arena) { }
 
     protected override bool CheckPull() => base.CheckPull() && Raid.Player()!.Position.InCircle(Arena.Center, 28f);
 }

@@ -1,8 +1,6 @@
 namespace BossMod.Components;
 
 // generic 'chasing AOE' component - these are AOEs that follow the target for a set amount of casts
-
-[SkipLocalsInit]
 public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid = default, string warningText = "GTFO from chasing aoe!") : GenericAOEs(module, aid, warningText)
 {
     private readonly float MoveDistance = moveDistance;
@@ -144,7 +142,6 @@ public class GenericChasingAOEs(BossModule module, float moveDistance, uint aid 
 }
 
 // standard chasing aoe; first cast is long - assume it is baited on the nearest allowed target; successive casts are instant
-[SkipLocalsInit]
 public class StandardChasingAOEs(BossModule module, AOEShape shape, uint actionFirst, uint actionRest, float moveDistance, double secondsBetweenActivations, int maxCasts, bool resetTargets = false, uint icon = default, double activationDelay = 5.1d) : GenericChasingAOEs(module, moveDistance)
 {
     public StandardChasingAOEs(BossModule module, float radius, uint actionFirst, uint actionRest, float moveDistance, double secondsBetweenActivations, int maxCasts, bool resetTargets = false, uint icon = default, double activationDelay = 5.1d)

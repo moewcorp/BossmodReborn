@@ -3,8 +3,6 @@
 // generic component for mechanics that require baiting some aoe (by proximity, by tether, etc) away from raid
 // some players can be marked as 'forbidden' - if any of them is baiting, they are warned
 // otherwise we show own bait as as outline (and warn if player is clipping someone) and other baits as filled (and warn if player is being clipped)
-
-[SkipLocalsInit]
 public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysDrawOtherBaits = true, bool centerAtTarget = false, bool tankbuster = false, bool onlyShowOutlines = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.None) : CastCounter(module, aid)
 {
     public struct Bait(Actor source, Actor target, AOEShape shape, DateTime activation = default, BitMask forbidden = default, Angle? customRotation = null, int maxCasts = 1, WDir offset = default, int? arenaProjectionLayer = null, bool restrictToArenaProjectionLayer = false)
@@ -372,7 +370,6 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
 }
 
 // bait on all players, requiring everyone to spread out
-[SkipLocalsInit]
 public class BaitAwayEveryone : GenericBaitAway
 {
     public BaitAwayEveryone(BossModule module, Actor? source, AOEShape shape, uint aid = default) : base(module, aid, damageType: AIHints.PredictedDamageType.Raidwide)
@@ -391,7 +388,7 @@ public class BaitAwayEveryone : GenericBaitAway
 }
 
 // component for mechanics requiring tether targets to bait their aoe away from raid
-[SkipLocalsInit]
+
 public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, uint aid = default, uint enemyOID = default, double activationDelay = default, bool centerAtTarget = false) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     public BaitAwayTethers(BossModule module, float radius, uint tetherID, uint aid = default, uint enemyOID = default, double activationDelay = default, bool centerAtTarget = true) : this(module, new AOEShapeCircle(radius), tetherID, aid, enemyOID, activationDelay, centerAtTarget) { }
@@ -488,7 +485,7 @@ public class BaitAwayTethers(BossModule module, AOEShape shape, uint tetherID, u
 }
 
 // component for mechanics requiring icon targets to bait their aoe away from raid
-[SkipLocalsInit]
+
 public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, uint aid = default, double activationDelay = 5.1d, bool centerAtTarget = false, Actor? source = null, bool tankbuster = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide, bool restrictToArenaProjectionLayer = false)
     : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, tankbuster: tankbuster, damageType: damageType)
 {
@@ -533,7 +530,6 @@ public class BaitAwayIcon(BossModule module, AOEShape shape, uint iconID, uint a
     }
 }
 
-[SkipLocalsInit]
 public class BaitAwayIconMulti(BossModule module, AOEShape shape, uint iconID, uint[] aids, double activationDelay = 5.1d, bool centerAtTarget = false, Actor? source = null, bool tankbuster = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide, bool restrictToArenaProjectionLayer = false)
     : BaitAwayIcon(module, shape, iconID, activationDelay: activationDelay, source: source, centerAtTarget: centerAtTarget, tankbuster: tankbuster, damageType: damageType, restrictToArenaProjectionLayer: restrictToArenaProjectionLayer)
 {
@@ -562,7 +558,7 @@ public class BaitAwayIconMulti(BossModule module, AOEShape shape, uint iconID, u
 }
 
 // component for mechanics requiring cast targets to gtfo from raid (aoe tankbusters etc)
-[SkipLocalsInit]
+
 public class BaitAwayCast(BossModule module, uint aid, AOEShape shape, bool centerAtTarget = false, bool endsOnCastEvent = false, bool tankbuster = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : GenericBaitAway(module, aid, centerAtTarget: centerAtTarget, tankbuster: tankbuster, damageType: damageType)
 {
     public BaitAwayCast(BossModule module, uint aid, float radius, bool centerAtTarget = true, bool endsOnCastEvent = false, bool tankbuster = false, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.Raidwide) : this(module, aid, new AOEShapeCircle(radius), centerAtTarget, endsOnCastEvent, tankbuster, damageType: damageType) { }
@@ -635,7 +631,7 @@ public class BaitAwayCast(BossModule module, uint aid, AOEShape shape, bool cent
 }
 
 // a variation of BaitAwayCast for charges that end at target
-[SkipLocalsInit]
+
 public class BaitAwayChargeCast(BossModule module, uint aid, float halfWidth) : GenericBaitAway(module, aid, damageType: AIHints.PredictedDamageType.Tankbuster)
 {
     private readonly float HalfWidth = halfWidth;
@@ -689,7 +685,7 @@ public class BaitAwayChargeCast(BossModule module, uint aid, float halfWidth) : 
 }
 
 // a variation of baits with tethers for charges that end at target
-[SkipLocalsInit]
+
 public class BaitAwayChargeTether(BossModule module, float halfWidth, double activationDelay, uint aidGood, uint aidBad = default, uint tetherIDBad = 57u, uint tetherIDGood = 1u, uint enemyOID = default, float minimumDistance = default)
 : StretchTetherDuo(module, minimumDistance, activationDelay, tetherIDBad, tetherIDGood, new AOEShapeRect(default, halfWidth), default, enemyOID)
 {
@@ -764,7 +760,6 @@ public class BaitAwayChargeTether(BossModule module, float halfWidth, double act
     }
 }
 
-[SkipLocalsInit]
 public class GenericBaitProximity(BossModule module, bool alwaysDrawOtherBaits = true, bool onlyShowOutlines = false) : CastCounter(module, default)
 {
     public struct Bait(WPos source, AOEShape shape, DateTime activation = default, int numTargets = 1, bool nearest = true, bool stack = false, int minStack = 1, int maxStack = 1, bool centerAtTarget = false, bool tankbuster = false, uint caster = default, Role role = Role.None, BitMask forbidden = default, AIHints.PredictedDamageType damageType = AIHints.PredictedDamageType.None, Angle? customRotation = null, WDir offset = default, int? arenaProjectionLayer = null, bool restrictToArenaProjectionLayer = false)

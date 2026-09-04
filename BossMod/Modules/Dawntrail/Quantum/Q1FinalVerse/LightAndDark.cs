@@ -1,9 +1,8 @@
 namespace BossMod.Dawntrail.Quantum.Q1FinalVerse;
 
 [SkipLocalsInit]
-sealed class LightAndDark(BossModule module) : Endwalker.DeepDungeon.PilgrimsTraverse.LightAndDarkBase(module)
+sealed class LightAndDark(Q1FinalVerse module) : DeepDungeon.PilgrimsTraverse.LightAndDarkBase(module)
 {
-    private readonly Q1FinalVerse bossmod = (Q1FinalVerse)module;
     private bool boundsOfSinTowers;
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(_aoes);
@@ -137,14 +136,14 @@ sealed class LightAndDark(BossModule module) : Endwalker.DeepDungeon.PilgrimsTra
             }
             else
             {
-                hints.Add($"Target {(darkBuff[slot] ? bossmod.BossEater?.Name : Module.PrimaryActor.Name)}!", false);
+                hints.Add($"Target {(darkBuff[slot] ? module.BossEater?.Name : Module.PrimaryActor.Name)}!", false);
             }
         }
     }
 
     public override void Update()
     {
-        if (bossmod.BossEater is Actor eater)
+        if (module.BossEater is Actor eater)
         {
             ref var eaterHPref = ref eater.HPMP;
             ref var primaryHPref = ref Module.PrimaryActor.HPMP;

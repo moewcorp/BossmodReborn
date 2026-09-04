@@ -3,7 +3,6 @@ using Dalamud.Interface;
 
 namespace BossMod;
 
-[SkipLocalsInit]
 public sealed class BossModuleMainWindow : UIWindow
 {
     private readonly BossModuleManager _mgr;
@@ -109,9 +108,11 @@ public sealed class BossModuleMainWindow : UIWindow
             for (var i = 0; i < count; ++i)
             {
                 var m = _mgr.LoadedModules[i];
-                var oidType = BossModuleRegistry.FindByOID(m.PrimaryActor.OID)?.ObjectIDType;
-                var oidName = oidType?.GetEnumName(m.PrimaryActor.OID);
-                if (ImGui.Button($"{m.GetType()} ({m.PrimaryActor.InstanceID:X} '{m.PrimaryActor.Name}' {oidName})"))
+                var primary = m.PrimaryActor;
+                var oid = primary.OID;
+                var oidType = BossModuleRegistry.FindByOID(oid)?.ObjectIDType;
+                var oidName = oidType?.GeneratedEnumName(oid);
+                if (ImGui.Button($"{m.GetType()} ({primary.InstanceID:X} '{primary.Name}' {oidName})"))
                 {
                     _mgr.ActiveModule = m;
                 }

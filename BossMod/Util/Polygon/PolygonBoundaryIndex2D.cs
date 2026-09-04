@@ -73,7 +73,7 @@ internal sealed unsafe class PolygonBoundaryIndex2D : IDisposable
             this.radius = radius;
             radiusSq = this.radius * this.radius;
 
-            var (sin, cos) = ((float, float))Math.SinCos(halfAngle);
+            var (sin, cos) = MathF.SinCos(halfAngle);
             cosHalfAngle = cos;
             cosHalfAngleSq = cos * cos;
             leftX = ox + (fx * cos - fz * sin) * this.radius;
@@ -130,7 +130,7 @@ internal sealed unsafe class PolygonBoundaryIndex2D : IDisposable
             innerSq = inner * inner;
             outerSq = outer * outer;
 
-            var (sin, cos) = ((float, float))Math.SinCos(halfAngle);
+            var (sin, cos) = MathF.SinCos(halfAngle);
             cosHalfAngle = cos;
             cosHalfAngleSq = cos * cos;
             var leftDirX = fx * cos - fz * sin;
@@ -6283,7 +6283,7 @@ internal sealed unsafe class PolygonBoundaryIndex2D : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void Rotate(float x, float z, float angle, out float rotatedX, out float rotatedZ)
     {
-        var (sin, cos) = ((float, float))Math.SinCos(angle);
+        var (sin, cos) = MathF.SinCos(angle);
         rotatedX = x * cos - z * sin;
         rotatedZ = x * sin + z * cos;
     }

@@ -1,7 +1,6 @@
 ﻿namespace BossMod.Components;
 
 // generic 'exaflare' component - these mechanics are a bunch of moving aoes, with different lines either staggered or moving with different speed
-[SkipLocalsInit]
 public class Exaflare(BossModule module, AOEShape shape, uint aid = default) : GenericAOEs(module, aid, "GTFO from exaflare!")
 {
     public sealed class Line(WPos next, WDir advance, DateTime nextExplosion, double timeToMove, int explosionsLeft, int maxShownExplosions, Angle rotation = default,
@@ -113,7 +112,6 @@ public class Exaflare(BossModule module, AOEShape shape, uint aid = default) : G
     }
 }
 
-[SkipLocalsInit]
 public class SimpleExaflare(BossModule module, AOEShape shape, uint aidFirst, uint aidRest, float distance, double timeToMove, int explosionsLeft, int maxShownExplosions, bool castEvent = false,
 bool locationBased = false, Angle rotation = default, float[]? arenaProjectionLayers = null, bool restrictToArenaProjectionLayer = true) : Exaflare(module, shape)
 {

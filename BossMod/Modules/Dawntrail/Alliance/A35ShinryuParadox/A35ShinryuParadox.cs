@@ -121,7 +121,7 @@ sealed class P2ArenaChange(BossModule module) : BossComponent(module)
     {
         if (index == 0x00 && state == 0x02000100u)
         {
-            Arena.Bounds = new ArenaBoundsRect(30f, 20f);
+            Arena.Bounds = new ArenaBoundsRect(30f, 20f) { Y = -878.9f, WorldProjectionHeight = 0f, BorderY = -879f };
         }
     }
 }
@@ -481,23 +481,7 @@ sealed class SuperNova(BossModule module) : Components.StackWithIcon(module, (ui
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed,
-    StatesType = typeof(A35ShinryuParadoxStates),
-    ConfigType = null, // replace null with typeof(ShinryuParadoxConfig) if applicable
-    ObjectIDType = typeof(OID),
-    ActionIDType = typeof(AID),
-    StatusIDType = typeof(SID),
-    TetherIDType = null, // replace null with typeof(TetherID) if applicable
-    IconIDType = typeof(IconID),
-    PrimaryActorOID = (uint)OID.ShinryuParadox,
-    Contributors = "Xan, ported by wen",
-    Expansion = BossModuleInfo.Expansion.Dawntrail,
-    Category = BossModuleInfo.Category.Alliance,
-    GroupType = BossModuleInfo.GroupType.CFC,
-    GroupID = 1117u,
-    NameID = 14729u,
-    SortOrder = 6,
-    PlanLevel = 0)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.ShinryuParadox, Contributors = "Xan, ported by wen", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1117u, NameID = 14729u)]
 
 // Set up base logic for what level of arena and which phase boss pc is fighting.
 [SkipLocalsInit]

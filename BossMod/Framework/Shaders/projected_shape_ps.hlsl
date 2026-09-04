@@ -1211,12 +1211,13 @@ float4 main(PS_INPUT input) : SV_Target
     // black too, so require valid scene depth before treating a black texel as a character. That
     // leaves depthless grate openings eligible for the bounded receiver-hole closer below.
     // Eye3D is real foreground volume geometry and retains ordinary scene-depth occlusion.
-    if (shapeKind != 8u && sceneDepthValid && SceneInfoParams.x > 0.5f)
+    bool referencePlaneProjection = input.projectionHeight <= 0.0f;
+
+    if (!referencePlaneProjection && shapeKind != 8u && sceneDepthValid && SceneInfoParams.x > 0.5f)
     {
         float3 sceneInfo = SceneInfoTexture.Load(int3(depthCoord, 0)).rgb;
         clip(max(sceneInfo.r, max(sceneInfo.g, sceneInfo.b)) - SceneInfoParams.y);
     }
-
     float4 worldH = 0.0f;
     float3 world = 0.0f;
     if (sceneDepthValid)
@@ -1238,7 +1239,6 @@ float4 main(PS_INPUT input) : SV_Target
     bool outlineOnly = (input.packed & 0x100u) != 0u;
     bool filledWithOutline = (input.packed & 0x200u) != 0u;
     bool suppressZoneWave = (input.packed & 0x400u) != 0u;
-    bool referencePlaneProjection = !(input.projectionHeight > 0.0f);
     bool arenaClipped = ProjectedSdfFlags.y > 0.5f;
 
     bool receiverAccepted = false;

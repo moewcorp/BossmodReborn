@@ -2,7 +2,6 @@ namespace BossMod.Components;
 
 // generic component that is 'active' when any actor casts specific spell
 
-[SkipLocalsInit]
 public class CastHint(BossModule module, uint aid, string hint, bool showCastTimeLeft = false) : CastCounter(module, aid)
 {
     public string Hint = hint;
@@ -36,7 +35,6 @@ public class CastHint(BossModule module, uint aid, string hint, bool showCastTim
     }
 }
 
-[SkipLocalsInit]
 public class CastHints(BossModule module, uint[] aids, string hint, bool showCastTimeLeft = false) : CastHint(module, default, hint, showCastTimeLeft)
 {
     private readonly uint[] AIDs = aids;
@@ -66,7 +64,6 @@ public class CastHints(BossModule module, uint[] aids, string hint, bool showCas
     }
 }
 
-[SkipLocalsInit]
 public class CastInterruptHint : CastHint
 {
     public readonly bool CanBeInterrupted;

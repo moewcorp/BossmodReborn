@@ -1,7 +1,6 @@
 ﻿namespace BossMod;
 
 // tree describing all phases, states and transitions
-[SkipLocalsInit]
 public sealed class StateMachineTree
 {
     public class Node
@@ -108,10 +107,12 @@ public sealed class StateMachineTree
 
     public StateMachineTree(StateMachine sm)
     {
-        for (var i = 0; i < sm.Phases.Count; ++i)
+        var count = sm.Phases.Count;
+        for (var i = 0; i < count; ++i)
         {
-            var (startingNode, maxTime) = LayoutNodeAndSuccessors(0, i, TotalBranches, sm.Phases[i].InitialState, sm.Phases[i], null);
-            Phases.Add(new(sm.Phases[i], startingNode, maxTime));
+            var phase = sm.Phases[i];
+            var (startingNode, maxTime) = LayoutNodeAndSuccessors(0, i, TotalBranches, phase.InitialState, phase, null);
+            Phases.Add(new(phase, startingNode, maxTime));
             TotalBranches += startingNode.NumBranches;
             TotalMaxTime = Math.Max(TotalMaxTime, maxTime);
         }
@@ -119,23 +120,27 @@ public sealed class StateMachineTree
 
     public void ApplyTimings(List<float>? phaseDurations)
     {
-        if (Phases.Count == 0)
+        var count = Phases.Count;
+        if (count == 0)
         {
             return;
         }
 
         if (phaseDurations != null)
         {
-            var phasesCount = Phases.Count < phaseDurations.Count ? Phases.Count : phaseDurations.Count;
+            var duraCount = phaseDurations.Count;
+            var phasesCount = count < duraCount ? count : duraCount;
             for (var pi = 0; pi < phasesCount; ++pi)
             {
-                Phases[pi].Duration = Math.Min(phaseDurations[pi], Phases[pi].MaxTime);
+                var p = Phases[pi];
+                p.Duration = Math.Min(phaseDurations[pi], p.MaxTime);
             }
         }
 
-        for (var i = 1; i < Phases.Count; ++i)
+        for (var i = 1; i < count; ++i)
         {
-            Phases[i].StartTime = Phases[i - 1].StartTime + Phases[i - 1].Duration;
+            var phasesm1 = Phases[i - 1];
+            Phases[i].StartTime = phasesm1.StartTime + phasesm1.Duration;
         }
 
         var lastPhase = Phases[^1];

@@ -1,4 +1,4 @@
-namespace BossMod.Endwalker.DeepDungeon.PilgrimsTraverse;
+namespace BossMod.Dawntrail.DeepDungeon.PilgrimsTraverse;
 
 abstract class LightAndDarkBase(BossModule module) : Components.GenericAOEs(module)
 {
