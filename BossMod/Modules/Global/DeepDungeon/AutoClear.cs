@@ -442,7 +442,7 @@ public abstract partial class AutoClear : ZoneModule
         var fullClear = false;
         if (Config.FullClear)
         {
-            var unexplored = Array.FindIndex(Palace.Rooms, d => (byte)d > 0 && !d.HasFlag(RoomFlags.Revealed));
+            var unexplored = Array.FindIndex(Palace.Rooms, static d => (byte)d > 0 && (d & RoomFlags.Revealed) == 0);
             if (unexplored > 0)
             {
                 DesiredRoom = unexplored;
@@ -524,7 +524,9 @@ public abstract partial class AutoClear : ZoneModule
         if (!player.InCombat && Config.AutoPassage && Palace.PassageActive)
         {
             if (DesiredRoom == 0)
-                DesiredRoom = Array.FindIndex(Palace.Rooms, d => d.HasFlag(RoomFlags.Passage));
+            {
+                DesiredRoom = Array.FindIndex(Palace.Rooms, static d => (d & RoomFlags.Passage) != 0);
+            }
 
             if (passage is Actor c && !fullClear)
             {
@@ -532,7 +534,9 @@ public abstract partial class AutoClear : ZoneModule
                 // give pathfinder a little help lmao
                 hints.GoalZones.Add(AIHints.GoalSingleTarget(c.Position, 25f, 0.25f));
                 if (player.DistanceToHitbox(c) < player.DistanceToHitbox(coffer) && !Config.OpenChestsFirst)
+                {
                     wantCoffer = null;
+                }
             }
         }
 
