@@ -32,6 +32,9 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("将雷达投影到 3D 世界中")]
     public bool ProjectRadarInto3DWorld = false;
 
+    [PropertyDisplay("在 3D 世界中显示角色三角", tooltip: "显示普通角色三角。禁用时，机制标记（包括击退目的地）仍保持可见。")]
+    public bool ShowActorTrianglesIn3DWorld = true;
+
     [PropertyDisplay("在 3D 世界中绘制场地轮廓", tooltip: "如果启用将雷达投影到 3D 世界，则也可以绘制轮廓")]
     public bool EnableArenaOutlineIn3DWorld = true;
 
@@ -85,6 +88,13 @@ public sealed class BossModuleConfig : ConfigNode
 
     [PropertyDisplay("当玩家处于危险时更改场地边框颜色", tooltip: "当你站在可能被机制击中的位置时，将白色边框变为红色")]
     public bool ShowBorderRisk = true;
+
+    [PropertyDisplay("当玩家处于危险时屏幕边缘脉冲提示", tooltip: "当玩家警告激活时，以危险场地边框颜色（敌人颜色）脉冲发光。独立于雷达和 3D 投影设置工作。")]
+    public bool ShowScreenRiskBorder = false;
+
+    [PropertyDisplay("屏幕危险脉冲强度")]
+    [PropertySlider(0f, 10f, Speed = 0.1f)]
+    public float ScreenRiskBorderIntensity = 2.5f;
 
     [PropertyDisplay("在雷达中显示方位名称")]
     public bool ShowCardinals = false;
