@@ -58,7 +58,7 @@ public static class BossModuleInfo
         HallOfTheNovice,
         Quantum,
         Advanced,
-
+        CrucibleOfTheUnbroken,
         Count
     }
 
@@ -82,6 +82,7 @@ public static class BossModuleInfo
         BozjaDuel, // group id is ContentFinderCondition row, name id is DynamicEvent row
         EurekaNM, // group id is ContentFinderCondition row, name id is Fate row
         GoldSaucer, // group id is GoldSaucerTextData row
+        CrucibleOfTheUnbroken
     }
 
     public enum HuntRank : uint { B, A, S, SS }
