@@ -17,6 +17,7 @@ public sealed class AutorotationConfig : ConfigNode
     }
 
     [PropertyDisplay("在服务器信息栏显示自动循环预设")]
+    [PropertyRadio]
     public DtrStatus ShowDTR = DtrStatus.None;
 
     [PropertyDisplay("隐藏 VBM 默认预设", tooltip: "如果你已创建了自己的预设且不再需要内置默认预设，此选项将阻止其在自动循环和预设编辑器窗口中显示。")]

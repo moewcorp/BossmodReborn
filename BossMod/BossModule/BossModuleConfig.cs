@@ -1,4 +1,6 @@
 ﻿using Dalamud.Bindings.ImGui;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BossMod;
 
@@ -22,7 +24,7 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("允许模块自动使用技能", tooltip: "示例：模块可以在击退发生前自动使用防击退技能")]
     public bool AllowAutomaticActions = true;
 
-    [PropertyDisplay("显示测试雷达和提示窗口", tooltip: "在不进行boss战时配置雷达和提示窗口非常有用", separator: true)]
+    [PropertyDisplay("显示测试雷达和提示窗口", tooltip: "在不进行boss战时配置雷达和提示窗口非常有用", separator: true, depends: nameof(EnableRadar))]
     public bool ShowDemo = false;
 
     // radar window settings
@@ -32,24 +34,24 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("将雷达投影到 3D 世界中")]
     public bool ProjectRadarInto3DWorld = false;
 
-    [PropertyDisplay("在 3D 世界中显示角色三角", tooltip: "显示普通角色三角。禁用时，机制标记（包括击退目的地）仍保持可见。")]
+    [PropertyDisplay("在 3D 世界中显示角色三角", tooltip: "显示普通角色三角。禁用时，机制标记（包括击退目的地）仍保持可见。", depends: nameof(ProjectRadarInto3DWorld))]
     public bool ShowActorTrianglesIn3DWorld = true;
 
-    [PropertyDisplay("在 3D 世界中绘制场地轮廓", tooltip: "如果启用将雷达投影到 3D 世界，则也可以绘制轮廓")]
+    [PropertyDisplay("在 3D 世界中绘制场地轮廓", tooltip: "如果启用将雷达投影到 3D 世界，则也可以绘制轮廓", depends: nameof(ProjectRadarInto3DWorld))]
     public bool EnableArenaOutlineIn3DWorld = true;
 
-    [PropertyDisplay("允许在 3D 世界中绘制文本和图标广告牌", tooltip: "如果启用将雷达投影到 3D 世界，则也可以绘制广告牌")]
+    [PropertyDisplay("允许在 3D 世界中绘制文本和图标广告牌", tooltip: "如果启用将雷达投影到 3D 世界，则也可以绘制广告牌", depends: nameof(ProjectRadarInto3DWorld))]
     public bool EnableTextIconBillboards = true;
 
-    [PropertyDisplay("广告牌高度偏移", tooltip: "广告牌应出现在地面上方多少 yalms。包括视线、文本和图标。")]
+    [PropertyDisplay("广告牌高度偏移", tooltip: "广告牌应出现在地面上方多少 yalms。包括视线、文本和图标。", depends: nameof(ProjectRadarInto3DWorld))]
     [PropertySlider(0f, 20f, Speed = 0.1f, Logarithmic = true)]
     public float BillboardHeightOffset = 5f;
 
-    [PropertyDisplay("文本广告牌字体大小", tooltip: "更改 3D 世界广告牌的文本大小")]
+    [PropertyDisplay("文本广告牌字体大小", tooltip: "更改 3D 世界广告牌的文本大小", depends: nameof(ProjectRadarInto3DWorld))]
     [PropertySlider(17f, 250f, Speed = 0.5f, Logarithmic = true)]
     public float TextBillboardFontSize = 110f;
 
-    [PropertyDisplay("图标广告牌字体大小", tooltip: "更改 3D 世界广告牌的图标大小")]
+    [PropertyDisplay("图标广告牌字体大小", tooltip: "更改 3D 世界广告牌的图标大小", separator: true, depends: nameof(ProjectRadarInto3DWorld))]
     [PropertySlider(17f, 250f, Speed = 0.5f, Logarithmic = true)]
     public float IconBillboardFontSize = 110f;
 
@@ -92,27 +94,23 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("当玩家处于危险时屏幕边缘脉冲提示", tooltip: "当玩家警告激活时，以危险场地边框颜色（敌人颜色）脉冲发光。独立于雷达和 3D 投影设置工作。")]
     public bool ShowScreenRiskBorder = false;
 
-    [PropertyDisplay("屏幕危险脉冲强度")]
+    [PropertyDisplay("屏幕危险脉冲强度", depends: nameof(ShowScreenRiskBorder))]
     [PropertySlider(0f, 10f, Speed = 0.1f)]
     public float ScreenRiskBorderIntensity = 2.5f;
 
     [PropertyDisplay("在雷达中显示方位名称")]
     public bool ShowCardinals = false;
 
-    [PropertyDisplay("方位名称字体大小")]
-    [PropertySlider(0.1f, 100, Speed = 1)]
+    [PropertyDisplay("方位名称字体大小", depends: nameof(ShowCardinals))]
+    [PropertySlider(0.1f, 100f, Speed = 1f)]
     public float CardinalsFontSize = 17f;
-
-    [PropertyDisplay("场地标记字体大小")]
-    [PropertySlider(0.1f, 100, Speed = 1)]
-    public float WaymarkFontSize = 22f;
-
-    [PropertyDisplay("角色三角型比例大小")]
-    [PropertySlider(0.1f, 10, Speed = 0.1f)]
-    public float ActorScale = 1f;
 
     [PropertyDisplay("在雷达上显示标记点")]
     public bool ShowWaymarks = false;
+
+    [PropertyDisplay("场地标记字体大小", depends: nameof(ShowWaymarks))]
+    [PropertySlider(0.1f, 100f, Speed = 1f)]
+    public float WaymarkFontSize = 22f;
 
     [PropertyDisplay("在雷达上显示信号（“攻击”、“止步”、“禁止”和形状标记）")]
     public bool ShowSigns = false;
@@ -126,7 +124,20 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("始终显示焦点目标的队友", separator: true)]
     public bool ShowFocusTargetPlayer = false;
 
+    [PropertyDisplay("角色三角型比例大小")]
+    [PropertySlider(0.1f, 10f, Speed = 0.1f)]
+    public float ActorScale = 1f;
+
     // hint window settings
+    [PropertyDisplay("开怪前显示机制提示弹窗", tooltip: "在开怪前显示该战斗的专属提示。单个战斗可永久隐藏，之后可在该战斗的配置窗口中重新启用。")]
+    public bool ShowPrePullHints = true;
+
+    // Persisted separately from module-specific config so every encounter can support "Never show again". Primary actor OIDs are used as unique module IDs.
+    public uint[] SuppressedPrePullHintOIDs = [];
+
+    [JsonIgnore]
+    internal HashSet<uint>? _suppressedPrePullHintOIDs;
+
     [PropertyDisplay("在单独窗口中显示文字提示", tooltip: "将雷达窗口与提示窗口分离，允许你重新定位提示窗口")]
     public bool HintsInSeparateWindow = false;
 
@@ -152,4 +163,53 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("最大加载距离", tooltip: "最大加载距离（单位：yalms）")]
     [PropertySlider(0.1f, 500f, Speed = 0.1f, Logarithmic = true)]
     public float MaxLoadDistance = 500f;
+
+    public override void Deserialize(JsonElement j, JsonSerializerOptions ser)
+    {
+        base.Deserialize(j, ser);
+        _suppressedPrePullHintOIDs = null;
+    }
+
+    public bool ShowPrePullHintsFor(uint primaryActorOID) => !SuppressedPrePullHintOIDSet().Contains(primaryActorOID);
+
+    public void SetShowPrePullHintsFor(uint primaryActorOID, bool show)
+    {
+        var set = SuppressedPrePullHintOIDSet();
+        var suppressed = set.Contains(primaryActorOID);
+        if (show == !suppressed)
+        {
+            return;
+        }
+
+        if (show)
+        {
+            set.Remove(primaryActorOID);
+        }
+        else
+        {
+            set.Add(primaryActorOID);
+        }
+
+        var persisted = new uint[set.Count];
+        set.CopyTo(persisted);
+        Array.Sort(persisted);
+        SuppressedPrePullHintOIDs = persisted;
+        Modified.Fire();
+    }
+
+    private HashSet<uint> SuppressedPrePullHintOIDSet()
+    {
+        if (_suppressedPrePullHintOIDs != null)
+        {
+            return _suppressedPrePullHintOIDs;
+        }
+
+        var len = SuppressedPrePullHintOIDs.Length;
+        var set = new HashSet<uint>(len);
+        for (var i = 0; i < len; ++i)
+        {
+            set.Add(SuppressedPrePullHintOIDs[i]);
+        }
+        return _suppressedPrePullHintOIDs = set;
+    }
 }

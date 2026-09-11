@@ -15,7 +15,7 @@ public sealed class ReplayManagementConfig : ConfigNode
     [PropertyDisplay("副本开始/结束或野外模块启停时自动录制回放")]
     public bool AutoRecord = false;
 
-    [PropertyDisplay("在副本录像中自动录制", tooltip: "需要开启自动录制")]
+    [PropertyDisplay("在副本录像中自动录制", tooltip: "需要开启自动录制", depends: nameof(AutoRecord))]
     public bool AutoARR = false;
 
     [PropertyDisplay("匿名化回放", tooltip: "若关闭此选项,回放中将包含你及录制期间所见其他玩家的个人身份信息(姓名和内容ID)")]
