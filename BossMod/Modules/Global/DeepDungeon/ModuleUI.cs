@@ -55,7 +55,7 @@ abstract partial class AutoClear : ZoneModule
         if (entry == null)
         {
             ImGui.SameLine();
-            UIMisc.HelpMarker(() => "该层缺少障碍物地图！", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
+            UIMisc.HelpMarker(static () => "该层缺少障碍物地图！", Dalamud.Interface.FontAwesomeIcon.ExclamationTriangle);
         }
 
         if (data != null && data.PixelSize != 0.5f)
@@ -96,7 +96,7 @@ abstract partial class AutoClear : ZoneModule
             }
             if (pos is WPos position)
             {
-                pos = position.Rounded(0.1f);
+                position = position.Rounded(0.1f);
                 ProblematicTrapLocations.Add(position);
                 IgnoreTraps.Add(position);
             }

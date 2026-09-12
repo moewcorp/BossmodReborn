@@ -86,7 +86,7 @@ public sealed class UIRotationWindow : UIWindow
                 {
                     ImGui.SameLine();
                     using var style = ImRaii.PushColor(ImGuiCol.Text, Colors.TextColor2);
-                    UIMisc.HelpMarker(() => "你已激活了一个预设，该预设将完全覆盖冷却规划！", FontAwesomeIcon.ExclamationTriangle);
+                    UIMisc.HelpMarker(static () => "你已激活了一个预设，该预设将完全覆盖冷却规划！", FontAwesomeIcon.ExclamationTriangle);
                 }
             }
         }

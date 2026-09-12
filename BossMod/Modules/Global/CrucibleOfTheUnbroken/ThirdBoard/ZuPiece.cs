@@ -288,9 +288,6 @@ sealed class Carve(BossModule module) : Components.GenericBaitAway(module)
             return;
         }
 
-        WPos position = default;
-        Angle direction = default;
-
         // Once the boss has done the EventCast we should update the position of the bait to match that position since the player
         // could macro adjust
         if (baitLocked)
@@ -303,8 +300,8 @@ sealed class Carve(BossModule module) : Components.GenericBaitAway(module)
         }
 
         CurrentBaits.Clear();
-        position = tetherTarget.Position;
-        direction = Angle.FromDirection(tetherTarget.Position - tetherSource.Position);
+        var position = tetherTarget.Position;
+        var direction = Angle.FromDirection(tetherTarget.Position - tetherSource.Position);
         CurrentBaits.Add(new(position, tetherSource, shape, activation, customRotation: direction + rotation));
     }
 
@@ -329,19 +326,13 @@ sealed class ZuPieceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP,
-    PrimaryActorOID = (uint)OID.ZuPiece,
-    Contributors = "Equilius",
-    GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken,
-    GroupID = 1090u,
-    NameID = 14572u,
-    SortOrder = 12)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.ZuPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1090u, NameID = 14572u, SortOrder = 4)]
 public sealed class ZuPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies((uint)OID.PulletPiece));
+        Arena.Actors(Enemies((uint)OID.PulletPiece), Colors.Vulnerable);
         Arena.Actors(Enemies((uint)OID.CockerelPiece));
     }
 
@@ -364,8 +355,10 @@ public sealed class ZuPiece(WorldState ws, Actor primary) : BossModule(ws, prima
     }
 
     private readonly string[] _prePullHints =
+        // PulletPiece
     [
-        "Avoid breaking the eggs!"
+        "Avoid breaking the eggs!",
+        "When adds spawn kill order is the following: PulletPiece (purple) -> CockerelPiece -> Boss"
     ];
 
     public override string[] PrePullHints => _prePullHints;
