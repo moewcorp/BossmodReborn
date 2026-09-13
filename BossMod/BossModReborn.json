@@ -3,7 +3,7 @@
   "Name": "BossMod Reborn",
   "InternalName": "BossModReborn",
   "RepoUrl": "https://github.com/FFXIV-CombatReborn/BossmodReborn",
-  "Description": "国服本地化适配&插件生态联动",
+  "Description": "国服本地化适配&插件生态联动（每日同步上游最新版）",
   "ApplicableVersion": "any",
   "Tags": [
     "combat",
@@ -21,7 +21,7 @@
   "LoadPriority": 0,
   "IsTestingExclusive": false,
   "IconUrl": "https://raw.githubusercontent.com/FFXIV-CombatReborn/RebornAssets/main/IconAssets/BMR_Icon.png",
-  "Punchline": "大脑按摩用的(在线安装Only)",
+  "Punchline": "国服本地化适配&插件生态联动（每日同步上游最新版）",
   "AcceptsFeedback": true,
   "ImageUrls": [
     "https://raw.githubusercontent.com/FFXIV-CombatReborn/BossmodReborn/master/Data/image1.png",
