@@ -18,8 +18,8 @@ public sealed class BossModuleConfig : ConfigNode
     }
 
     // boss module settings
-    [PropertyDisplay("模块加载的最低成熟度", tooltip: "某些模块将处于\"WIP\"状态，除非你更改此设置，否则不会自动加载")]
-    public BossModuleInfo.Maturity MinMaturity = BossModuleInfo.Maturity.Contributed;
+    [JsonIgnore]
+    public BossModuleInfo.Maturity MinMaturity = BossModuleInfo.Maturity.WIP;
 
     // Modules explicitly disabled from Supported fights. Primary actor OIDs are used as unique module IDs.
     public uint[] DisabledModuleOIDs = [];
