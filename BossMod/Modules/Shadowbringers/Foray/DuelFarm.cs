@@ -13,18 +13,18 @@ public sealed class DuelAttribute(uint nameID, uint prepNameID, uint fateID = de
     public string Label => $"{ModuleViewer.BNpcName(nameID)} ({ModuleViewer.BNpcName(prepNameID)})";
 }
 
-[ConfigDisplay(Name = "Bozja duel farming", Parent = typeof(ShadowbringersConfig))]
+[ConfigDisplay(Name = "博兹雅单挑速刷", Parent = typeof(ShadowbringersConfig))]
 public class DuelFarmConfig : ConfigNode
 {
-    [PropertyDisplay("Max range to look for new mobs to pull")]
+    [PropertyDisplay("寻找新怪物拉取的最大范围")]
     [PropertySlider(20, 100, Speed = 0.1f)]
     public float MaxPullDistance = 30f;
 
-    [PropertyDisplay("Max number of mobs to pull at once (0 for no limit)")]
+    [PropertyDisplay("一次最多拉取的怪物数量（0 = 不限）")]
     [PropertySlider(0, 30, Speed = 0.1f)]
     public int MaxPullCount = 10;
 
-    [PropertyDisplay("Show auto farm window")]
+    [PropertyDisplay("显示自动刷怪窗口")]
     public bool ShowAutoFarmWindow = false;
 
     public bool AssistMode;
@@ -131,7 +131,7 @@ public abstract class DuelFarm<Duel> : ZoneModule where Duel : struct, Enum
     }
 }
 
-[ConfigDisplay(Name = "Bozja", Parent = typeof(DuelFarmConfig))]
+[ConfigDisplay(Name = "博兹雅", Parent = typeof(DuelFarmConfig))]
 public class BozjaFarmConfig : ConfigNode
 {
     public BozjaDuel FarmTarget = BozjaDuel.None;
@@ -164,7 +164,7 @@ public class Bozja(WorldState ws) : DuelFarm<BozjaDuel>(ws, "Bozja")
     }
 }
 
-[ConfigDisplay(Name = "Zadnor", Parent = typeof(DuelFarmConfig))]
+[ConfigDisplay(Name = "扎杜诺尔", Parent = typeof(DuelFarmConfig))]
 public class ZadnorFarmConfig : ConfigNode
 {
     public ZadnorDuel FarmTarget = ZadnorDuel.None;

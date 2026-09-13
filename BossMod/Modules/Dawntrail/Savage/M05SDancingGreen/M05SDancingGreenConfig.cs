@@ -3,15 +3,15 @@
 [ConfigDisplay(Order = 0x100, Parent = typeof(DawntrailConfig))]
 public sealed class M05SDancingGreenConfig() : ConfigNode()
 {
-    [PropertyDisplay("Draw moving exaflare pattern", tooltip: "If disabled the full Ride the Waves exaflare pattern is drawn from the beginning. Otherwise it will move like in normal mode.")]
+    [PropertyDisplay("绘制移动的 exaflare 图案", tooltip: "若关闭，则完整的舞浪全开 exaflare 图案会从一开始就绘制；否则会像普通模式一样移动。")]
     public bool MovingExaflares = true;
 
-    [PropertyDisplay("Show all spotlight positions of same order", tooltip: "If enabled all spotlight positions are shown that match your own order.")]
+    [PropertyDisplay("显示相同顺序的所有聚光灯位置", tooltip: "若启用，显示与你自身顺序匹配的所有聚光灯位置。")]
     public bool ShowFromSameOrder = true;
-    [PropertyDisplay("Show all spotlight positions of different order", tooltip: "If enabled all spotlight positions are shown that do not match your own order.")]
+    [PropertyDisplay("显示不同顺序的所有聚光灯位置", tooltip: "若启用，显示与你自身顺序不匹配的所有聚光灯位置。")]
     public bool ShowFromDifferentOrder = false;
 
-    [PropertyDisplay("Time left before spotlights get drawn")]
+    [PropertyDisplay("聚光灯绘制前的剩余时间")]
     [PropertySlider(0.1f, 34, Speed = 1)]
     public float SpotlightTimer = 34;
 }

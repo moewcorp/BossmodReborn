@@ -1,14 +1,14 @@
-using Dalamud.Bindings.ImGui;
+﻿using Dalamud.Bindings.ImGui;
 
 namespace BossMod.Dawntrail.Savage.M06SSugarRiot;
 
 [ConfigDisplay(Order = 0x110, Parent = typeof(DawntrailConfig))]
 public sealed class M06SSugarRiotConfig() : ConfigNode
 {
-    [PropertyDisplay("Enable custom priority list", tooltip: "If disabled the add phase priority list below will not be used.")]
+    [PropertyDisplay("启用自定义优先级列表", tooltip: "若关闭，下方的增援阶段优先级列表将不会使用。")]
     public bool EnablePriorityList = true;
 
-    [PropertyDisplay("Add phase priorities for autorotation (from highest to lowest)")]
+    [PropertyDisplay("自动循环使用的增援阶段优先级（由高到低）")]
     [PropertyStringOrder(["Sugar Riot", "Mu P1", "Yan P1", "Gimme Cat P1", "Mu P2", "Feather Ray NW", "Feather Ray NE", "Yan P3", "Gimme Cat P3", "Jabberwock P3",
         "Feather Ray SW", "Feather Ray SE", "Mu P4", "Gimme Cat P4", "Jabberwock P4", "Yan P4"])]
     public int[] AddsPriorityOrder = [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];

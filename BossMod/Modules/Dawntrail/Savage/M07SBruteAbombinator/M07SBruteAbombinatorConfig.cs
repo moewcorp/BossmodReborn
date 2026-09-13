@@ -3,9 +3,9 @@
 [ConfigDisplay(Order = 0x120, Parent = typeof(DawntrailConfig))]
 public sealed class M07SBruteAbombinatorConfig() : ConfigNode()
 {
-    [PropertyDisplay("Enable seed AOE prediction")]
+    [PropertyDisplay("启用种子 AOE 预测")]
     public bool EnableSeedPrediction = true;
 
-    [PropertyDisplay("Enable lariat prediction")]
+    [PropertyDisplay("启用碎颈臂预测")]
     public bool EnableLariatPrediction = true;
 }

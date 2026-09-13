@@ -1,11 +1,11 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Threading;
 
 namespace BossMod.Pathfinding;
 
-[ConfigDisplay(Name = "Developer settings", Order = 9)]
+[ConfigDisplay(Name = "开发者设置", Order = 9)]
 public sealed class DeveloperConfig : ConfigNode
 {
     [PropertyDisplay("障碍物地图：从源加载")]

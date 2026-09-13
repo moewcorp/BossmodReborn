@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 
 namespace BossMod;
@@ -91,8 +91,8 @@ public sealed class ConfigRoot
         List<string> result = [];
         if (args.Length == 0)
         {
-            result.Add("Usage: /bmr cfg <config-type> <field> <value>");
-            result.Add("Both config-type and field can be shortened. Valid config-types:");
+            result.Add("用法：/bmr cfg <配置类型> <字段> <值>");
+            result.Add("配置类型与字段均支持简写。可用的配置类型：");
             foreach (var type in _nodes.Keys)
                 result.Add($"- {type.Name}");
             return result;
@@ -115,14 +115,14 @@ public sealed class ConfigRoot
 
         if (matchingNodes.Count == 0)
         {
-            result.Add("Config type not found. Valid types:");
+            result.Add("未找到该配置类型。可用类型：");
             foreach (var type in _nodes.Keys)
                 result.Add($"- {type.Name}");
             return result;
         }
         if (matchingNodes.Count > 1)
         {
-            result.Add("Ambiguous config type, pass longer pattern. Matches:");
+            result.Add("配置类型不唯一，请提供更长的匹配串。候选：");
             foreach (var node in matchingNodes)
                 result.Add($"- {node.GetType().Name}");
             return result;
@@ -132,8 +132,8 @@ public sealed class ConfigRoot
         var fields = GeneratedConfigMetadata.Get(selectedNode).DisplayFields;
         if (args.Length == 1)
         {
-            result.Add("Usage: /bmr cfg <config-type> <field> <value>");
-            result.Add($"Valid fields for {selectedNode.GetType().Name}:");
+            result.Add("用法：/bmr cfg <配置类型> <字段> <值>");
+            result.Add($"{selectedNode.GetType().Name} 的可用字段：");
             foreach (var field in fields)
                 result.Add($"- {field.Name}");
             return result;
@@ -156,14 +156,14 @@ public sealed class ConfigRoot
 
         if (matchingFields.Count == 0)
         {
-            result.Add($"Field not found {args[1]}, Valid fields:");
+            result.Add($"未找到字段 {args[1]}，可用字段：");
             foreach (var field in fields)
                 result.Add($"- {field.Name}");
             return result;
         }
         if (matchingFields.Count > 1)
         {
-            result.Add("Ambiguous field name, pass longer pattern. Matches:");
+            result.Add("字段名不唯一，请提供更长的匹配串。候选：");
             foreach (var field in matchingFields)
                 result.Add($"- {field.Name}");
             return result;
@@ -174,14 +174,14 @@ public sealed class ConfigRoot
         {
             if (args.Length == 2)
             {
-                result.Add(selectedField.Getter(selectedNode)?.ToString() ?? $"Failed to get value of '{selectedField.Name}'");
+                result.Add(selectedField.Getter(selectedNode)?.ToString() ?? $"无法读取「{selectedField.Name}」的值");
             }
             else
             {
                 var value = FromConsoleString(args[2], selectedField.FieldType);
                 if (value == null)
                 {
-                    result.Add($"Failed to convert '{args[2]}' to {selectedField.FieldType}");
+                    result.Add($"无法将「{args[2]}」转换为 {selectedField.FieldType}");
                 }
                 else
                 {
@@ -194,8 +194,8 @@ public sealed class ConfigRoot
         catch (Exception e)
         {
             result.Add(args.Length == 2
-                ? $"Failed to get value of {selectedNode.GetType().Name}.{selectedField.Name}: {e}"
-                : $"Failed to set {selectedNode.GetType().Name}.{selectedField.Name} to {args[2]}: {e}");
+                ? $"读取 {selectedNode.GetType().Name}.{selectedField.Name} 的值失败：{e}"
+                : $"将 {selectedNode.GetType().Name}.{selectedField.Name} 设为 {args[2]} 失败：{e}");
         }
         return result;
     }

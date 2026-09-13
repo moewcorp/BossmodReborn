@@ -1,4 +1,4 @@
-namespace BossMod.Dawntrail.Savage.M12S2Lindwurm;
+﻿namespace BossMod.Dawntrail.Savage.M12S2Lindwurm;
 
 [ConfigDisplay(Order = 0x160, Parent = typeof(DawntrailConfig))]
 public sealed class M12S2LindwurmConfig : ConfigNode
@@ -7,7 +7,7 @@ public sealed class M12S2LindwurmConfig : ConfigNode
     // Replication 1 — Strategy Selection
     // ============================================================
 
-    [PropertyDisplay("Replication 1 strategy")]
+    [PropertyDisplay("自我复制 1 策略")]
     public Replication1Strategy Rep1Strategy = Replication1Strategy.CloneRelative;
 
     public Replication1Effective GetReplication1()
@@ -39,14 +39,14 @@ public sealed class M12S2LindwurmConfig : ConfigNode
     // Replication 2 — Strategy Selection
     // ============================================================
 
-    [PropertyDisplay("Replication 2 strategy")]
+    [PropertyDisplay("自我复制 2 策略")]
     public Replication2Strategy Rep2Strategy = Replication2Strategy.DN;
 
     // ============================================================
     // Replication 3 — Idyllic Dream
     // ============================================================
 
-    [PropertyDisplay("Replication 3: clockspot → mechanic roles")]
+    [PropertyDisplay("自我复制 3: 钟点站位 → 机制职责")]
     [GroupDetails(["N", "NE", "E", "SE", "S", "SW", "W", "NW"])]
     public Replication3Role[] Rep3Roles =
     [
@@ -60,10 +60,10 @@ public sealed class M12S2LindwurmConfig : ConfigNode
         Replication3Role.Defam4
     ];
 
-    [PropertyDisplay("Attempt to adjust Idyllic Dream tower logic to mistakes")]
+    [PropertyDisplay("尝试根据失误调整境中奇梦的塔逻辑")]
     public bool IdyllicDreamAdjustToMistakes = true;
 
-    [PropertyDisplay("Show Lindwurm's Portent positional hints based on towers taken")]
+    [PropertyDisplay("根据已踩塔显示大蛇的魔力站位提示")]
     public bool ShowLindwurmsPortentHints = true;
 
     // ============================================================
@@ -107,14 +107,14 @@ public enum Replication2Strategy
 
 public enum Clockspot
 {
-    [PropertyDisplay("North")] N,
-    [PropertyDisplay("Northeast")] NE,
-    [PropertyDisplay("East")] E,
-    [PropertyDisplay("Southeast")] SE,
-    [PropertyDisplay("South")] S,
-    [PropertyDisplay("Southwest")] SW,
-    [PropertyDisplay("West")] W,
-    [PropertyDisplay("Northwest")] NW
+    [PropertyDisplay("北")] N,
+    [PropertyDisplay("东北")] NE,
+    [PropertyDisplay("东")] E,
+    [PropertyDisplay("东南")] SE,
+    [PropertyDisplay("南")] S,
+    [PropertyDisplay("西南")] SW,
+    [PropertyDisplay("西")] W,
+    [PropertyDisplay("西北")] NW
 }
 
 //
@@ -125,14 +125,14 @@ public enum Clockspot
 
 public enum Replication2Role
 {
-    [PropertyDisplay("Boss")] Boss,
-    [PropertyDisplay("None")] None,
+    [PropertyDisplay("首领")] Boss,
+    [PropertyDisplay("无")] None,
 
-    [PropertyDisplay("Cone (CW)")] Cone1,
-    [PropertyDisplay("Cone (CCW)")] Cone2,
+    [PropertyDisplay("扇形（顺时针）")] Cone1,
+    [PropertyDisplay("扇形（逆时针）")] Cone2,
 
-    [PropertyDisplay("Stack (CW)")] Stack1,
-    [PropertyDisplay("Stack (CCW)")] Stack2,
+    [PropertyDisplay("分摊（顺时针）")] Stack1,
+    [PropertyDisplay("分摊（逆时针）")] Stack2,
 
     [PropertyDisplay("Defamation (CW)")] Defam1,
     [PropertyDisplay("Defamation (CCW)")] Defam2,
@@ -148,8 +148,8 @@ public enum Replication3Role
 {
     [PropertyDisplay("Stack N1")] Stack1,
     [PropertyDisplay("Stack N2")] Stack2,
-    [PropertyDisplay("Stack S1")] Stack3,
-    [PropertyDisplay("Stack S2")] Stack4,
+    [PropertyDisplay("分摊 南1")] Stack3,
+    [PropertyDisplay("分摊 南2")] Stack4,
 
     [PropertyDisplay("Defamation N1")] Defam1,
     [PropertyDisplay("Defamation N2")] Defam2,

@@ -8,11 +8,11 @@ public static class UIStrategyValue
 {
     private static readonly (string Name, float Value)[] PriorityBaselines =
     [
-        ("Very Low", ActionQueue.Priority.VeryLow),
-        ("Low", ActionQueue.Priority.Low),
-        ("Medium", ActionQueue.Priority.Medium),
-        ("High", ActionQueue.Priority.High),
-        ("Very High", ActionQueue.Priority.VeryHigh),
+        ("极低", ActionQueue.Priority.VeryLow),
+        ("低", ActionQueue.Priority.Low),
+        ("中", ActionQueue.Priority.Medium),
+        ("高", ActionQueue.Priority.High),
+        ("极高", ActionQueue.Priority.VeryHigh),
     ];
 
     public static List<string> Preview(StrategyValue value, StrategyConfigTrack cfg, BossModuleRegistry.Info? moduleInfo)
@@ -22,10 +22,10 @@ public static class UIStrategyValue
             case StrategyValueTrack t:
                 var opt = cfg.Options[t.Option];
                 return [
-                    $"Option: {opt.UIName}",
-                    $"Comment: {value.Comment}",
-                    $"Priority: {(float.IsNaN(t.PriorityOverride) ? $"default ({opt.DefaultPriority:f})" : t.PriorityOverride.ToString("f"))}",
-                    $"Target: {PreviewTarget(t, moduleInfo)}"
+                    $"选项：{opt.UIName}",
+                    $"备注：{value.Comment}",
+                    $"优先级：{(float.IsNaN(t.PriorityOverride) ? $"default ({opt.DefaultPriority:f})" : t.PriorityOverride.ToString("f"))}",
+                    $"目标：{PreviewTarget(t, moduleInfo)}"
                 ];
             default:
                 return [];
@@ -60,7 +60,7 @@ public static class UIStrategyValue
         return modified;
     }
 
-    public static bool DrawEditorTrackOption(StrategyValueTrack value, StrategyConfigTrack cfg, int? level, string label = "Option")
+    public static bool DrawEditorTrackOption(StrategyValueTrack value, StrategyConfigTrack cfg, int? level, string label = "选项")
     {
         var modified = false;
         using (var combo = ImRaii.Combo(label, cfg.Options[value.Option].UIName))
@@ -149,7 +149,7 @@ public static class UIStrategyValue
     public static bool DrawEditorTarget(StrategyValueTrack value, ActionTargets supportedTargets, BossModuleRegistry.Info? moduleInfo)
     {
         var modified = false;
-        using (var combo = ImRaii.Combo("Target", value.Target.ToString()))
+        using (var combo = ImRaii.Combo("目标", value.Target.ToString()))
         {
             if (combo)
             {
@@ -169,28 +169,28 @@ public static class UIStrategyValue
         switch (value.Target)
         {
             case StrategyTarget.PartyByAssignment:
-                modified |= DrawEditorTargetParamCombo<PartyRolesConfig.Assignment>(ref value.TargetParam, "Assignment");
+                modified |= DrawEditorTargetParamCombo<PartyRolesConfig.Assignment>(ref value.TargetParam, "职能分配");
                 break;
             case StrategyTarget.PartyWithLowestHP:
             case StrategyTarget.PartyByFilter:
                 if ((supportedTargets & ActionTargets.Self) != 0)
                 {
-                    modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.IncludeSelf, "Allow self", false);
+                    modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.IncludeSelf, "允许自身", false);
                 }
-                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeTanks, "Allow tanks", true);
-                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeHealers, "Allow healers", true);
-                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeMelee, "Allow melee", true);
-                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeRanged, "Allow ranged", true);
-                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeNoPredictedDamage, "Only if more damage is expected", false);
+                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeTanks, "允许坦克", true);
+                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeHealers, "允许治疗", true);
+                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeMelee, "允许近战", true);
+                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeRanged, "允许远程", true);
+                modified |= DrawEditorTargetParamFlags(ref value.TargetParam, StrategyPartyFiltering.ExcludeNoPredictedDamage, "仅在预计伤害更高时", false);
                 break;
             case StrategyTarget.EnemyWithHighestPriority:
-                modified |= DrawEditorTargetParamCombo<StrategyEnemySelection>(ref value.TargetParam, "Criterion");
+                modified |= DrawEditorTargetParamCombo<StrategyEnemySelection>(ref value.TargetParam, "筛选条件");
                 break;
             case StrategyTarget.EnemyByOID:
                 if (moduleInfo?.ObjectIDType != null)
                 {
                     var v = GeneratedEnumMetadata.ValueByRaw(moduleInfo.ObjectIDType, (uint)value.TargetParam);
-                    if (UICombo.Enum("OID", ref v))
+                    if (UICombo.Enum("对象ID", ref v))
                     {
                         value.TargetParam = (int)(uint)(object)v;
                         modified = true;
@@ -199,7 +199,7 @@ public static class UIStrategyValue
                 break;
             case StrategyTarget.PointWaymark:
                 var wm = (Waymark)value.TargetParam;
-                if (UICombo.Enum("Waymark", ref wm))
+                if (UICombo.Enum("场景标记", ref wm))
                 {
                     value.TargetParam = (int)wm;
                     modified = true;
@@ -239,13 +239,13 @@ public static class UIStrategyValue
 
     private static string PreviewParam(StrategyPartyFiltering pf)
     {
-        string excludeIfSet(StrategyPartyFiltering flag, string value) => (pf & flag) != 0 ? $", exclude {value}" : "";
-        return $"{((pf & StrategyPartyFiltering.IncludeSelf) != 0 ? "include" : "exclude")} self"
-            + excludeIfSet(StrategyPartyFiltering.ExcludeTanks, "tanks")
-            + excludeIfSet(StrategyPartyFiltering.ExcludeHealers, "healers")
-            + excludeIfSet(StrategyPartyFiltering.ExcludeMelee, "melee")
-            + excludeIfSet(StrategyPartyFiltering.ExcludeRanged, "ranged")
-            + excludeIfSet(StrategyPartyFiltering.ExcludeNoPredictedDamage, "players not expecting damage");
+        string excludeIfSet(StrategyPartyFiltering flag, string value) => (pf & flag) != 0 ? $"，排除{value}" : "";
+        return $"{((pf & StrategyPartyFiltering.IncludeSelf) != 0 ? "包含" : "排除")}自身"
+            + excludeIfSet(StrategyPartyFiltering.ExcludeTanks, "坦克")
+            + excludeIfSet(StrategyPartyFiltering.ExcludeHealers, "治疗")
+            + excludeIfSet(StrategyPartyFiltering.ExcludeMelee, "近战")
+            + excludeIfSet(StrategyPartyFiltering.ExcludeRanged, "远程")
+            + excludeIfSet(StrategyPartyFiltering.ExcludeNoPredictedDamage, "预计无伤害的玩家");
     }
 
     private static bool DrawEditorTargetParamCombo<E>(ref int current, string text) where E : Enum

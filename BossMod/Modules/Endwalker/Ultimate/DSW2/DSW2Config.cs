@@ -3,22 +3,22 @@
 [ConfigDisplay(Order = 0x201, Parent = typeof(EndwalkerConfig))]
 public sealed class DSW2Config() : ConfigNode()
 {
-    [PropertyDisplay("P2 Sanctity of the Ward (charges): group assignments")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（蓄能）：队伍分配")]
     [GroupDetails(["West/Across", "East/Behind"])]
     [GroupPreset("Default light parties", [0, 1, 0, 1, 0, 1, 0, 1])]
     [GroupPreset("Inverted light parties", [1, 0, 1, 0, 1, 0, 1, 0])]
     public GroupAssignmentLightParties P2SanctityGroups = GroupAssignmentLightParties.DefaultLightParties();
 
-    [PropertyDisplay("P2 Sanctity of the Ward (charges): groups relative to DRK (across/behind) rather than absolute (west/east)")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（蓄能）：队伍相对 DRK（对面/身后）而非绝对（西/东）")]
     public bool P2SanctityRelative = false;
 
-    [PropertyDisplay("P2 Sanctity of the Ward (charges): role responsible for balancing groups (if not set, swap with role partner instead)")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（蓄能）：负责平衡队伍的职能（若未设置，则与职能搭档互换）")]
     public Role P2SanctitySwapRole;
 
-    [PropertyDisplay("P2 Sanctity of the Ward (meteors): automatically use knockback immunity if needed")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（陨石）：需要时自动使用击退免疫")]
     public bool P2Sanctity2AutomaticAntiKB = true;
 
-    [PropertyDisplay("P2 Sanctity of the Ward (meteors): pair assignments")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（陨石）：配对分配")]
     [GroupDetails(["North", "East", "South", "West"])]
     [GroupPreset("MT/R1 N, OT/R2 S, H1/M1 E, H2/M2 W", [0, 2, 1, 3, 1, 3, 0, 2])]
     [GroupPreset("MT/R1 N, OT/R2 S, H1/M1 W, H2/M2 E", [0, 2, 3, 1, 3, 1, 0, 2])]
@@ -26,112 +26,112 @@ public sealed class DSW2Config() : ConfigNode()
 
     public enum P2PreyCardinals
     {
-        [PropertyDisplay("N/S always")]
+        [PropertyDisplay("北/南 始终")]
         AlwaysNS,
 
-        [PropertyDisplay("E/W always")]
+        [PropertyDisplay("东/西 始终")]
         AlwaysEW,
 
-        [PropertyDisplay("N/S, unless both preys start at E & W")]
+        [PropertyDisplay("北/南，除非两个猎物都起始于东和西")]
         PreferNS,
 
-        [PropertyDisplay("E/W, unless both preys start at N & S")]
+        [PropertyDisplay("东/西，除非两个猎物都起始于北和南")]
         PreferEW,
     }
 
-    [PropertyDisplay("P2 Sanctity of the Ward (meteors): preferred cardinals for prey targets")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（陨石）：猎物目标偏好的正点")]
     public P2PreyCardinals P2Sanctity2PreyCardinals;
 
-    [PropertyDisplay("P2 Sanctity of the Ward (meteors): force preferred cardinals even for 120-degree pattern (simpler swaps, but trickier movement)")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（陨石）：即使120度阵型也强制使用偏好正点（换位更简单，但走位更刁钻）")]
     public bool P2Sanctity2ForcePreferredPrey = true;
 
     public enum P2PreySwapDirection
     {
-        [PropertyDisplay("All prey roles rotate clockwise")]
+        [PropertyDisplay("所有猎物职能顺时针旋转")]
         RotateCW,
 
-        [PropertyDisplay("All prey roles rotate counterclockwise")]
+        [PropertyDisplay("所有猎物职能逆时针旋转")]
         RotateCCW,
 
-        [PropertyDisplay("Pairwise: N <-> E, S <-> W")]
+        [PropertyDisplay("成对：北 <-> 东，南 <-> 西")]
         PairsNE,
 
-        [PropertyDisplay("Pairwise: N <-> W, S <-> E")]
+        [PropertyDisplay("成对：北 <-> 西，南 <-> 东")]
         PairsNW,
     }
 
-    [PropertyDisplay("P2 Sanctity of the Ward (meteors): swap direction if both prey targets are on wrong cardinals")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（陨石）：若两个猎物目标都处于错误的正点则交换方向")]
     public P2PreySwapDirection P2Sanctity2SwapDirection;
 
-    [PropertyDisplay("P2 Sanctity of the Ward (meteors): preferred outer tower for prey role")]
-    [PropertyCombo("CCW (leftmost, if facing outside)", "CW (rightmost, if facing outside)")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（陨石）：猎物职能偏好的外侧塔")]
+    [PropertyCombo("逆时针（面向场外时最左侧）", "顺时针（面向场外时最右侧）")]
     public bool P2Sanctity2PreferCWTowerAsPrey = true;
 
     public enum P2OuterTowers
     {
-        [PropertyDisplay("Don't try to assign outer towers")]
+        [PropertyDisplay("不尝试分配外侧塔")]
         None,
 
-        [PropertyDisplay("Always use preferred direction")]
+        [PropertyDisplay("始终使用偏好方向")]
         AlwaysPreferred,
 
-        [PropertyDisplay("Prey targets both use common opposite direction, if it gives better angle; players in quadrants without prey targets still use preferred direction")]
+        [PropertyDisplay("若角度更优，两个猎物目标都使用共同的相反方向；无猎物目标的象限内的玩家仍使用偏好方向")]
         SynchronizedTargets,
 
-        [PropertyDisplay("Prey targets both use common opposite direction, if it gives better angle; players in all quadrants use same direction")]
+        [PropertyDisplay("若角度更优，两个猎物目标都使用共同的相反方向；所有象限内的玩家都使用相同方向")]
         SynchronizedRole,
 
-        [PropertyDisplay("Prey targets use whatever direction gives the best angle; players in quadrants without prey targets still use preferred direction")]
+        [PropertyDisplay("猎物目标使用能得到最佳角度的任意方向；无猎物目标的象限内的玩家仍使用偏好方向")]
         Individual
     }
 
-    [PropertyDisplay("P2 Sanctity of the Ward (meteors): outer tower assignment strategy")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（陨石）：外侧塔分配策略")]
     public P2OuterTowers P2Sanctity2OuterTowers = P2OuterTowers.Individual;
 
     public enum P2InnerTowers
     {
-        [PropertyDisplay("Don't try to assign inner towers")]
+        [PropertyDisplay("不尝试分配内侧塔")]
         None,
 
-        [PropertyDisplay("Assign closest unambiguous inner tower")]
+        [PropertyDisplay("分配最近且无歧义的内侧塔")]
         Closest,
 
-        [PropertyDisplay("Assign first CW tower that is not assigned to someone closer")]
+        [PropertyDisplay("分配第一个未被更近的人占用的顺时针塔")]
         CW,
     }
 
-    [PropertyDisplay("P2 Sanctity of the Ward (meteors): inner tower assignment strategy")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（陨石）：内侧塔分配策略")]
     public P2InnerTowers P2Sanctity2InnerTowers = P2InnerTowers.CW;
 
-    [PropertyDisplay("P2 Sanctity of the Ward (meteors): intercardinal for non-prey role for second towers")]
-    [PropertyCombo("CCW", "CW")]
+    [PropertyDisplay("P2 苍穹之阵：圣杖（陨石）：第二轮塔中非猎物职能的斜点")]
+    [PropertyCombo("逆时针", "顺时针")]
     public bool P2Sanctity2NonPreyTowerCW = false;
 
-    [PropertyDisplay("P3 Dive from Grace: look west for arrows rather than east (so forward arrow takes E spot, backward arrow takes W spot)")]
+    [PropertyDisplay("P3 堕天龙炎冲：看西边的箭头而非东边（即前进箭头去东位，后退箭头去西位）")]
     public bool P3DiveFromGraceLookWest = false;
 
-    [PropertyDisplay("P3 enumeration towers: assignments")]
+    [PropertyDisplay("P3 点数塔：分配")]
     [GroupDetails(["NW Flex", "NE Flex", "SE Flex", "SW Flex", "NW Stay", "NE Stay", "SE Stay", "SW Stay"])]
     [GroupPreset("LPDU", [1, 3, 6, 0, 2, 4, 5, 7])]
     [GroupPreset("LPDU but CCW", [0, 2, 5, 7, 1, 3, 4, 6])]
     [GroupPreset("NA", [1, 3, 4, 6, 0, 2, 5, 7])]
     public GroupAssignmentUnique P3DarkdragonDiveCounterGroups = GroupAssignmentUnique.Default();
 
-    [PropertyDisplay("P3 enumeration towers: prefer flexing to CCW tower (rather than to CW)")]
+    [PropertyDisplay("P3 点数塔：优先向逆时针塔机动（而非顺时针）")]
     public bool P3DarkdragonDiveCounterPreferCCWFlex = false;
 
     public enum P6MortalVow
     {
-        [PropertyDisplay("Don't assume any order")]
+        [PropertyDisplay("不假设任何顺序")]
         None,
 
-        [PropertyDisplay("LPDU: MT->OT->M1 (M2 as fallback)->R1")]
+        [PropertyDisplay("LPDU：MT->OT->M1（M2 作为后备）->R1")]
         TanksMeleeR1,
 
-        [PropertyDisplay("LPDU: MT->OT->M1 (M2 as fallback)->R2")]
+        [PropertyDisplay("LPDU：MT->OT->M1（M2 作为后备）->R2")]
         TanksMeleeR2,
     }
 
-    [PropertyDisplay("P6 Mortal Vow pass order")]
+    [PropertyDisplay("P6 灭杀的誓言 传递顺序")]
     public P6MortalVow P6MortalVowOrder = P6MortalVow.None;
 }

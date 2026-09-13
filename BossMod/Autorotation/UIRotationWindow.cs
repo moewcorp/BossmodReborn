@@ -75,7 +75,7 @@ public sealed class UIRotationWindow : UIWindow
                 {
                     if (plans.SelectedIndex < 0)
                     {
-                        var plan = new Plan($"New {plans.Plans.Count + 1}", activeModule.GetType()) { Guid = Guid.NewGuid().ToString(), Class = player.Class, Level = activeModule.Info.PlanLevel };
+                        var plan = new Plan($"新建 {plans.Plans.Count + 1}", activeModule.GetType()) { Guid = Guid.NewGuid().ToString(), Class = player.Class, Level = activeModule.Info.PlanLevel };
                         plans.SelectedIndex = plans.Plans.Count;
                         _mgr.Database.Plans.ModifyPlan(null, plan);
                     }
@@ -92,7 +92,7 @@ public sealed class UIRotationWindow : UIWindow
         }
 
         // TODO: more fancy action history/queue...
-        ImGui.TextUnformatted($"Modules: {_mgr}");
+        ImGui.TextUnformatted($"模块：{_mgr}");
         if (_mgr.Preset?.Modules.Any(m => m.TransientSettings.Count > 0) ?? false)
         {
             ImGui.SameLine();

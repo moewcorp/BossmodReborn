@@ -36,7 +36,7 @@ public class M10STheXtremesConfig : ConfigNode
     [GroupPreset("Default", [0, 4, 6, 2, 5, 3, 7, 1])]
     public GroupAssignmentUnique WaterAlleyOopAssignment = new() { Assignments = [0, 4, 6, 2, 5, 3, 7, 1] };
 
-    [PropertyDisplay("显示浪顶炽火的落点（火焰）")]
+    [PropertyDisplay("显示空中旋火的落点")]
     public bool ShowFireAlleyOopHints = false;
 
     [PropertyDisplay("提前显示浪尖转体的劈斩")]

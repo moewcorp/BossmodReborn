@@ -9,7 +9,7 @@ public sealed class ReplayManagementConfig : ConfigNode
     [PropertyDisplay("显示回放管理界面")]
     public bool ShowUI = false;
 
-    [PropertyDisplay("进入或录制无完整模块副本时显示聊天提醒")]
+    [PropertyDisplay("进入或录制没有模块的副本时显示聊天提醒")]
     public bool ImportantDutyAlert = true;
 
     [PropertyDisplay("副本开始/结束或野外模块启停时自动录制回放")]
@@ -18,7 +18,7 @@ public sealed class ReplayManagementConfig : ConfigNode
     [PropertyDisplay("在副本录像中自动录制", tooltip: "需要开启自动录制", depends: nameof(AutoRecord))]
     public bool AutoARR = false;
 
-    [PropertyDisplay("匿名化回放", tooltip: "若关闭此选项,回放中将包含你及录制期间所见其他玩家的个人身份信息(姓名和内容ID)")]
+    [PropertyDisplay("匿名化回放", tooltip: "若关闭此选项，回放中将包含你及录制期间所见其他玩家的个人身份信息（姓名和内容ID）")]
     public bool Anonymize = false;
 
     [PropertyDisplay("保留的最大回放数量")]

@@ -120,8 +120,8 @@ public sealed class ModuleViewer : IDisposable
         Customize(BossModuleInfo.Category.Quantum, contentType.GetRow(21u), "Quantum");
         Customize(BossModuleInfo.Category.Ultimate, contentType.GetRow(28u));
         Customize(BossModuleInfo.Category.VariantCriterion, contentType.GetRow(30u));
-        Customize(BossModuleInfo.Category.HallOfTheNovice, contentType.GetRow(20u), "Hall of the Novice");
-        Customize(BossModuleInfo.Category.CrucibleOfTheUnbroken, contentType.GetRow(40u), "Beastmaster");
+        Customize(BossModuleInfo.Category.HallOfTheNovice, contentType.GetRow(20u), "初学者学堂");
+        Customize(BossModuleInfo.Category.CrucibleOfTheUnbroken, contentType.GetRow(40u), "驯兽师");
 
         var playStyle = Service.LuminaSheet<CharaCardPlayStyle>()!;
         Customize(BossModuleInfo.Category.Foray, playStyle.GetRow(6u));
@@ -304,7 +304,7 @@ public sealed class ModuleViewer : IDisposable
     private static float EnabledColumnWidth()
     {
         var style = ImGui.GetStyle();
-        return ImGui.CalcTextSize("Enabled").X + style.CellPadding.X * 2f + style.FramePadding.X * 2f;
+        return ImGui.CalcTextSize("启用").X + style.CellPadding.X * 2f + style.FramePadding.X * 2f;
     }
 
     private static void CenterEnableCheckbox()
@@ -325,7 +325,7 @@ public sealed class ModuleViewer : IDisposable
             return;
         }
 
-        ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.WidthFixed, EnabledColumnWidth());
+        ImGui.TableSetupColumn("启用", ImGuiTableColumnFlags.WidthFixed, EnabledColumnWidth());
         ImGui.TableSetupColumn("##showExpac", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableHeadersRow();
 
@@ -353,7 +353,7 @@ public sealed class ModuleViewer : IDisposable
             }
             if (ImGui.IsItemHovered())
             {
-                ImGui.SetTooltip(anyEnabled != allEnabled ? "Some modules in this expansion are disabled. Click to enable all." : enabled ? "Disable all modules in this expansion." : "Enable all modules in this expansion.");
+                ImGui.SetTooltip(anyEnabled != allEnabled ? "该资料片下部分模块已被禁用。点击可全部启用。" : enabled ? "禁用该资料片下的全部模块。" : "启用该资料片下的全部模块。");
             }
 
             ImGui.TableNextColumn();
@@ -379,7 +379,7 @@ public sealed class ModuleViewer : IDisposable
             return;
         }
 
-        ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.WidthFixed, EnabledColumnWidth());
+        ImGui.TableSetupColumn("启用", ImGuiTableColumnFlags.WidthFixed, EnabledColumnWidth());
         ImGui.TableSetupColumn("##showType", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableHeadersRow();
 
@@ -407,7 +407,7 @@ public sealed class ModuleViewer : IDisposable
             }
             if (ImGui.IsItemHovered())
             {
-                ImGui.SetTooltip(anyEnabled != allEnabled ? "Some modules in this category are disabled. Click to enable all." : enabled ? "Disable all modules in this category." : "Enable all modules in this category.");
+                ImGui.SetTooltip(anyEnabled != allEnabled ? "该内容类型下部分模块已被禁用。点击可全部启用。" : enabled ? "禁用该内容类型下的全部模块。" : "启用该内容类型下的全部模块。");
             }
 
             ImGui.TableNextColumn();
@@ -434,7 +434,7 @@ public sealed class ModuleViewer : IDisposable
         }
 
         ImGui.TableSetupColumn("##type", ImGuiTableColumnFlags.WidthFixed, 80f);
-        ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.WidthFixed, EnabledColumnWidth());
+        ImGui.TableSetupColumn("启用", ImGuiTableColumnFlags.WidthFixed, EnabledColumnWidth());
         ImGui.TableSetupColumn("##fight", ImGuiTableColumnFlags.WidthStretch);
         ImGui.TableHeadersRow();
 
@@ -501,7 +501,7 @@ public sealed class ModuleViewer : IDisposable
                     }
                     if (ImGui.IsItemHovered())
                     {
-                        ImGui.SetTooltip(groupAnyEnabled != groupAllEnabled ? "Some modules in this group are disabled. Click to enable all." : groupEnabled ? "Disable all modules in this group." : "Enable all modules in this group.");
+                        ImGui.SetTooltip(groupAnyEnabled != groupAllEnabled ? "该分组下部分模块已被禁用。点击可全部启用。" : groupEnabled ? "禁用该分组下的全部模块。" : "启用该分组下的全部模块。");
                     }
 
                     ImGui.TableNextColumn();
@@ -530,7 +530,7 @@ public sealed class ModuleViewer : IDisposable
                             }
                             if (ImGui.IsItemHovered())
                             {
-                                ImGui.SetTooltip(moduleEnabled ? "Disable this module." : "Enable this module.");
+                                ImGui.SetTooltip(moduleEnabled ? "禁用该模块。" : "启用该模块。");
                             }
 
                             ImGui.TableNextColumn();
@@ -611,7 +611,7 @@ public sealed class ModuleViewer : IDisposable
                 groupId |= module.GroupID;
                 var bmRow = Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value;
                 var bmSort = uint.Parse(bmRow.ShortCode.ToString().AsSpan(3), CultureInfo.InvariantCulture);
-                var bmName = $"Crucible of the Unbroken: {FixCase(bmRow.Name)}";
+                var bmName = FixCase(bmRow.Name);
                 const string suffix = " Of the Unbroken";
 
                 if (bmName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
@@ -622,21 +622,21 @@ public sealed class ModuleViewer : IDisposable
             case BossModuleInfo.GroupType.RemovedUnreal:
                 return (new("已移除内容", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.BaldesionArsenal:
-                return (new("Baldesion Arsenal", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
+                return (new("兵武塔", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.CastrumLacusLitore:
                 return (new("Castrum Lacus Litore", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.TheDalriada:
-                return (new("The Dalriada", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
+                return (new("旗舰达尔里阿达号", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.TheForkedTowerBlood:
-                return (new("The Forked Tower: Blood", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
+                return (new("两歧塔 力之塔", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.TheForkedTowerMagicNormal:
-                return (new("The Forked Tower: Magic (Normal)", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
+                return (new("两歧塔 魔之塔（普通）", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.TheForkedTowerMagicExtreme:
-                return (new("The Forked Tower: Magic (Extreme)", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
+                return (new("两歧塔 超魔之塔", groupId, groupId), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.ForayFATE:
                 groupId |= module.GroupID;
                 var fateRowBozjaSkirmish = Service.LuminaRow<Fate>(module.NameID)!.Value;
-                var skirmishName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} FATE";
+                var skirmishName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} 危命任务";
                 return (new(skirmishName, groupId, groupId), new(module, $"{fateRowBozjaSkirmish.Name}", module.SortOrder));
             case BossModuleInfo.GroupType.Quest:
                 var questRow = Service.LuminaRow<Quest>(module.GroupID)!.Value;
@@ -645,17 +645,17 @@ public sealed class ModuleViewer : IDisposable
                 return (new(questCategoryName, groupId, groupId), new(module, $"{questRow.Name}: {BNpcName(module.NameID)}", module.SortOrder));
             case BossModuleInfo.GroupType.Fate:
                 var fateRow = Service.LuminaRow<Fate>(module.GroupID)!.Value;
-                return (new($"{module.Expansion.ShortName()} FATE", groupId, groupId, _iconFATE), new(module, $"{fateRow.Name}: {BNpcName(module.NameID)}", module.SortOrder));
+                return (new($"{module.Expansion.ShortName()} 危命任务", groupId, groupId, _iconFATE), new(module, $"{fateRow.Name}: {BNpcName(module.NameID)}", module.SortOrder));
             case BossModuleInfo.GroupType.Hunt:
                 groupId |= module.GroupID;
-                return (new($"{module.Expansion.ShortName()} Hunt {(BossModuleInfo.HuntRank)module.GroupID}", groupId, groupId, _iconHunt), new(module, BNpcName(module.NameID), module.SortOrder));
+                return (new($"{module.Expansion.ShortName()} 狩猎 {(BossModuleInfo.HuntRank)module.GroupID}", groupId, groupId, _iconHunt), new(module, BNpcName(module.NameID), module.SortOrder));
             case BossModuleInfo.GroupType.CriticalEngagement:
                 groupId |= module.GroupID;
-                var ceName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} CE";
+                var ceName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} 紧急遭遇战";
                 return (new(ceName, groupId, groupId), new(module, Service.LuminaRow<DynamicEvent>(module.NameID)!.Value.Name.ToString(), module.SortOrder));
             case BossModuleInfo.GroupType.BozjaDuel:
                 groupId |= module.GroupID;
-                var duelName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} Duel";
+                var duelName = $"{FixCase(Service.LuminaRow<ContentFinderCondition>(module.GroupID)!.Value.Name)} 单挑";
                 return (new(duelName, groupId, groupId), new(module, Service.LuminaRow<DynamicEvent>(module.NameID)!.Value.Name.ToString(), module.SortOrder));
             case BossModuleInfo.GroupType.EurekaNM:
                 groupId |= module.GroupID;
@@ -704,7 +704,7 @@ public sealed class ModuleViewer : IDisposable
             if (ImGui.Selectable($"为 {player.Class} 新建规划..."))
             {
                 var plans = mplans.GetOrAdd(player.Class);
-                var plan = new Plan($"New {plans.Plans.Count + 1}", info.ModuleType) { Guid = Guid.NewGuid().ToString(), Class = player.Class, Level = info.PlanLevel };
+                var plan = new Plan($"新建 {plans.Plans.Count + 1}", info.ModuleType) { Guid = Guid.NewGuid().ToString(), Class = player.Class, Level = info.PlanLevel };
                 _planDB.ModifyPlan(null, plan);
                 UIPlanDatabaseEditor.StartPlanEditor(_planDB, plan);
             }

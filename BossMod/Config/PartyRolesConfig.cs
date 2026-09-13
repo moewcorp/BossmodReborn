@@ -395,11 +395,11 @@ public class PartyRolesConfig : ConfigNode
 
 
 
-        foreach (var _ in tree.Node("Tank auto-assign priority (drag to reorder, highest to lowest)"))
+        foreach (var _ in tree.Node("坦克自动分配优先级（可拖动排序，从高到低）"))
         {
-            ImGui.TextColored(ImGuiColors.TankBlue, "Main Tank:");
+            ImGui.TextColored(ImGuiColors.TankBlue, "主坦克：");
             DrawTankPriority("mt", MainTankPriority);
-            ImGui.TextColored(ImGuiColors.TankBlue, "Off Tank:");
+            ImGui.TextColored(ImGuiColors.TankBlue, "副坦克：");
             DrawTankPriority("ot", OffTankPriority);
         }
 
@@ -475,12 +475,12 @@ public class PartyRolesConfig : ConfigNode
             ImGui.TextUnformatted("一切都好！");
         }
 
-        if (ImGui.Button("Clear all assignments"))
+        if (ImGui.Button("清空所有分配"))
         {
             Assignments.Clear();
             Modified.Fire();
         }
         ImGui.SameLine();
-        ImGui.TextUnformatted("Clears all assignments, for example to debloat config file size.");
+        ImGui.TextUnformatted("清空所有职能分配，例如可用于精简配置文件体积。");
     }
 }

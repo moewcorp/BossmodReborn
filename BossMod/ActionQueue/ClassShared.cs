@@ -2,7 +2,7 @@
 
 namespace BossMod.ClassShared;
 
-[ConfigDisplay(Name = "Cross-class actions", Parent = typeof(ActionTweaksConfig), Order = -5)]
+[ConfigDisplay(Name = "跨职业技能", Parent = typeof(ActionTweaksConfig), Order = -5)]
 public sealed class SharedActionsConfig : ConfigNode
 {
     [PropertyDisplay("将冲刺技能与相机方向对齐（失传敏捷、魔猎步等）")]

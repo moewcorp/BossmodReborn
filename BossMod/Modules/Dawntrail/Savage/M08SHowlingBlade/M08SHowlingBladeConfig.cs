@@ -3,31 +3,31 @@
 [ConfigDisplay(Order = 0x130, Parent = typeof(DawntrailConfig))]
 public sealed class M08SHowlingBladeConfig() : ConfigNode()
 {
-    [PropertyDisplay("Show platform numbers")]
+    [PropertyDisplay("显示平台编号")]
     public bool ShowPlatformNumbers = true;
 
-    [PropertyDisplay("Platform number colors:")]
+    [PropertyDisplay("平台编号颜色：")]
     public Color[] PlatformNumberColors = [new(0xffffffff), new(0xffffffff), new(0xffffffff), new(0xffffffff), new(0xffffffff)];
 
-    [PropertyDisplay("Platform number font size")]
+    [PropertyDisplay("平台编号字号")]
     [PropertySlider(0.1f, 100, Speed = 1)]
     public float PlatformNumberFontSize = 22;
 
     public enum ReignStrategy
     {
-        [PropertyDisplay("Show both safespots for current role")]
+        [PropertyDisplay("显示当前职责的两个安全点")]
         Any,
-        [PropertyDisplay("Assume G1 left, G2 right when looking at boss from arena center")]
+        [PropertyDisplay("从场地中心面向首领时，假设 G1 在左、G2 在右")]
         Standard,
-        [PropertyDisplay("Assume G1 right, G2 left when looking at boss from arena center")]
+        [PropertyDisplay("从场地中心面向首领时，假设 G1 在右、G2 在左")]
         Inverse,
-        [PropertyDisplay("None")]
+        [PropertyDisplay("无")]
         Disabled
     }
 
-    [PropertyDisplay("Revolutionary/Eminent Reign positioning hints")]
+    [PropertyDisplay("旋击群狼剑/扫击群狼剑 站位提示")]
     public ReignStrategy ReignHints = ReignStrategy.Standard;
 
-    [PropertyDisplay("Show Rinon/Toxic Friends tower spots for Lone Wolf's Lament")]
+    [PropertyDisplay("为独狼的诅咒显示 Rinon/Toxic Friends 塔位")]
     public bool LoneWolfsLamentHints = true;
 }

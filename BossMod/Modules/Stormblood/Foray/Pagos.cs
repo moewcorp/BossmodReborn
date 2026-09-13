@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Stormblood.Foray.Pagos;
 
-[ConfigDisplay(Name = "Pagos", Parent = typeof(EurekaConfig))]
+[ConfigDisplay(Name = "恒冰之地", Parent = typeof(EurekaConfig))]
 public class PagosConfig : ConfigNode
 {
     public NotoriousMonster FarmTarget = NotoriousMonster.None;

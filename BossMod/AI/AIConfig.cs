@@ -1,15 +1,15 @@
 ﻿namespace BossMod.AI;
 
-[ConfigDisplay(Name = "AI配置", Order = 7)]
+[ConfigDisplay(Name = "自动移动", Order = 7)]
 sealed class AIConfig : ConfigNode
 {
-    [PropertyDisplay("在标题栏中显示AI状态")]
+    [PropertyDisplay("在服务器信息栏中显示AI状态")]
     public bool ShowDTR = false;
 
     [PropertyDisplay("显示AI界面")]
     public bool DrawUI = false;
 
-    [PropertyDisplay("焦点目标敌人")]
+    [PropertyDisplay("将队长设为焦点目标")]
     public bool FocusTargetMaster = false;
 
     [PropertyDisplay("将按键广播到其他窗口", tooltip: "在某些电脑上可能会导致卡顿。仅在确实需要时启用！它仅适用于多开玩家。")]
@@ -30,7 +30,7 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("战斗时跟随")]
     public bool FollowDuringCombat = true;
 
-    [PropertyDisplay("在boss模块工作期间跟随")]
+    [PropertyDisplay("Boss 模块激活时跟随")]
     public bool FollowDuringActiveBossModule = true;
 
     [PropertyDisplay("脱战时跟随")]
@@ -39,7 +39,7 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("跟随目标")]
     public bool FollowTarget = true;
 
-    [PropertyDisplay("跟随目标时所需的位置")]
+    [PropertyDisplay("跟随目标时期望的身位")]
     [PropertyCombo(["任何", "侧面", "背面", "正面"])]
     public Positional DesiredPositional = Positional.Any;
 
@@ -67,7 +67,7 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("自动挂机时间", tooltip: "离开战斗直至启用挂机模式的时间（秒）。任何移动都将重置计时器或禁用已激活的挂机模式")]
     public float AFKModeTimer = 10f;
 
-    [PropertyDisplay("禁用加载障碍物地图", tooltip: "可能需要启用某些内容，例如深层迷宫")]
+    [PropertyDisplay("禁用加载障碍物地图", tooltip: "对于某些内容（例如深层迷宫），可能需要启用此项")]
     public bool DisableObstacleMaps = false;
 
     [PropertyDisplay("移动决策延迟", tooltip: "更改此值需您自担风险，并保持此值较低！太高则无法及时适应某些机制。请确保针对不同内容重新调整此值")]

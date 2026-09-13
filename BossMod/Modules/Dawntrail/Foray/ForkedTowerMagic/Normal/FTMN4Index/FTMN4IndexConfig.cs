@@ -3,9 +3,9 @@
 [ConfigDisplay(Order = 0x174, Parent = typeof(DawntrailConfig))]
 public sealed class FTMN4IndexConfig : ConfigNode
 {
-    [PropertyDisplay("Force AI to target closest add when spawned")]
+    [PropertyDisplay("生成时强制 AI 攻击最近的增援")]
     public bool ForceAddTargeting = false;
 
-    [PropertyDisplay("Force AI to target boss if no adds and no current target")]
+    [PropertyDisplay("若无增援且无当前目标，强制 AI 攻击首领")]
     public bool ForceBossTargeting = false;
 }

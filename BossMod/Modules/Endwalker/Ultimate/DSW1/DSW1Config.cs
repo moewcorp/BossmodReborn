@@ -5,16 +5,16 @@ public sealed class DSW1Config() : ConfigNode()
 {
     public enum HeavensflameHints
     {
-        [PropertyDisplay("Don't show any hints")]
+        [PropertyDisplay("不显示任何提示")]
         None,
 
-        [PropertyDisplay("Match waymark colors: circle=red, triangle=green, cross=blue, square=purple")]
+        [PropertyDisplay("匹配场景标记颜色：圆=红，三角=绿，十字=蓝，方=紫")]
         Waymarks,
 
-        [PropertyDisplay("LPDU (inter)cardinals: cross=N/S, square=NE/SW, circle=E/W, triangle=SE/NW")]
+        [PropertyDisplay("LPDU（正/斜）点：十字=北/南，方=东北/西南，圆=东/西，三角=东南/西北")]
         LPDU,
     }
 
-    [PropertyDisplay("Heavensflame resolution hints")]
+    [PropertyDisplay("天火解法提示")]
     public HeavensflameHints Heavensflame = HeavensflameHints.None;
 }

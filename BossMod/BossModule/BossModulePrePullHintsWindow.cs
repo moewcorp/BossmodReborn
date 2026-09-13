@@ -30,7 +30,7 @@ public sealed class BossModulePrePullHintsWindow : UIWindow
         if (show)
         {
             var encounterName = string.IsNullOrEmpty(module!.PrimaryActor.Name) ? module.GetType().Name : module.PrimaryActor.Name;
-            WindowName = $"Pre-fight hints: {encounterName}{WindowID}";
+            WindowName = $"开怪前提示：{encounterName}{WindowID}";
         }
     }
 
@@ -42,7 +42,7 @@ public sealed class BossModulePrePullHintsWindow : UIWindow
             return;
         }
 
-        ImGui.TextWrapped("Before the pull:");
+        ImGui.TextWrapped("开怪前：");
         ImGui.Separator();
         ImGui.PushTextWrapPos();
         var hints = module.PrePullHints;
@@ -58,7 +58,7 @@ public sealed class BossModulePrePullHintsWindow : UIWindow
         ImGui.Spacing();
         ImGui.Separator();
 
-        if (ImGui.Button("Never show again"))
+        if (ImGui.Button("不再显示"))
         {
             _permanentlySuppressing = true;
             if (module.Info != null)
@@ -69,11 +69,11 @@ public sealed class BossModulePrePullHintsWindow : UIWindow
         }
         if (ImGui.IsItemHovered())
         {
-            ImGui.SetTooltip("You can re-enable this popup from this encounter's config window.");
+            ImGui.SetTooltip("可在本场战斗的配置窗口中重新启用该弹窗。");
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Dismiss for now"))
+        if (ImGui.Button("暂时关闭"))
         {
             _dismissedModule = module;
             IsOpen = false;

@@ -252,7 +252,7 @@ public sealed class UIPresetDatabaseEditor(RotationDatabase rotationDB)
     {
         try
         {
-            var finfo = new FileInfo("<import from clipboard>");
+            var finfo = new FileInfo("<从剪贴板导入>");
             var json = JsonNode.Parse(ImGui.GetClipboardText());
 
             // handle case where someone has posted the entire raw json for whatever reason
@@ -272,7 +272,7 @@ public sealed class UIPresetDatabaseEditor(RotationDatabase rotationDB)
 
                 Service.Notifications.AddNotification(new()
                 {
-                    Content = $"Imported plan '{plan.Name}' for L{plan.Level} {plan.Class}"
+                    Content = $"已导入 {plan.Class} {plan.Level} 级的计划「{plan.Name}」"
                 });
 
                 return;

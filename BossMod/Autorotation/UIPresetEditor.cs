@@ -48,7 +48,7 @@ public sealed class UIPresetEditor
         }
         else
         {
-            Preset = new("New");
+            Preset = new("新建");
             NameConflict = CheckNameConflict();
             MakeNameUnique();
             Modified = false; // don't bother...

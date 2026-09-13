@@ -6,21 +6,21 @@ public sealed class M09SVampFataleConfig : ConfigNode
     //[PropertyDisplay("Enable force targetting adds", tooltip: "Prioritizes Deadly Doornail; melee move to flails once puddle is too big")]
     //public bool EnableForcedTarget = false;
 
-    [PropertyDisplay("Show static Aetherletting positions (NA / Hector)", tooltip: "If party roles are configured, only show player's spot")]
+    [PropertyDisplay("显示静态以太流失位置（NA / Hector）", tooltip: "若已配置队伍职责，仅显示自身位置。")]
     public bool ShowStaticAetherletting = false;
 
-    [PropertyDisplay("Enable AI static Aetherletting spread positions (NA / Hector)", tooltip: "Will not work unless party roles are configured")]
+    [PropertyDisplay("启用 AI 静态以太流失分散位置（NA / Hector）", tooltip: "除非已配置队伍职责，否则无效")]
     public bool EnableStaticAetherlettingPuddle = false;
 
-    [PropertyDisplay("Show Hell In A Cell tower order (North CW / Hector)", tooltip: "If party roles are configured, only show own tower")]
+    [PropertyDisplay("显示笼中地狱塔顺序（北 顺时针 / Hector）", tooltip: "若已配置队伍职责，仅显示自身塔")]
     public bool ShowTowerOrder = false;
 
-    [PropertyDisplay("Enable AI Hell In A Cell tower order (North CW / Hector)", tooltip: "Will not work unless party roles are configured")]
+    [PropertyDisplay("启用 AI 笼中地狱塔顺序（北 顺时针 / Hector）", tooltip: "除非已配置队伍职责，否则无效")]
     public bool EnableTowerOrder = false;
 
     //[PropertyDisplay("Show Ultrasonic Amp/Spread bait positions (NA / Hector)")]
     //public bool ShowUltrasonicBait = false;
 
-    [PropertyDisplay("Enable AI Undead Deathmatch (LP1 N/W)", tooltip: "Will not work unless party roles are configured")]
+    [PropertyDisplay("启用 AI 血蝠死斗（LP1 北/西）", tooltip: "除非已配置队伍职责，否则无效")]
     public bool EnableDeathmatch = false;
 }

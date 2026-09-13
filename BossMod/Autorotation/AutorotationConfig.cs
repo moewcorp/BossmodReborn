@@ -12,7 +12,7 @@ public sealed class AutorotationConfig : ConfigNode
         None,
         [PropertyDisplay("仅文字")]
         TextOnly,
-        [PropertyDisplay("图标")]
+        [PropertyDisplay("带图标")]
         Icon
     }
 

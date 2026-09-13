@@ -1,6 +1,6 @@
-namespace BossMod.Stormblood.Foray.Hydatos;
+﻿namespace BossMod.Stormblood.Foray.Hydatos;
 
-[ConfigDisplay(Name = "Hydatos", Parent = typeof(EurekaConfig))]
+[ConfigDisplay(Name = "丰水之地", Parent = typeof(EurekaConfig))]
 public class HydatosConfig : ConfigNode
 {
     public NotoriousMonster FarmTarget = NotoriousMonster.None;

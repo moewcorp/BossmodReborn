@@ -79,28 +79,28 @@ public sealed class ColorConfig : ConfigNode
     [PropertyDisplay("轮廓和阴影")]
     public Color Shadows = new(0xFF000000);
 
-    [PropertyDisplay("标点: A")]
+    [PropertyDisplay("场景标记A")]
     public Color WaymarkA = new(0xff964ee5);
 
-    [PropertyDisplay("标点: B")]
+    [PropertyDisplay("场景标记B")]
     public Color WaymarkB = new(0xff11a2c6);
 
-    [PropertyDisplay("标点: C")]
+    [PropertyDisplay("场景标记C")]
     public Color WaymarkC = new(0xffe29f30);
 
-    [PropertyDisplay("标点: D")]
+    [PropertyDisplay("场景标记D")]
     public Color WaymarkD = new(0xffbc567a);
 
-    [PropertyDisplay("标点: 1")]
+    [PropertyDisplay("场景标记1")]
     public Color Waymark1 = new(0xff964ee5);
 
-    [PropertyDisplay("标点: 2")]
+    [PropertyDisplay("场景标记2")]
     public Color Waymark2 = new(0xff11a2c6);
 
-    [PropertyDisplay("标点: 3")]
+    [PropertyDisplay("场景标记3")]
     public Color Waymark3 = new(0xffe29f30);
 
-    [PropertyDisplay("标点: 4")]
+    [PropertyDisplay("场景标记4")]
     public Color Waymark4 = new(0xffbc567a);
 
     [PropertyDisplay("方位: 北")]

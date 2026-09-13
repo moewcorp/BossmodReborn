@@ -10,7 +10,7 @@ public sealed class ActionTweaksConfig : ConfigNode
     [PropertyDisplay("移除瞬发技能因延迟引起的额外动画锁定延迟（请阅读提示！）", tooltip: "请不要与XivAlexander或NoClippy一起使用——如果检测到这些工具，它应会自动禁用，但请务必先检查！")]
     public bool RemoveAnimationLockDelay = false;
 
-    [PropertyDisplay("最大动画锁。模拟延迟（请阅读工具提示！）", tooltip: "配置使用动画锁定移除时的最大模拟延迟（以毫秒为单位）——这是必需的，且不能减少到零。将此设置为20毫秒时，在使用自动循环时将启用三插。移除三插的最小设置为26毫秒。20毫秒的最小值已被FFLogs接受，不应对你的日志造成问题。")]
+    [PropertyDisplay("最大动画锁模拟延迟（请阅读提示！）", tooltip: "配置使用动画锁定移除时的最大模拟延迟（以毫秒为单位）——这是必需的，且不能减少到零。将此设置为20毫秒时，在使用自动循环时将启用三插。移除三插的最小设置为26毫秒。20毫秒的最小值已被FFLogs接受，不应对你的日志造成问题。")]
     [PropertySlider(20, 50, Speed = 0.1f)]
     public int AnimationLockDelayMax = 20;
 
@@ -22,7 +22,7 @@ public sealed class ActionTweaksConfig : ConfigNode
 
     public enum ModifierKey
     {
-        [PropertyDisplay("None")]
+        [PropertyDisplay("无")]
         None,
         [PropertyDisplay("Control")]
         Ctrl,
@@ -30,7 +30,7 @@ public sealed class ActionTweaksConfig : ConfigNode
         Alt,
         [PropertyDisplay("Shift")]
         Shift,
-        [PropertyDisplay("LMB + RMB")]
+        [PropertyDisplay("左右键同时按下")]
         M12
     }
 
@@ -60,20 +60,20 @@ public sealed class ActionTweaksConfig : ConfigNode
     [PropertyDisplay("为手动按下的技能使用自定义队列", tooltip: "此设置可以更好地与自动循环结合，并防止在自动循环过程中按下治疗技能时出现三插或卡GCD的情况")]
     public bool UseManualQueue = false;
 
-    [PropertyDisplay("尽量避免冲入 AOE", tooltip: "如果自动使用定向冲刺（例如 WAR Onslaught）会将你带入危险区域，则阻止其生效。在没有模块的实例中可能无法正常工作。\n\n如果你启用了“使用自定义队列执行手动操作”，则此选项也适用于手动按下的冲刺。")]
+    [PropertyDisplay("尽量避免冲入 AOE", tooltip: "如果自动使用定向冲刺（例如战士的猛攻）会将你带入危险区域，则阻止其生效。在没有模块的副本中可能无法正常工作。\n\n如果你启用了“使用自定义队列执行手动操作”，则此选项也适用于手动按下的冲刺。")]
     public bool DashSafety = true;
 
-    [PropertyDisplay("将上一个选项应用于所有冲刺，而不仅仅是缩短距离的冲刺", tooltip: "包括后退冲刺（例如 SAM Yaten）、传送（例如 NIN Shukuchi）和固定长度冲刺（例如 DRG Elusive Jump）")]
+    [PropertyDisplay("将上一个选项应用于所有冲刺，而不仅仅是缩短距离的冲刺", tooltip: "包括后跳（例如武士的必杀剑·夜天）、瞬移（例如忍者的缩地）和固定距离的冲刺（例如龙骑士的回避跳跃）")]
 
     public bool DashSafetyExtra = true;
 
-    [PropertyDisplay("自动管理自动攻击", tooltip: "此设置可防止在倒计时期间提前启动自动循环，在拉动时、切换目标时以及使用任何未明确取消自动循环的操作时自动启动自动循环。")]
+    [PropertyDisplay("自动管理自动攻击", tooltip: "此设置可防止在倒计时期间提前开启自动攻击，并在开怪时、切换目标时以及使用任何未明确取消自动攻击的技能时自动开启自动攻击。")]
     public bool AutoAutos = false;
 
     [PropertyDisplay("使用技能时自动下坐骑")]
     public bool AutoDismount = true;
 
-    [PropertyDisplay("Allow forbidding targets", tooltip: "Some modules want to prevent attacking certain targets, for example to prevent an early enrage. This setting gets ignored while AI is on.")]
+    [PropertyDisplay("允许禁止选中目标", tooltip: "某些模块需要防止攻击特定目标，例如为了不提前触发狂暴。开启 AI 时此设置会被忽略。")]
     public bool PreventForbiddenTargets = true;
 
     public enum GroundTargetingMode

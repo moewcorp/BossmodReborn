@@ -1,4 +1,4 @@
-using BossMod.Autorotation;
+﻿using BossMod.Autorotation;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using System.IO;
@@ -400,7 +400,7 @@ public sealed class ConfigUI : IDisposable
     private static PropertyRenderer GetPropertyRenderer(Type type)
         => _propertyRenderers.TryGetValue(type, out var renderer) ? renderer : (_propertyRenderers[type] = GeneratedFactories.CreatePropertyRenderer(type));
 
-    internal static void DrawPrePullHintSetting(BossModuleRegistry.Info info, string label = "Show pre-fight hint popup for this encounter")
+    internal static void DrawPrePullHintSetting(BossModuleRegistry.Info info, string label = "显示本场战斗的开怪前提示弹窗")
     {
         var show = BossModuleManager.Config.ShowPrePullHintsFor(info.PrimaryActorOID);
         if (ImGui.Checkbox($"{label}##PrePullHints{info.PrimaryActorOID:X8}", ref show))
@@ -411,12 +411,12 @@ public sealed class ConfigUI : IDisposable
         if (!BossModuleManager.Config.ShowPrePullHints)
         {
             ImGui.SameLine();
-            ImGui.TextDisabled("(globally disabled)");
+            ImGui.TextDisabled("（已在全局设置中关闭）");
         }
     }
 
     private static string PrePullHintSettingLabel(BossModuleRegistry.Info info, bool disambiguate)
-        => disambiguate ? $"Show pre-fight hint popup for {GenerateNodeName(info.ModuleType)}" : "Show pre-fight hint popup for this encounter";
+        => disambiguate ? $"显示 {GenerateNodeName(info.ModuleType)} 的开怪前提示弹窗" : "显示本场战斗的开怪前提示弹窗";
 
     private static Type ExpansionConfigType(BossModuleInfo.Expansion expansion) => expansion switch
     {

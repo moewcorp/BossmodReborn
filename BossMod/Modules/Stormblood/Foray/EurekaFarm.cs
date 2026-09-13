@@ -13,18 +13,18 @@ public sealed class NMAttribute(uint nameID, uint prepNameID, uint fateID = 0) :
     public string Label => $"{ModuleViewer.BNpcName(nameID)} ({ModuleViewer.BNpcName(prepNameID)})";
 }
 
-[ConfigDisplay(Name = "Eureka", Parent = typeof(StormbloodConfig))]
+[ConfigDisplay(Name = "优雷卡", Parent = typeof(StormbloodConfig))]
 public class EurekaConfig : ConfigNode
 {
-    [PropertyDisplay("Max range to look for new mobs to pull")]
+    [PropertyDisplay("寻找新怪物拉取的最大范围")]
     [PropertySlider(20, 100, Speed = 0.1f)]
     public float MaxPullDistance = 30f;
 
-    [PropertyDisplay("Max number of mobs to pull at once (0 for no limit)")]
+    [PropertyDisplay("一次最多拉取的怪物数量（0 = 不限）")]
     [PropertySlider(0, 30, Speed = 0.1f)]
     public int MaxPullCount = 10;
 
-    [PropertyDisplay("Show auto farm window")]
+    [PropertyDisplay("显示自动刷怪窗口")]
     public bool ShowAutoFarmWindow = false;
 
     public bool AssistMode;

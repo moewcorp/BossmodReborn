@@ -29,7 +29,7 @@ public sealed class AutoDDConfig : ConfigNode
     [PropertySlider(min: 0.2f, max: 3, Speed = 0.05f)]
     public float MinimapScale = 1.0f;
 
-    [PropertyDisplay("自动躲避陷阱", tooltip: "避开PalacePal数据中已知的陷阱位置。已与在线数据打通，请安装同仓库下PalacePal版本一同使用。（无论此设置如何，使用“全景”发现的陷阱都会被避开。）")]
+    [PropertyDisplay("自动躲避陷阱", tooltip: "避开源自 PalacePal 数据的已知陷阱位置。无需安装 PalacePal，数据已包含在 BMR 中。（无论此设置如何，使用「全景」发现的陷阱都会被避开。）")]
     public bool TrapHints = true;
     [PropertyDisplay("自动导航至传送装置")]
     public bool AutoPassage = true;
@@ -37,13 +37,13 @@ public sealed class AutoDDConfig : ConfigNode
     [PropertyDisplay("自动选中怪物行为逻辑")]
     public ClearBehavior AutoClear = ClearBehavior.Leveling;
 
-    [PropertyDisplay("禁止在非BOSS楼层的使用DoT技能（仅适用于BMR自动循环）")]
+    [PropertyDisplay("禁止在非 BOSS 楼层使用 DoT 技能（仅影响 BMR 自动循环）")]
     public bool ForbidDOTs = false;
 
     [PropertyDisplay("暂停导航前可拉的最大怪物数量（0 = 战斗中不进行导航）")]
     [PropertySlider(0, 15)]
     public int MaxPull = 0;
-    [PropertyDisplay("尝试利用地形进行视线攻击")]
+    [PropertyDisplay("尝试利用地形阻断敌人视线")]
     public bool AutoLOS = false;
 
     [PropertyDisplay("自动导航至宝箱")]

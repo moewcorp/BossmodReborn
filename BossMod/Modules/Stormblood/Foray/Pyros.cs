@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Stormblood.Foray.Pyros;
 
-[ConfigDisplay(Name = "Pyros", Parent = typeof(EurekaConfig))]
+[ConfigDisplay(Name = "涌火之地", Parent = typeof(EurekaConfig))]
 public class PyrosConfig : ConfigNode
 {
     public NotoriousMonster FarmTarget = NotoriousMonster.None;

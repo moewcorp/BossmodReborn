@@ -86,7 +86,7 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("如果旋转地图关闭，则将地图旋转 180°")]
     public bool FlipArena = false;
 
-    [PropertyDisplay("为雷达提供额外的旋转空间", tooltip: "如果您使用上述设置，您可以在修剪边缘之前在侧面给雷达额外的空间，以便考虑在战斗过程中旋转相机或给基本方向空间。")]
+    [PropertyDisplay("为雷达提供额外的旋转空间", tooltip: "如果您使用上述设置，您可以在修剪边缘之前在侧面给雷达额外的空间，以便在战斗中旋转相机或给正点方位留出空间。")]
     [PropertySlider(1, 2, Speed = 0.1f, Logarithmic = true)]
     public float SlackForRotations = 1.5f;
 
@@ -110,10 +110,10 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertySlider(0.1f, 100f, Speed = 1f)]
     public float CardinalsFontSize = 17f;
 
-    [PropertyDisplay("在雷达上显示标记点")]
+    [PropertyDisplay("在雷达上显示场景标记")]
     public bool ShowWaymarks = false;
 
-    [PropertyDisplay("场地标记字体大小", depends: nameof(ShowWaymarks))]
+    [PropertyDisplay("场景标记字体大小", depends: nameof(ShowWaymarks))]
     [PropertySlider(0.1f, 100f, Speed = 1f)]
     public float WaymarkFontSize = 22f;
 
@@ -123,13 +123,13 @@ public sealed class BossModuleConfig : ConfigNode
     [PropertyDisplay("始终显示所有存活的队员")]
     public bool ShowIrrelevantPlayers = false;
 
-    [PropertyDisplay("在雷达上为未着色的玩家显示基于职业的颜色")]
+    [PropertyDisplay("在雷达上为未着色的玩家按职能着色")]
     public bool ColorPlayersBasedOnRole = false;
 
     [PropertyDisplay("始终显示焦点目标的队友", separator: true)]
     public bool ShowFocusTargetPlayer = false;
 
-    [PropertyDisplay("角色三角型比例大小")]
+    [PropertyDisplay("角色三角形缩放系数")]
     [PropertySlider(0.1f, 10f, Speed = 0.1f)]
     public float ActorScale = 1f;
 

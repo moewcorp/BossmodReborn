@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Stormblood.Foray.Anemos;
 
-[ConfigDisplay(Name = "Anemos", Parent = typeof(EurekaConfig))]
+[ConfigDisplay(Name = "常风之地", Parent = typeof(EurekaConfig))]
 public class AnemosConfig : ConfigNode
 {
     public NotoriousMonster FarmTarget = NotoriousMonster.None;
