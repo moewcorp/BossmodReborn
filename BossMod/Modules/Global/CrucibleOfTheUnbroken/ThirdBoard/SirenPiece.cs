@@ -31,12 +31,14 @@ public enum AID : uint {
 
 public enum SID : uint {
     WitsEnd = 5424, // Helper->player, extra=0x1
+    Bind = 5710, // CrawlingPiece->player, extra=0x0
     Bleeding = 3077, // none->player, extra=0x0
     Bleeding1 = 3078, // none->player, extra=0x0
     ForcedMarch = 1257, // SirenPiece->player, extra=0x4
     ForwardMarch = 2161, // SirenPiece->player, extra=0x0
     LeftFace = 2163, // SirenPiece->player, extra=0x0
     RightFace = 2164, // SirenPiece->player, extra=0x0
+    AboutFace = 2162, // SirenPiece->player, extra=0x0
 }
 
 public enum IconID : uint {
@@ -111,7 +113,7 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module) {
     }
 }
 
-sealed class InvitingVerse(BossModule module) : Components.StatusDrivenForcedMarch(module, 3.0f, (uint)SID.ForwardMarch, default, (uint)SID.LeftFace,
+sealed class InvitingVerse(BossModule module) : Components.StatusDrivenForcedMarch(module, 3.0f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace,
     (uint)SID.RightFace) {
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var state = State.GetValueOrDefault(actor.InstanceID);
