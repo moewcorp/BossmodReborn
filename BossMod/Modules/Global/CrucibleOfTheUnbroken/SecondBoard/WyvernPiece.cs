@@ -3,11 +3,11 @@
 public enum OID : uint
 {
     WyvernPiece = 0x4C58,
-    Helper = 0x233C,
     WindSprite = 0x4C5B, // R1.600, x0 (spawn during fight)
     WhirlwindSmall = 0x4C59, // R2.000, x0 (spawn during fight), mixed types
     WhirlwindBig = 0x4C5A, // R3.000, x0 (spawn during fight)
     LiquidHellPuddle = 0x1EA66D, // R0.500, x0 (spawn during fight), EventObj type
+    Helper = 0x233C
 }
 
 public enum AID : uint

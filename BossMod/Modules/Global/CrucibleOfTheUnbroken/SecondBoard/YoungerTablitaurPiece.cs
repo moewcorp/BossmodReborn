@@ -4,8 +4,8 @@ public enum OID : uint
 {
     YoungerTablitaurPiece = 0x4C60,
     ElderTablitaurPiece = 0x4C5F, // R3.600, x1
-    Helper = 0x233C,
     Gen = 0x4E00, // R1.000, x2
+    Helper = 0x233C
 }
 
 public enum AID : uint

@@ -1,6 +1,7 @@
 ﻿namespace BossMod.Global.CrucibleOfTheUnbroken.ThirdBoard.SirenPiece;
 
-public enum OID : uint {
+public enum OID : uint
+{
     SirenPiece = 0x4CA1,
     Helper = 0x233C,
     CrawlingPiece = 0x4CA4, // R0.750, x0 (spawn during fight)
@@ -8,7 +9,8 @@ public enum OID : uint {
     SweetSong = 0x4CA2, // R1.000, x0 (spawn during fight)
 }
 
-public enum AID : uint {
+public enum AID : uint
+{
     AutoAttack = 50395, // SirenPiece->players, no cast, range 9 ?-degree cone
     AutoAttackShambling = 49682, // 4CA3->player, no cast, single-target
     Teleport = 48564, // SirenPiece->location, no cast, single-target
@@ -29,7 +31,8 @@ public enum AID : uint {
     Wallop = 50662, // ShamblingPiece->self, 2.5s cast, range 5 width 3 rect
 }
 
-public enum SID : uint {
+public enum SID : uint
+{
     WitsEnd = 5424, // Helper->player, extra=0x1
     Bind = 5710, // CrawlingPiece->player, extra=0x0
     Bleeding = 3077, // none->player, extra=0x0
@@ -41,11 +44,13 @@ public enum SID : uint {
     AboutFace = 2162, // SirenPiece->player, extra=0x0
 }
 
-public enum IconID : uint {
+public enum IconID : uint
+{
     TankBuster = 218, // player->self
 }
 
-public enum TetherID : uint {
+public enum TetherID : uint
+{
     TargetTether = 17, // 4CA4->player - from the CrawlingPiece
 }
 
@@ -55,19 +60,24 @@ sealed class DeadMansDirgeOuter(BossModule module) : Components.SimpleAOEs(modul
 sealed class DeadMansDirgeInner(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DeadMansDirgeInner, new AOEShapeDonut(3.0f, 43.0f));
 sealed class Wallop(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Wallop, new AOEShapeRect(5.0f, 1.5f));
 
-sealed class UnmooringMelody(BossModule module) : Components.GenericAOEs(module) {
+sealed class UnmooringMelody(BossModule module) : Components.GenericAOEs(module)
+{
     private readonly List<AOEInstance> aoes = [];
     private readonly AOEShapeCone shape = new(50.0f, 45.0f.Degrees());
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.Teleport) {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID == (uint)AID.Teleport)
+        {
             aoes.Add(new(shape, spell.TargetXZ, Angle.FromDirection(Arena.Center - spell.TargetXZ)));
         }
 
-        if (spell.Action.ID == (uint)AID.UnmooringMelody1) {
+        if (spell.Action.ID == (uint)AID.UnmooringMelody1)
+        {
             NumCasts++;
 
-            if (NumCasts == 12) {
+            if (NumCasts == 12)
+            {
                 aoes.Clear();
                 NumCasts = 0;
             }
@@ -77,34 +87,43 @@ sealed class UnmooringMelody(BossModule module) : Components.GenericAOEs(module)
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(aoes);
 }
 
-sealed class Burst(BossModule module) : Components.GenericAOEs(module) {
+sealed class Burst(BossModule module) : Components.GenericAOEs(module)
+{
     private readonly List<AOEInstance> aoes = [];
     private readonly AOEShapeCircle shape = new(9.0f);
 
-    public override void OnActorCreated(Actor actor) {
-        if (actor.OID == (uint)OID.SweetSong) {
+    public override void OnActorCreated(Actor actor)
+    {
+        if (actor.OID == (uint)OID.SweetSong)
+        {
             aoes.Add(new(shape, actor.Position, actor.Rotation, WorldState.FutureTime(5.7f)));
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.Burst) {
-            if (aoes.Count > 0) {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID == (uint)AID.Burst)
+        {
+            if (aoes.Count > 0)
+            {
                 aoes.RemoveAt(0);
             }
         }
     }
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
         var count = aoes.Count;
-        if (count == 0) {
+        if (count == 0)
+        {
             return [];
         }
 
         var max = count > 6 ? 6 : count;
         var nextAOEs = CollectionsMarshal.AsSpan(aoes);
 
-        for (var i = 0; i < max; i++) {
+        for (var i = 0; i < max; i++)
+        {
             ref var aoe = ref nextAOEs[i];
             aoe.Color = i < 3 ? Colors.Danger : Colors.AOE;
         }
@@ -114,10 +133,13 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module) {
 }
 
 sealed class InvitingVerse(BossModule module) : Components.StatusDrivenForcedMarch(module, 3.0f, (uint)SID.ForwardMarch, (uint)SID.AboutFace, (uint)SID.LeftFace,
-    (uint)SID.RightFace) {
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+    (uint)SID.RightFace)
+{
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
         var state = State.GetValueOrDefault(actor.InstanceID);
-        if (state == null || state.PendingMoves.Count == 0) {
+        if (state == null || state.PendingMoves.Count == 0)
+        {
             return;
         }
 
@@ -127,8 +149,10 @@ sealed class InvitingVerse(BossModule module) : Components.StatusDrivenForcedMar
     }
 }
 
-sealed class SirenPieceStates : StateMachineBuilder {
-    public SirenPieceStates(BossModule module) : base(module) {
+sealed class SirenPieceStates : StateMachineBuilder
+{
+    public SirenPieceStates(BossModule module) : base(module)
+    {
         TrivialPhase()
             .ActivateOnEnter<SongOfTorment>()
             .ActivateOnEnter<UnmooringMelody>()
@@ -142,12 +166,16 @@ sealed class SirenPieceStates : StateMachineBuilder {
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.SirenPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1090u, NameID = 14583u, SortOrder = 6)]
-public sealed class SirenPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f)) {
-    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+public sealed class SirenPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f))
+{
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
         var count = hints.PotentialTargets.Count;
-        for (var i = 0; i < count; ++i) {
+        for (var i = 0; i < count; ++i)
+        {
             var e = hints.PotentialTargets[i];
-            e.Priority = e.Actor.OID switch {
+            e.Priority = e.Actor.OID switch
+            {
                 (uint)OID.CrawlingPiece => 3,
                 (uint)OID.ShamblingPiece => 2,
                 (uint)OID.SirenPiece => 1,
@@ -156,7 +184,8 @@ public sealed class SirenPiece(WorldState ws, Actor primary) : BossModule(ws, pr
         }
     }
 
-    protected override void DrawEnemies(int pcSlot, Actor pc) {
+    protected override void DrawEnemies(int pcSlot, Actor pc)
+    {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies((uint)OID.CrawlingPiece));
         Arena.Actors(Enemies((uint)OID.ShamblingPiece));

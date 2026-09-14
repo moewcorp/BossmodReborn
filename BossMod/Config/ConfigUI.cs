@@ -12,6 +12,7 @@ public sealed class ConfigUI : IDisposable
         public ConfigNode? Node = node;
         public string Name = "";
         public int Order;
+        public ModuleViewer.SupportedFightSortKey? SupportedFightOrder;
         public UINode? Parent;
         public List<UINode> Children = [];
         public string[] Tags = [];
@@ -81,7 +82,8 @@ public sealed class ConfigUI : IDisposable
             var hintNode = new UINode(null)
             {
                 Name = GenerateNodeName(info.ModuleType),
-                Order = SupportedFightNodeOrder(info),
+                Order = 0x100000,
+                SupportedFightOrder = ModuleViewer.GetSupportedFightSortKey(info),
                 Parent = nodes.GetValueOrDefault(ExpansionConfigType(info.Expansion)) ?? nodes.GetValueOrDefault(typeof(ModuleConfig))
             };
             hintNode.PrePullHintModules.Add(info);
@@ -430,20 +432,25 @@ public sealed class ConfigUI : IDisposable
 
     private static string GenerateNodeName(Type t) => t.Name.EndsWith("Config", StringComparison.Ordinal) ? t.Name[..^"Config".Length] : t.Name;
 
-    private int SupportedFightNodeOrder(BossModuleRegistry.Info info)
-    {
-        var order = _mv.SupportedListOrder(info);
-        // Hint-only encounter nodes live after explicitly ordered config nodes, but retain the exact
-        // relative order used by Supported fights. The fallback is only for an unexpected registry mismatch.
-        return order == int.MaxValue ? 0x20000000 : 0x100000 + order;
-    }
-
     private static void SortByOrder(List<UINode> nodes)
     {
         nodes.Sort(static (a, b) =>
         {
             var order = a.Order.CompareTo(b.Order);
-            return order != 0 ? order : string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+            if (order != 0)
+                return order;
+
+            if (a.SupportedFightOrder.HasValue != b.SupportedFightOrder.HasValue)
+                return a.SupportedFightOrder.HasValue ? 1 : -1;
+
+            if (a.SupportedFightOrder is { } aSupported && b.SupportedFightOrder is { } bSupported)
+            {
+                var supportedOrder = aSupported.CompareTo(bSupported);
+                if (supportedOrder != 0)
+                    return supportedOrder;
+            }
+
+            return string.Compare(a.Name, b.Name, StringComparison.Ordinal);
         });
         var count = nodes.Count;
         for (var i = 0; i < count; ++i)
@@ -599,7 +606,7 @@ public sealed class ConfigUI : IDisposable
     private static bool DrawProperty(string label, string tooltip, ConfigNode node, ConfigFieldMetadata member, Enum v)
     {
         DrawHelp(tooltip);
-        if (UICombo.Enum(label, ref v))
+        if (UICombo.Enum(label, member.FieldType, ref v))
         {
             member.Setter(node, v);
             return true;

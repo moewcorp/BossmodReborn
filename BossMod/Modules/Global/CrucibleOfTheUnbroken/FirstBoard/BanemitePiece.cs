@@ -2,16 +2,16 @@ namespace BossMod.Global.CrucibleOfTheUnbroken.FirstBoard.BanemitePiece;
 
 public enum OID : uint
 {
-    Actor1ec0fb = 0x1EC0FB, // R0.500, x?, EventObj type
     BanemitePiece = 0x4B8B, // R3.000, x?
-    Helper = 0x233C, // R0.500, x?, Helper type
     MitelingPiece = 0x4B8C, // R1.800, x?
-
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    _AutoAttack_ = 50398, // BanemitePiece->player, no cast, single-target
+    AutoAttack = 50398, // BanemitePiece->player, no cast, single-target
+    AutoAttackAdd = 49682, // MitelingPiece->player, no cast, single-target
+
     BedrockUplift = 46901, // BanemitePiece->self, 4.0s cast, single-target
     BedrockUplift1 = 46902, // 233C->self, 5.0s cast, range 6 circle
     BedrockUplift2 = 46903, // 233C->self, 7.0s cast, range 5-12 donut
@@ -20,21 +20,14 @@ public enum AID : uint
     DeadlyThrust = 46906, // BanemitePiece->player, 5.0s cast, single-target
     VenomWeb = 46907, // BanemitePiece->self, 3.0s cast, single-target
     VenomWeb1 = 46908, // 233C->location, 6.0s cast, range 9 circle
-    _AutoAttack_1 = 49682, // MitelingPiece->player, no cast, single-target
+
     Silkscreen = 46909, // MitelingPiece->self, 5.0s cast, range 40 width 4 rect
 }
 
-
 // Concentric rings after an initial circle aoe.
-class BedrockUplift(BossModule module) : Components.ConcentricAOEs(module, _shapes)
+sealed class BedrockUplift(BossModule module) : Components.ConcentricAOEs(module, [new AOEShapeCircle(6f), new AOEShapeDonut(6f, 12f),
+        new AOEShapeDonut(12f, 18f), new AOEShapeDonut(18f, 24f)])
 {
-    private static readonly AOEShape[] _shapes = [
-        new AOEShapeCircle(6f),
-        new AOEShapeDonut(6f, 12f),
-        new AOEShapeDonut(12f, 18f),
-        new AOEShapeDonut(18f, 24f)
-    ];
-
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.BedrockUplift1)
@@ -69,7 +62,6 @@ sealed class MitelingAdds(BossModule module) : Components.Adds(module, (uint)OID
 //Silkscreen = 46909, // MitelingPiece->self, 5.0s cast, range 40 width 4 rect
 sealed class Silkscreen(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Silkscreen, new AOEShapeRect(40f, 2f));
 
-
 sealed class BanemitePieceStates : StateMachineBuilder
 {
     public BanemitePieceStates(BossModule module) : base(module)
@@ -90,6 +82,6 @@ sealed class BanemitePieceStates : StateMachineBuilder
     GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken,
     GroupID = 1088u,
     NameID = 14536u,
-    SortOrder = 1)]
+    SortOrder = 2)]
 
 public sealed class BanemitePiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f));

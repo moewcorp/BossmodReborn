@@ -2,7 +2,6 @@ namespace BossMod.Global.CrucibleOfTheUnbroken.FirstBoard.PiscodemonPiece;
 
 public enum OID : uint
 {
-    _Gen_Actor1ec0fb = 0x1EC0FB, // R0.500, x?, EventObj type
     PiscodemonPiece = 0x4B8A, // R2.340, x?
     Helper = 0x233C, // R0.500, x?, Helper type
 }
@@ -57,6 +56,6 @@ sealed class PiscodemonPieceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.PiscodemonPiece, Contributors = "wen", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1088u, NameID = 14535u, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.PiscodemonPiece, Contributors = "wen", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1088u, NameID = 14535u, SortOrder = 5)]
 
 public sealed class PiscodemonPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsSquare(20f));

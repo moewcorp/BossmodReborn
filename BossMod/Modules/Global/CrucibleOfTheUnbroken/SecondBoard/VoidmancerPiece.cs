@@ -3,9 +3,9 @@
 public enum OID : uint
 {
     VoidmancerPiece = 0x4C5C,
-    Helper = 0x233C,
     ZombiePiece = 0x4C5D, // R0.750, x20
     Malady = 0x4C5E, // R1.000, x0 (spawn during fight)
+    Helper = 0x233C,
 }
 
 public enum AID : uint
