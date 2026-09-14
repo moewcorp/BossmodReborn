@@ -67,7 +67,7 @@ public enum TetherID : uint {
 }
 
 
-sealed class AutoAttack(BossModule module) : Components.Cleave(module, (uint)AID.AutoAttack, new AOEShapeCone(9.0f, 50.0f.Degrees())) {
+sealed class AutoAttack(BossModule module) : Components.Cleave(module, (uint)AID.AutoAttack, new AOEShapeCone(9.0f, 55.0f.Degrees())) {
     private readonly BeastlyAura? beastlyAura = module.FindComponent<BeastlyAura>();
 
     public override void AddHints(int slot, Actor actor, TextHints hints) {
@@ -278,7 +278,7 @@ sealed class GuttlerTheGutterStates : StateMachineBuilder {
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.GuttlerTheGutter, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1090u, NameID = 14592u, SortOrder = 7)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.GuttlerTheGutter, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1090u, NameID = 14592u, SortOrder = 8)]
 public sealed class GuttlerTheGutter : BossModule {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var count = hints.PotentialTargets.Count;
