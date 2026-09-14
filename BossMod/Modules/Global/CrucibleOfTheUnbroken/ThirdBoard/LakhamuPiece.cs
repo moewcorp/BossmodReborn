@@ -1,15 +1,13 @@
 ﻿namespace BossMod.Global.CrucibleOfTheUnbroken.ThirdBoard.LakhamuPiece;
 
-public enum OID : uint
-{
+public enum OID : uint {
     LakhamuPiece = 0x4C9E,
     Helper = 0x233C,
     GolemPiece = 0x4C9F, // R2.200, x0 (spawn during fight)
     SandSphere = 0x4CA0, // R1.800, x0 (spawn during fight)
 }
 
-public enum AID : uint
-{
+public enum AID : uint {
     AutoAttackStone = 50792, // LakhamuPiece->player, no cast, single-target
     AutoAttackGolem = 50398, // 4C9F->player, no cast, single-target
     EarthrenderBoss = 48559, // LakhamuPiece->self, 4.0s cast, single-target
@@ -24,41 +22,58 @@ public enum AID : uint
     Landslip = 48556, // Helper->self, 8.0s cast, range 45 width 10 rect
 }
 
-public enum SID : uint
-{
+public enum SID : uint {
     EarthResistanceDown = 5025, // Helper->player, extra=0x1
     Blind = 5389, // LakhamuPiece->player, extra=0x0
 }
 
-public enum IconID : uint
-{
+public enum IconID : uint {
     EarthShake = 40, // player/4A09/49F0->self
 }
 
 sealed class Earthrender(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Earthrender, 6.0f);
-sealed class SandTempest(BossModule module) : Components.RaidwideCast(module, (uint)AID.SandTempest);
-sealed class EarthShaker(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(60.0f, 25.0f.Degrees()), (uint)IconID.EarthShake,
-    (uint)AID.EarthShaker, 3.3f);
+sealed class SandTempest(BossModule module) : Components.RaidwideCast(module, (uint)AID.SandTempest, "Applies blind debuff");
 
-sealed class Burst(BossModule module) : Components.GenericAOEs(module)
-{
+// Eventcast is triggered but the bait actually resolves a little bit later, so a timer of 1.0 second is added
+sealed class EarthShaker(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(60.0f, 75.0f.Degrees()), (uint)IconID.EarthShake,
+    (uint)AID.EarthShaker, 3.3f) {
+    private const float additionalActivationTime = 1.0f;
+    private DateTime? eventCastActivation;
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (CurrentBaits.Count != 0 && spell.Action.ID == WatchedAction) {
+            eventCastActivation = WorldState.CurrentTime;
+        }
+    }
+
+    public override void Update() {
+        base.Update();
+
+        if (eventCastActivation == null || CurrentBaits.Count == 0) {
+            return;
+        }
+
+        if (eventCastActivation.Value.AddSeconds(additionalActivationTime) > WorldState.CurrentTime) {
+            return;
+        }
+
+        CurrentBaits.Clear();
+    }
+}
+
+sealed class Burst(BossModule module) : Components.GenericAOEs(module) {
     private readonly List<AOEInstance> aoes = [];
     private readonly AOEShapeCircle shape = new(12.0f);
 
-    public override void OnActorCreated(Actor actor)
-    {
-        if (actor.OID == (uint)OID.SandSphere)
-        {
+    public override void OnActorCreated(Actor actor) {
+        if (actor.OID == (uint)OID.SandSphere) {
             aoes.Add(new(shape, actor.Position, actor.Rotation, WorldState.FutureTime(5.9f)));
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID == (uint)AID.Burst)
-        {
-            if (aoes.Count > 0)
-            {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.Burst) {
+            if (aoes.Count > 0) {
                 aoes.RemoveAt(0);
             }
         }
@@ -67,50 +82,39 @@ sealed class Burst(BossModule module) : Components.GenericAOEs(module)
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(aoes);
 }
 
-sealed class Rockslide(BossModule module) : Components.GenericAOEs(module, (uint)AID.Rockslide)
-{
+sealed class Rockslide(BossModule module) : Components.GenericAOEs(module, (uint)AID.Rockslide) {
     public readonly List<AOEInstance> aoes = [];
     private readonly AOEShapeRect shape = new(45.0f, 5.0f);
     private bool active = false;
 
-    public override void OnActorCreated(Actor actor)
-    {
-        if (actor.OID == (uint)OID.GolemPiece)
-        {
+    public override void OnActorCreated(Actor actor) {
+        if (actor.OID == (uint)OID.GolemPiece) {
             aoes.Add(new(shape, actor.Position, actor.Rotation, WorldState.FutureTime(9.7f)));
         }
     }
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.Landslip)
-        {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.Landslip) {
             active = true;
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID == (uint)AID.Rockslide)
-        {
-            if (aoes.Count > 0)
-            {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.Rockslide) {
+            if (aoes.Count > 0) {
                 aoes.RemoveAt(0);
             }
         }
 
-        if (spell.Action.ID == (uint)AID.Landslip)
-        {
+        if (spell.Action.ID == (uint)AID.Landslip) {
             active = false;
         }
     }
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(aoes);
 
-    public override void AddHints(int slot, Actor actor, TextHints hints)
-    {
-        if (active)
-        {
+    public override void AddHints(int slot, Actor actor, TextHints hints) {
+        if (active) {
             return;
         }
 
@@ -119,8 +123,7 @@ sealed class Rockslide(BossModule module) : Components.GenericAOEs(module, (uint
 }
 
 sealed class Landslip(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Landslip, 20.0f, shape: new AOEShapeRect(45.0f, 5.0f), maxCasts: 1,
-    kind: Kind.DirForward)
-{
+    kind: Kind.DirForward) {
     private readonly Rockslide? rockslide = module.FindComponent<Rockslide>();
 
     // Grid map
@@ -129,48 +132,38 @@ sealed class Landslip(BossModule module) : Components.SimpleKnockbacks(module, (
     private const int tiles = tilesFromCenter * 2;
     private const int tilesFromCenter = 2;
 
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
         base.DrawArenaForeground(pcSlot, pc);
 
-        if (rockslide == null || rockslide.aoes.Count == 0 || Casters.Count == 0)
-        {
+        if (rockslide == null || rockslide.aoes.Count == 0 || Casters.Count == 0) {
             return;
         }
 
-        for (var y = 0; y < tiles; y++)
-        {
-            for (var x = 0; x < tiles; x++)
-            {
+        for (var y = 0; y < tiles; y++) {
+            for (var x = 0; x < tiles; x++) {
                 // Checking each tile
                 var tile = Arena.Center + new WDir((x - tilesFromCenter + 0.5f) * tileSize, (y - tilesFromCenter + 0.5f) * tileSize); // center of tile
 
                 // Checking the knockback against the tile
-                foreach (var knockback in Casters)
-                {
-                    if (knockback.Shape == null || !knockback.Shape.Check(tile, knockback.Origin, knockback.Direction))
-                    {
+                foreach (var knockback in Casters) {
+                    if (knockback.Shape == null || !knockback.Shape.Check(tile, knockback.Origin, knockback.Direction)) {
                         continue;
                     }
 
                     var destination = tile + knockback.Distance * knockback.Direction.ToDirection();
-                    if (!Arena.InBounds(destination))
-                    {
+                    if (!Arena.InBounds(destination)) {
                         continue;
                     }
 
                     var tileSafe = true; // We have to check every rockslide cast since they can overlap
-                    foreach (var aoe in rockslide.aoes)
-                    {
-                        if (aoe.Check(destination))
-                        {
+                    foreach (var aoe in rockslide.aoes) {
+                        if (aoe.Check(destination)) {
                             tileSafe = false;
                             break;
                         }
                     }
 
-                    if (tileSafe)
-                    {
+                    if (tileSafe) {
                         Arena.ZoneRect(tile, new WDir(0, 1), tileHalf, tileHalf, tileHalf, Colors.SafeFromAOE);
                     }
                 }
@@ -178,54 +171,29 @@ sealed class Landslip(BossModule module) : Components.SimpleKnockbacks(module, (
         }
     }
 
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        if (Casters.Count != 0)
-        {
-            var knockbacks = ActiveKnockbacks(slot, actor);
-            ref readonly var kb1 = ref Casters.Ref(0);
-            var activation = kb1.Activation;
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        if (rockslide == null || rockslide.aoes.Count == 0 || Casters.Count == 0) {
+            return;
+        }
 
-            if (IsImmune(slot, activation))
-            {
-                return;
+        var knockbacks = CollectionsMarshal.AsSpan(Casters);
+        for (var i = 0; i < knockbacks.Length; i++) {
+            ref var knockback = ref knockbacks[i];
+            if (knockback.Shape == null || IsImmune(slot, knockback.Activation)) {
+                continue;
             }
 
-            var count = knockbacks.Length;
-            Knockback? knockback = null;
-
-            for (var i = 0; i < count; ++i)
-            {
-                ref readonly var kb = ref knockbacks[i];
-
-                if (kb.Shape!.Check(actor.Position, kb.Origin, kb.Direction))
-                {
-                    knockback = kb;
-                }
-                else
-                {
-                    hints.AddForbiddenZone(kb.Shape, kb.Origin, kb.Direction, kb.Activation, kb.ActorID, kb.ArenaProjectionLayer);
-                }
-            }
-
-            if (knockback == null || rockslide == null)
-            {
-                return;
-            }
-
-            var direction = knockback.Value.Direction.ToDirection() * 20f;
-            var aoes = rockslide.ActiveAOEs(slot, actor).ToArray();
-            var aoecount = aoes.Length;
-            ShapeDistance sd = aoecount == 0 ? new SDKnockbackInAABBSquareFixedDirection(Arena.Center, direction, 20f) : new SDKnockbackInAABBSquareFixedDirectionPlusMixedAOEs(Arena.Center, direction, 20f, aoes, aoecount);
-            hints.AddForbiddenZone(sd, activation, knockback.Value.ActorID);
+            var direction = knockback.Distance * knockback.Direction.ToDirection();
+            hints.AddForbiddenZone(new SDIntersection([
+                    knockback.Shape.Distance(knockback.Origin, knockback.Direction),
+                    new SDKnockbackInAABBSquareFixedDirectionPlusMixedAOEs(Arena.Center, direction,  19.0f, [.. rockslide.aoes], rockslide.aoes.Count)]),
+                    knockback.Activation);
         }
     }
 }
 
-sealed class LakhamuPieceStates : StateMachineBuilder
-{
-    public LakhamuPieceStates(BossModule module) : base(module)
-    {
+sealed class LakhamuPieceStates : StateMachineBuilder {
+    public LakhamuPieceStates(BossModule module) : base(module) {
         TrivialPhase()
             .ActivateOnEnter<Rockslide>()
             .ActivateOnEnter<Landslip>()
@@ -236,17 +204,13 @@ sealed class LakhamuPieceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.LakhamuPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1090u, NameID = 14580u, SortOrder = 5)]
-public sealed class LakhamuPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsRect(20f, 20f))
-{
-    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.LakhamuPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1090u, NameID = 14580u, SortOrder = 5)]
+public sealed class LakhamuPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsRect(20f, 20f)) {
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var count = hints.PotentialTargets.Count;
-        for (var i = 0; i < count; ++i)
-        {
+        for (var i = 0; i < count; ++i) {
             var e = hints.PotentialTargets[i];
-            e.Priority = e.Actor.OID switch
-            {
+            e.Priority = e.Actor.OID switch {
                 (uint)OID.GolemPiece => 2,
                 (uint)OID.LakhamuPiece => 1,
                 _ => 0
@@ -254,8 +218,7 @@ public sealed class LakhamuPiece(WorldState ws, Actor primary) : BossModule(ws, 
         }
     }
 
-    protected override void DrawEnemies(int pcSlot, Actor pc)
-    {
+    protected override void DrawEnemies(int pcSlot, Actor pc) {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies((uint)OID.GolemPiece));
     }
