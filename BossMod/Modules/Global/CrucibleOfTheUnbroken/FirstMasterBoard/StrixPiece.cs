@@ -85,6 +85,7 @@ sealed class OnThePropertiesOfQuakes(BossModule module) : Components.PersistentI
 }
 
 // Entering this voidzone will give you a buff with a timer
+// TODO make it so after the cast has happen they go back into the voidzone - nice feature, but might be annoying to setup, since they could enter as it goes away
 sealed class OnThePropertiesOfFloods(BossModule module) : Components.PersistentInvertibleVoidzoneByCast(module, 6.0f, GetVoidzones,
     (uint)AID.OnThePropertiesOfFloods) {
     private BitMask affectedPlayers;
@@ -138,6 +139,14 @@ sealed class MagicalMalletTheory(BossModule module) : Components.PersistentInver
         base.AddHints(slot, actor, hints);
     }
 
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell) { }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.MagicalMalletTheoryAOE) {
+            InvertResolveAt = default;
+        }
+    }
+
     private static Actor[] GetVoidzones(BossModule module) {
         var enemies = module.Enemies((uint)OID.Puddle);
         var count = enemies.Count;
@@ -155,29 +164,6 @@ sealed class MagicalMalletTheory(BossModule module) : Components.PersistentInver
     }
 }
 
-sealed class MagicalMalletTheoryBait(BossModule module) : Components.BaitAwayCast(module, (uint)AID.MagicalMalletTheory, new AOEShapeCircle(8.0f),
-    centerAtTarget: true) {
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell) { }
-
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.MagicalMalletTheory) {
-            var party = Raid.WithoutSlot(true);
-            var len = party.Length;
-            for (var i = 0; i < len; ++i) {
-                CurrentBaits.Add(new(caster, party[i], Shape));
-            }
-        }
-    }
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.MagicalMalletTheoryAOE) {
-            if (CurrentBaits.Count > 0) {
-                CurrentBaits.RemoveAt(0);
-            }
-        }
-    }
-}
-
 sealed class Overdue : Components.SimpleAOEs {
     public Overdue(BossModule module) : base(module, (uint)AID.Overdue, 15.0f, maxCasts: 4) {
         MaxDangerColor = 2;
@@ -191,7 +177,6 @@ sealed class StrixPieceStates : StateMachineBuilder {
             .ActivateOnEnter<OnThePropertiesOfQuakes>()
             .ActivateOnEnter<OnThePropertiesOfFloods>()
             .ActivateOnEnter<MagicalMalletTheory>()
-            .ActivateOnEnter<MagicalMalletTheoryBait>()
             .ActivateOnEnter<UltimateFocus>()
             .ActivateOnEnter<OnThePropertiesOfDarkness>()
             .ActivateOnEnter<AeroIII>()
