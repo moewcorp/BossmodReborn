@@ -561,6 +561,17 @@ public sealed class ModuleViewer : IDisposable
                             using (ImRaii.PushColor(ImGuiCol.Text, textColor))
                             {
                                 ImGui.TextUnformatted(mod.DisplayName);
+
+                                // Add tooltip to explain module maturity levels
+                                if (ImGui.IsItemHovered())
+                                {
+                                    var maturityString = mod.Info.Maturity.GetAttribute<PropertyDisplayAttribute>()!.Label;
+
+                                    ImGui.BeginTooltip();
+                                    ImGui.PushTextWrapPos(900.0f);
+                                    ImGui.Text(maturityString);
+                                    ImGui.EndTooltip();
+                                }
                             }
 
                             using (var popup = ImRaii.Popup(mod.PopupID))
@@ -667,8 +678,10 @@ public sealed class ModuleViewer : IDisposable
     private static string BuildModuleHelpText(BossModuleRegistry.Info info)
     {
         var planning = info.PlanLevel > 0 ? $"L{info.PlanLevel}" : "not supported";
+        var maturityString = info.Maturity.GetAttribute<PropertyDisplayAttribute>()!.Label;
+
         return info.Contributors.Length > 0
-            ? $"Cooldown planning: {planning}\nContributors: {info.Contributors}\n"
+            ? $"Cooldown planning: {planning}\nContributors: {info.Contributors}\n{maturityString}\n"  + "\n"
             : $"Cooldown planning: {planning}\n";
     }
 
