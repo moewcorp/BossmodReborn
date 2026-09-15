@@ -203,13 +203,33 @@ sealed class AcidRainBait(BossModule module) : Components.BaitAwayIcon(module, 6
 sealed class AcidRain(BossModule module) : Components.StandardChasingAOEs(module, 6.0f, (uint)AID.AcidRainStart, (uint)AID.AcidRainRest, 5.0f, 1.0d, 8,
     icon: (uint)IconID.AcidRainLockOn);
 
+sealed class Devour(BossModule module) : Components.GenericBaitProximity(module) {
+    private readonly AOEShapeCone shape = new(7.0f, 15.0f.Degrees());
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.FloralTrap) {
+            CurrentBaits.Add(new(Module.PrimaryActor, shape));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.Devour) {
+            if (CurrentBaits.Count > 0) {
+                CurrentBaits.RemoveAt(0);
+            }
+        }
+    }
+}
+
 sealed class CorpseFlowerPieceStates : StateMachineBuilder {
-    public CorpseFlowerPieceStates(BossModule module) : base(module) {
+    public CorpseFlowerPieceStates(BossModule module) : base(module)
+    {
         TrivialPhase()
             .ActivateOnEnter<FloralTrap>()
             .ActivateOnEnter<RottenStench>()
             .ActivateOnEnter<AcidRainBait>()
-            .ActivateOnEnter<AcidRain>();
+            .ActivateOnEnter<AcidRain>()
+            .ActivateOnEnter<Devour>();
     }
 }
 
