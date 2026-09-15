@@ -2,15 +2,15 @@ namespace BossMod.Global.CrucibleOfTheUnbroken.FirstBoard.BoneBishop;
 
 public enum OID : uint
 {
-    _Gen_Actor1ec0fb = 0x1EC0FB, // R0.500, x?, EventObj type
     BoneKnight = 0x4B86, // R0.900, x?
-    Helper = 0x233C, // R0.500, x?, Helper type
     BoneBishop = 0x4B87, // R0.900, x?
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    _AutoAttack_ = 50784, // BoneKnight->player, no cast, single-target
+    AutoAttack = 50784, // BoneKnight->player, no cast, single-target
+
     Blizzard = 50788, // BoneBishop->player, no cast, single-target
     DeathSpiral = 46867, // BoneBishop->self, 5.0s cast, single-target
     DeathSpiral1 = 46868, // Helper->self, 6.0s cast, range 4-40 donut
@@ -142,7 +142,7 @@ sealed class BoneBishopStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.BoneBishop, Contributors = "wen", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1088u, NameID = 14532u, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.BoneBishop, Contributors = "wen", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1088u, NameID = 14532u, SortOrder = 3)]
 public sealed class BoneBishop(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f))
 {
     protected override void DrawEnemies(int pcSlot, Actor pc)

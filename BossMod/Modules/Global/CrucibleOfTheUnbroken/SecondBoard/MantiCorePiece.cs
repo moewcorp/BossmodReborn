@@ -3,13 +3,14 @@
 public enum OID : uint
 {
     ManticorePiece = 0x4C53,
-    Helper = 0x233C,
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
     AutoAttack = 49680, // ManticorePiece->player, no cast, single-target
     Teleport = 48126, // ManticorePiece->location, no cast, single-target
+
     ArmAndHammerLeftGlow = 48124, // ManticorePiece->self, 5.0+0.6s cast, single-target
     ArmAndHammerLeft = 48125, // Helper->self, 5.6s cast, range 30 90-degree cone
     ArmAndHammerRightGlow = 48122, // ManticorePiece->self, 5.0+0.6s cast, single-target

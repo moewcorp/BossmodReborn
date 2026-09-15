@@ -3,47 +3,50 @@
 public enum OID : uint
 {
     TaurusPiece = 0x4C54, // R2.240, x1
-    Helper = 0x233C, // R0.500, x3 (spawn during fight), Helper type
     _Gen_ = 0x4C8D, // R1.000, x10
     AethericCharge = 0x4C55, // R1.000-3.010, x0 (spawn during fight)
     TaurusPiece1 = 0x4C56, // R1.500, x0 (spawn during fight)
     AhrimanPiece = 0x4C57, // R0.900, x0 (spawn during fight)
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    _AutoAttack_ = 50784, // TaurusPiece->player, no cast, single-target
+    AutoAttack = 50784, // TaurusPiece->player, no cast, single-target
+
     MortalRay = 48143, // TaurusPiece->self, 5.0s cast, range 60 circle
-    _Weaponskill_RuinousRing = 48156, // TaurusPiece->self, 4.5+1.5s cast, single-target
+
+    RuinousExpansion1 = 48158, // TaurusPiece->self, 4.5+1.5s cast, single-target
+    RuinousExpansion2 = 48160, // TaurusPiece->self, no cast, single-target
+    RuinousContraction1 = 48162, // TaurusPiece->self, 4.5+1.5s cast, single-target
+    RuinousContraction2 = 48164, // TaurusPiece->self, no cast, single-target
+    RuinousRingVisual = 48156, // TaurusPiece->self, 4.5+1.5s cast, single-target
     RuinousRing1 = 48157, // Helper->self, 6.0s cast, range 8-50 donut
-    _Weaponskill_RuinousLocus = 48154, // TaurusPiece->self, 4.5+1.5s cast, single-target
+    RuinousRing2 = 48161, // Helper->self, 9.5s cast, range 8-50 donut
+    RuinousRing3 = 48163, // Helper->self, 6.0s cast, range 8-50 donut
+    RuinousLocusVisual = 48154, // TaurusPiece->self, 4.5+1.5s cast, single-target
     RuinousLocus1 = 48155, // Helper->self, 6.0s cast, range 8 circle
+    RuinousLocus2 = 48159, // Helper->self, 6.0s cast, range 8 circle
+    RuinousLocus3 = 48165, // Helper->self, 9.5s cast, range 8 circle
+
     RayOfIgnoranceCast = 48144, // TaurusPiece->self, 5.0+1.0s cast, single-target
     RayOfIgnorance = 48145, // Helper->player, no cast, single-target
     Burst1 = 48146, // 4C55->self, 1.5s cast, range 6 circle
     Burst2 = 48147, // 4C55->self, 1.5s cast, range 12 circle
     Burst3 = 48148, // 4C55->self, 1.5s cast, range 18 circle
-    _Weaponskill_AetherialFissure = 48149, // TaurusPiece->self, 4.0s cast, single-target
+    AetherialFissure = 48149, // TaurusPiece->self, 4.0s cast, single-target
     Aetherwave = 48150, // 4C56->self, 6.0s cast, range 50 width 10 rect
-    _Weaponskill_Summon = 48151, // TaurusPiece->self, 3.0s cast, single-target
-    _Weaponskill_MortalGaze = 48152, // 4C57->self, 4.5+0.5s cast, single-target
+    Summon = 48151, // TaurusPiece->self, 3.0s cast, single-target
+    MortalGazeVisual = 48152, // 4C57->self, 4.5+0.5s cast, single-target
     MortalGaze = 48153, // Helper->self, 5.0s cast, range 50 circle
-    _Spell_Stone = 48625, // 4C57->player, no cast, single-target
-    RuinousExpansion = 48158, // TaurusPiece->self, 4.5+1.5s cast, single-target
-    RuinousLocus2 = 48159, // Helper->self, 6.0s cast, range 8 circle
-    _Weaponskill_RuinousExpansion1 = 48160, // TaurusPiece->self, no cast, single-target
-    RuinousRing2 = 48161, // Helper->self, 9.5s cast, range 8-50 donut
-    RuinousContraction = 48162, // TaurusPiece->self, 4.5+1.5s cast, single-target
-    RuinousRing3 = 48163, // Helper->self, 6.0s cast, range 8-50 donut
-    _Weaponskill_RuinousContraction1 = 48164, // TaurusPiece->self, no cast, single-target
-    RuinousLocus3 = 48165, // Helper->self, 9.5s cast, range 8 circle
+    Stone = 48625, // 4C57->player, no cast, single-target
 }
 
 public enum SID : uint
 {
     Doom = 5421, // TaurusPiece->player, extra=0x358
-    _Gen_DamageDown = 4874, // AethericCharge->player, extra=0x1
-    _Gen_Bleeding = 3077, // none->player, extra=0x0
+    DamageDown = 4874, // AethericCharge->player, extra=0x1
+    Bleeding = 3077, // none->player, extra=0x0
     ChargeSize = 4215, // none->4C55, extra=0x1/0x2/0x3
 }
 
@@ -186,7 +189,7 @@ sealed class RayOfIgnorance(BossModule module) : BossComponent(module)
 }
 sealed class MortalGaze(BossModule module) : Components.CastGaze(module, (uint)AID.MortalGaze, maxCasts: 2);
 sealed class Adds(BossModule module) : Components.Adds(module, (uint)OID.AhrimanPiece, 1);
-sealed class RuinousExpansion(BossModule module) : Components.GenericAOEs(module, (uint)AID.RuinousExpansion)
+sealed class RuinousExpansion(BossModule module) : Components.GenericAOEs(module, (uint)AID.RuinousExpansion1)
 {
     private readonly List<AOEInstance> _aoes = [];
     private readonly AOEShapeCircle _circle = new(8f);
@@ -222,7 +225,7 @@ sealed class RuinousExpansion(BossModule module) : Components.GenericAOEs(module
         }
     }
 }
-sealed class RuinousContraction(BossModule module) : Components.GenericAOEs(module, (uint)AID.RuinousContraction)
+sealed class RuinousContraction(BossModule module) : Components.GenericAOEs(module, (uint)AID.RuinousContraction1)
 {
     private readonly List<AOEInstance> _aoes = [];
     private readonly AOEShapeCircle _circle = new(8f);
@@ -308,6 +311,7 @@ sealed class AethericCharge(BossModule module) : Components.GenericAOEs(module)
         }
     }
 }
+
 sealed class Aetherwave(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Aetherwave, new AOEShapeRect(50f, 5f))
 {
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)

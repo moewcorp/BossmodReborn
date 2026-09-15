@@ -2,21 +2,22 @@ namespace BossMod.Global.CrucibleOfTheUnbroken.FirstBoard.PasDeSeul;
 
 public enum OID : uint
 {
-    Actor1ec0fb = 0x1EC0FB, // R0.500, x?, EventObj type
-    _Gen_ = 0x4DA2, // R1.000, x?
-    Helper = 0x233C, // R0.500, x?, Helper type
     PasDeSeul = 0x4B90, // R3.000, x?
     SuccubusMage = 0x4B91, // R1.500, x?
     SuccubusKnight = 0x4B92, // R1.500, x?
     Pheromone = 0x4B93, // R1.000, x? Summoned with Beguiling Mist. Hearts tethered together, cast Heart Shatter?
+    _Gen_ = 0x4DA2, // R1.000, x?
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    _AutoAttack_ = 50396, // PasDeSeul/SuccubusKnight->player, no cast, single-target
+    AutoAttack = 50396, // PasDeSeul/SuccubusKnight->player, no cast, single-target
+    Teleport = 46931, // PasDeSeul->location, no cast, single-target
+
     BloodRain = 46925, // PasDeSeul->self, 5.4+0.6s cast, single-target
     BloodRainCircle = 46926, // 233C->self, 6.0s cast, range 8 circle
-    _Ability_ = 46931, // PasDeSeul->location, no cast, single-target
+
     VoidAeroII = 46932, // PasDeSeul->self, 4.0s cast, range 60 width 8 rect
     VoidAeroII1 = 46933, // 233C->self, 3.0s cast, range 60 20.000-degree cone
     ColdCaress = 46935, // PasDeSeul->player, 5.0s cast, single-target : Poisons target.
@@ -73,9 +74,10 @@ sealed class HeartShatter(BossModule module) : Components.GenericAOEs(module)
             {
                 var pos1 = _orbs[0].Position;
                 var pos2 = _orbs[1].Position;
-                var length = (pos2 - pos1).Length();
-                var direction = (pos2 - pos1).Normalized();
-                var estimated = pos1 + direction * (length / 2f);
+                var dir = pos2 - pos1;
+                var length = dir.Length();
+                var direction = length != 0f ? dir / length : default;
+                var estimated = pos1 + direction * (length * 0.5f);
                 var activation = WorldState.FutureTime(13.5d);
 
                 _aoes.Add(new(new AOEShapeCircle(24f), estimated, default, activation));
@@ -111,7 +113,7 @@ sealed class PasDeSeulStates : StateMachineBuilder
     GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken,
     GroupID = 1088u,
     NameID = 14541u,
-    SortOrder = 1)]
+    SortOrder = 6)]
 public sealed class PasDeSeul : BossModule
 {
     public PasDeSeul(WorldState ws, Actor primary) : this(ws, primary, BuildArena()) { }
@@ -129,25 +131,25 @@ public sealed class PasDeSeul : BossModule
             ],
             [
                 new Rectangle(new WPos(502.88f, -398.45f), 3.41f, 5.42f, -7.380f.Degrees()),
-                new Rectangle(new WPos(510.94f, -396.70f), 1.30f, 0.50f, 0.000f.Degrees()),
-                new Rectangle(new WPos(515.42f, -396.61f), 0.75f, 0.50f, 0.000f.Degrees()),
-                new Rectangle(new WPos(524.58f, -396.61f), 0.75f, 0.50f, 0.000f.Degrees()),
-                new Rectangle(new WPos(528.84f, -397.06f), 1.57f, 1.01f, 0.000f.Degrees()),
-                new Rectangle(new WPos(539.61f, -408.00f), 0.77f, 1.20f, 0.000f.Degrees()),
-                new Rectangle(new WPos(537.57f, -412.33f), 2.50f, 3.20f, 0.000f.Degrees()),
-                new Rectangle(new WPos(541.41f, -420.00f), 2.50f, 1.20f, 0.000f.Degrees()),
-                new Rectangle(new WPos(538.77f, -426.12f), 2.41f, 3.97f, 0.000f.Degrees()),
-                new Rectangle(new WPos(539.57f, -431.99f), 0.75f, 1.20f, 0.000f.Degrees()),
-                new Rectangle(new WPos(539.31f, -443.61f), 0.47f, 0.79f, 0.000f.Degrees()),
-                new Rectangle(new WPos(505.35f, -443.55f), 1.52f, 0.79f, 0.000f.Degrees()),
+                new Rectangle(new WPos(510.94f, -396.70f), 1.30f, 0.50f),
+                new Rectangle(new WPos(515.42f, -396.61f), 0.75f, 0.50f),
+                new Rectangle(new WPos(524.58f, -396.61f), 0.75f, 0.50f),
+                new Rectangle(new WPos(528.84f, -397.06f), 1.57f, 1.01f),
+                new Rectangle(new WPos(539.61f, -408.00f), 0.77f, 1.20f),
+                new Rectangle(new WPos(537.57f, -412.33f), 2.50f, 3.20f),
+                new Rectangle(new WPos(541.41f, -420.00f), 2.50f, 1.20f),
+                new Rectangle(new WPos(538.77f, -426.12f), 2.41f, 3.97f),
+                new Rectangle(new WPos(539.57f, -431.99f), 0.75f, 1.20f),
+                new Rectangle(new WPos(539.31f, -443.61f), 0.47f, 0.79f),
+                new Rectangle(new WPos(505.35f, -443.55f), 1.52f, 0.79f),
                 new Rectangle(new WPos(501.05f, -440.73f), 3.75f, 5.00f, 5.790f.Degrees()),
-                new Rectangle(new WPos(500.56f, -432.03f), 0.60f, 1.25f, 0.000f.Degrees()),
-                new Rectangle(new WPos(500.56f, -420.00f), 0.60f, 1.25f, 0.000f.Degrees()),
-                new Rectangle(new WPos(500.60f, -408.02f), 0.60f, 1.25f, 0.000f.Degrees()),
-                new Rectangle(new WPos(539.50f, -396.55f), 0.70f, 0.60f, 0.000f.Degrees()),
-                new Rectangle(new WPos(502.11f, -424.06f), 2.50f, 2.90f, 0.000f.Degrees()),
+                new Rectangle(new WPos(500.56f, -432.03f), 0.60f, 1.25f),
+                new Rectangle(new WPos(500.56f, -420.00f), 0.60f, 1.25f),
+                new Rectangle(new WPos(500.60f, -408.02f), 0.60f, 1.25f),
+                new Rectangle(new WPos(539.50f, -396.55f), 0.70f, 0.60f),
+                new Rectangle(new WPos(502.11f, -424.06f), 2.50f, 2.90f),
                 new Rectangle(new WPos(501.36f, -415.86f), 2.30f, 1.80f, -5.800f.Degrees()),
-                new Rectangle(new WPos(500.13f, -413.02f), 1.10f, 1.30f, 0.000f.Degrees())
+                new Rectangle(new WPos(500.13f, -413.02f), 1.10f, 1.30f)
             ]);
         return (ArenaCenter, arena);
     }

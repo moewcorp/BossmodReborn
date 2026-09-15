@@ -3,10 +3,9 @@
 public enum OID : uint
 {
     CatoblepasPiece = 0x4C9B,
-    Helper = 0x233C,
-    _Gen_Actor1ec0de = 0x1EC0DE, // R0.500, x1, EventObj type
     DemonicEyeCircle = 0x4C9C, // R1.500, x0 (spawn during fight)
     DemonicEyeDonut = 0x4C9D, // R1.500, x0 (spawn during fight)
+    Helper = 0x233C
 }
 
 public enum AID : uint
