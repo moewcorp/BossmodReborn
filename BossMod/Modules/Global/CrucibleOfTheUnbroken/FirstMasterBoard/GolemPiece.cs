@@ -44,10 +44,14 @@ sealed class Outcrop(BossModule module) : Components.SimpleAOEs(module, (uint)AI
 sealed class SelfDestruct(BossModule module) : Components.RaidwideCast(module, (uint)AID.SelfDestruct, "Enrage");
 
 sealed class Shockwave(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shockwave, new AOEShapeRect(5.0f, 2.5f)) {
+    // Used to track if the mechanic started - needed as the boss can die while casting it, if the cast goes through and the boss dies, the mechanic
+    // will still play out
+    private bool active = false;
+
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) { }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.GolemDeath) {
+        if (spell.Action.ID == (uint)AID.GolemDeath && !active) {
             if (Casters.Count > 0) {
                 Casters.Clear();
             }
@@ -55,8 +59,13 @@ sealed class Shockwave(BossModule module) : Components.SimpleAOEs(module, (uint)
     }
 
     public override void OnMapEffect(byte index, uint state) {
+        if (state == 2097168 || state == 131073) {
+            active = true;
+        }
+
         if (state == 4194308 || state == 524292) {
             Casters.Clear();
+            active = false;
         }
     }
 }
@@ -66,8 +75,12 @@ sealed class Rockslide(BossModule module) : Components.GenericAOEs(module) {
     private readonly List<AOEInstance> aoes = [];
     private readonly AOEShapeRect shape = new(15.0f, 5.0f, 15.0f);
 
+    // Used to track if the mechanic started - needed as the boss can die while casting it, if the cast goes through and the boss dies, the mechanic
+    // will still play out
+    private bool active = false;
+
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.GolemDeath) {
+        if (spell.Action.ID == (uint)AID.GolemDeath && !active) {
             if (aoes.Count > 0) {
                 aoes.Clear();
             }
@@ -81,15 +94,18 @@ sealed class Rockslide(BossModule module) : Components.GenericAOEs(module) {
         if (state == 2097168 && aoes.Count == 0) {
             aoes.Add(new(shape, new WPos(505.0f, 0.0f), 180.0f.Degrees()));
             aoes.Add(new(shape, new WPos(535.0f, 0.0f), 180.0f.Degrees()));
+            active = true;
         }
 
         // Inside is bad
         if (state == 131073 && aoes.Count == 0) {
             aoes.Add(new(shape, new WPos(520.0f, 0.0f), 180.0f.Degrees()));
+            active = true;
         }
 
         if ((state == 4194308 || state == 524292) && aoes.Count > 0) {
             aoes.Clear();
+            active = false;
         }
     }
 
