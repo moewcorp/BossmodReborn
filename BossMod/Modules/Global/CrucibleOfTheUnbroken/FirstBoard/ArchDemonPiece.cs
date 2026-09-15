@@ -2,14 +2,15 @@ namespace BossMod.Global.CrucibleOfTheUnbroken.FirstBoard.ArchDemonPiece;
 
 public enum OID : uint
 {
-    Helper = 0x233C, // R0.500, x?, Helper type
     ArchDemonPiece = 0x4B88, // R3.000, x?
     AbyssalLance = 0x4B89, // R1.500, x?
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    _AutoAttack_ = 49682, // 4B88->player, no cast, single-target
+    AutoAttack = 49682, // 4B88->player, no cast, single-target
+
     AbyssalChargeVisual = 46875, // 4B88->self, 3.0s cast, single-target : Summons Abyssal Lance to shoot lasers at pc.
     AbyssalCharge = 46876, // 4B89->self, 3.0s cast, range 40 width 4 rect
     DismemberVisual = 46877, // 4B88->self, 3.0s cast, single-target
@@ -23,7 +24,6 @@ public enum AID : uint
     AbyssalSwing = 46885, // 4B88->self, no cast, single-target
     AbyssalSwing1 = 46886, // 233C->self, 5.7s cast, range 40 180.000-degree cone
 }
-
 
 sealed class AbyssalLanceAdds(BossModule module) : Components.AddsPointless(module, (uint)OID.AbyssalLance);
 
@@ -42,7 +42,6 @@ sealed class AbyssalTransfixion2(BossModule module) : Components.SimpleAOEs(modu
 // Laser axe swing that covers half the arena.
 sealed class AbyssalSwing(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AbyssalSwing1, new AOEShapeCone(40f, 90f.Degrees()));
 
-
 sealed class ArchDemonPieceStates : StateMachineBuilder
 {
     public ArchDemonPieceStates(BossModule module) : base(module)
@@ -53,8 +52,7 @@ sealed class ArchDemonPieceStates : StateMachineBuilder
             .ActivateOnEnter<Dismember>()
             .ActivateOnEnter<AbyssalTransfixion>()
             .ActivateOnEnter<AbyssalTransfixion2>()
-            .ActivateOnEnter<AbyssalSwing>()
-            ;
+            .ActivateOnEnter<AbyssalSwing>();
     }
 }
 
@@ -66,5 +64,4 @@ sealed class ArchDemonPieceStates : StateMachineBuilder
     NameID = 14533u,
     SortOrder = 1)]
 
-public sealed class ArchDemonPiece(WorldState ws, Actor primary) :  BossModule(ws, primary, new(520f, 0f), new ArenaBoundsRect(20f, 14.8f));
-
+public sealed class ArchDemonPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(520f, 0f), new ArenaBoundsRect(20f, 14.8f));

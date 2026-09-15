@@ -1,6 +1,7 @@
 ﻿namespace BossMod.Global.CrucibleOfTheUnbroken.FirstMasterBoard.MorbolPiece;
 
-public enum OID : uint {
+public enum OID : uint
+{
     MorbolPiece = 0x4CB9,
     Helper = 0x233C,
     CarrionBroth = 0x4CBC, // R2.500, x3 (spawn during fight)
@@ -9,7 +10,8 @@ public enum OID : uint {
     GreenPuddle = 0x1E9F40, // R0.500, x0 (spawn during fight), EventObj type
 }
 
-public enum AID : uint {
+public enum AID : uint
+{
     AutoAttack = 50937, // MorbolPiece->player, no cast, single-target
     AutoAttackSeedling = 50750, // 4CBA->player, no cast, single-target
     AutoAttackOchu = 50396, // 4CBB->player, no cast, single-target
@@ -28,17 +30,20 @@ public enum AID : uint {
     AcidMist = 48679, // 4CBB->self, 4.0s cast, range 6 circle
 }
 
-public enum SID : uint {
+public enum SID : uint
+{
     Heavy = 2551, // 4CBC->player, extra=0x1E
     Paralysis = 5382, // 4CBC->player, extra=0x0
 }
 
-public enum IconID : uint {
+public enum IconID : uint
+{
     TurnRight = 684, // MorbolPiece->self
     TurnLeft = 685, // MorbolPiece->self
 }
 
-public enum TetherID : uint {
+public enum TetherID : uint
+{
     AddTargetTether = 17, // 4CBA->player
     Unknown = 44, // 4CBC->player
 }
@@ -47,17 +52,21 @@ sealed class AcidMist(BossModule module) : Components.SimpleAOEs(module, (uint)A
 sealed class Tremblor(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Tremblor, 10.0f);
 sealed class VineProbe(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VineProbe, new AOEShapeRect(13.0f, 4.0f));
 
-sealed class GreenPuddle(BossModule module) : Components.Voidzone(module, 6.0f, GetVoidzones) {
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+sealed class GreenPuddle(BossModule module) : Components.Voidzone(module, 6.0f, GetVoidzones)
+{
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
         var aoes = new List<AOEInstance>();
-        foreach (var source in Sources(Module)) {
+        foreach (var source in Sources(Module))
+        {
             if (ArenaProjectionLayerParticipantApplies(source, ArenaProjectionLayer, RestrictToArenaProjectionLayer))
                 aoes.Add(new(Shape, source.Position, source.Rotation, color: Colors.Danger, arenaProjectionLayer: ArenaProjectionLayer, restrictToArenaProjectionLayer: RestrictToArenaProjectionLayer));
         }
         return CollectionsMarshal.AsSpan(aoes);
     }
 
-    private static Actor[] GetVoidzones(BossModule module) {
+    private static Actor[] GetVoidzones(BossModule module)
+    {
         var enemies = module.Enemies((uint)OID.GreenPuddle);
         var count = enemies.Count;
         if (count == 0)
@@ -65,7 +74,8 @@ sealed class GreenPuddle(BossModule module) : Components.Voidzone(module, 6.0f, 
 
         var voidzones = new Actor[count];
         var index = 0;
-        for (var i = 0; i < count; ++i) {
+        for (var i = 0; i < count; ++i)
+        {
             var z = enemies[i];
             if (z.EventState != 7)
                 voidzones[index++] = z;
@@ -75,26 +85,31 @@ sealed class GreenPuddle(BossModule module) : Components.Voidzone(module, 6.0f, 
 }
 
 // Icon given like 3 seconds after the cast has started, so I use the spell IDs instead to figure out if its self or right
-sealed class ExtremelyBadBreathBoss(BossModule module) : Components.GenericAOEs(module) {
+sealed class ExtremelyBadBreathBoss(BossModule module) : Components.GenericAOEs(module)
+{
     private readonly List<AOEInstance> aoes = [];
     private readonly AOEShapeCone shape = new(50.0f, 45.0f.Degrees());
     private ActorCastInfo? spellInfo;
     private Angle increment = default;
     private const int numberOfAOEs = 5;
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.ExtremelyBadBreathStart) {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
+    {
+        if (spell.Action.ID == (uint)AID.ExtremelyBadBreathStart)
+        {
             spellInfo = spell;
             InitIfReady();
         }
 
-        var direction = spell.Action.ID switch {
+        var direction = spell.Action.ID switch
+        {
             (uint)AID.ExtremelyBadBreathBossRight => -50.0f.Degrees(),
             (uint)AID.ExtremelyBadBreathBossLeft => 50.0f.Degrees(),
             _ => default
         };
 
-        if (direction == default) {
+        if (direction == default)
+        {
             return;
         }
 
@@ -102,10 +117,14 @@ sealed class ExtremelyBadBreathBoss(BossModule module) : Components.GenericAOEs(
         InitIfReady();
     }
 
-    private void InitIfReady() {
-        if (spellInfo != null && increment != default) {
-            for (var i = 0; i < numberOfAOEs; i++) {
-                if (i == 0) {
+    private void InitIfReady()
+    {
+        if (spellInfo != null && increment != default)
+        {
+            for (var i = 0; i < numberOfAOEs; i++)
+            {
+                if (i == 0)
+                {
                     aoes.Add(new(shape, spellInfo.LocXZ, spellInfo.Rotation, Module.CastFinishAt(spellInfo)));
                     continue;
                 }
@@ -120,24 +139,30 @@ sealed class ExtremelyBadBreathBoss(BossModule module) : Components.GenericAOEs(
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID is (uint)AID.ExtremelyBadBreathStart or (uint)AID.ExtremelyBadBreathRest) {
-            if (aoes.Count > 0) {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID is (uint)AID.ExtremelyBadBreathStart or (uint)AID.ExtremelyBadBreathRest)
+        {
+            if (aoes.Count > 0)
+            {
                 aoes.RemoveAt(0);
             }
         }
     }
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
+    {
         var count = aoes.Count;
-        if (count == 0) {
+        if (count == 0)
+        {
             return [];
         }
 
         var max = count > 2 ? 2 : count;
         var nextAOEs = CollectionsMarshal.AsSpan(aoes);
 
-        for (var i = 0; i < max; i++) {
+        for (var i = 0; i < max; i++)
+        {
             ref var aoe = ref nextAOEs[i];
             aoe.Color = i == 0 ? Colors.Danger : Colors.AOE;
         }
@@ -146,8 +171,10 @@ sealed class ExtremelyBadBreathBoss(BossModule module) : Components.GenericAOEs(
     }
 }
 
-sealed class MorbolPieceStates : StateMachineBuilder {
-    public MorbolPieceStates(BossModule module) : base(module) {
+sealed class MorbolPieceStates : StateMachineBuilder
+{
+    public MorbolPieceStates(BossModule module) : base(module)
+    {
         TrivialPhase()
             .ActivateOnEnter<ExtremelyBadBreathBoss>()
             .ActivateOnEnter<AcidMist>()
@@ -158,12 +185,16 @@ sealed class MorbolPieceStates : StateMachineBuilder {
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.MorbolPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14599u, SortOrder = 2)]
-public sealed class MorbolPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f)) {
-    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+public sealed class MorbolPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f))
+{
+    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
         var count = hints.PotentialTargets.Count;
-        for (var i = 0; i < count; ++i) {
+        for (var i = 0; i < count; ++i)
+        {
             var e = hints.PotentialTargets[i];
-            e.Priority = e.Actor.OID switch {
+            e.Priority = e.Actor.OID switch
+            {
                 (uint)OID.CarrionBroth => 4,
                 (uint)OID.OchuPiece => 3,
                 (uint)OID.SeedlingPiece => 2,
@@ -173,7 +204,8 @@ public sealed class MorbolPiece(WorldState ws, Actor primary) : BossModule(ws, p
         }
     }
 
-    protected override void DrawEnemies(int pcSlot, Actor pc) {
+    protected override void DrawEnemies(int pcSlot, Actor pc)
+    {
         Arena.Actor(PrimaryActor);
         Arena.Actors(Enemies((uint)OID.CarrionBroth));
         Arena.Actors(Enemies((uint)OID.SeedlingPiece));

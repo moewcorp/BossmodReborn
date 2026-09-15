@@ -3,35 +3,36 @@
 public enum OID : uint
 {
     LoosefroxInkyjots = 0x4C65,
-    Helper = 0x233C,
     ChewchumPopoto = 0x4C66, // R6.105, x1
     Quicksand = 0x1EC026, // R0.500, x6, EventObj type
     GobbieBombBig = 0x4C67, // R1.200, x0 (spawn during fight)
     GobbieBombSmall = 0x4C69, // R0.600, x0 (spawn during fight)
-
+    Helper = 0x233C
 }
 
 public enum AID : uint
 {
-    _AutoAttack_ = 50784, // LoosefroxInkyjots/4C66->player, no cast, single-target
+    AutoAttack = 50784, // LoosefroxInkyjots/4C66->player, no cast, single-target
+
     Burrow = 48224, // 4C66->self, no cast, single-target
     SandPillar = 48225, // Helper->location, no cast, range 4 circle
-    _Weaponskill_ = 50451, // Helper->location, no cast, single-target
-    _Spell_SandBreath = 48226, // 4C66->self, 7.8+1.2s cast, single-target
+    Teleport = 50451, // Helper->location, no cast, single-target
+    SandBreathVisual = 48226, // 4C66->self, 7.8+1.2s cast, single-target
     SandBreath = 48227, // Helper->self, 9.0s cast, range 60 90.000-degree cone
-    _Weaponskill_GobspinHeadlops = 48228, // LoosefroxInkyjots->self, 5.3+0.7s cast, single-target
+    GobspinHeadlopsVisual = 48228, // LoosefroxInkyjots->self, 5.3+0.7s cast, single-target
     GobspinHeadlops = 48229, // Helper->self, 6.0s cast, range 8 circle
-    _Weaponskill_Kinborrow = 48242, // LoosefroxInkyjots->self, 4.0s cast, single-target
-    _Weaponskill_GobbieboomBarrage = 50446, // LoosefroxInkyjots->self, 3.0s cast, single-target
+    Kinborrow = 48242, // LoosefroxInkyjots->self, 4.0s cast, single-target
+    GobbieboomBarrage1 = 50446, // LoosefroxInkyjots->self, 3.0s cast, single-target
+    GobbieboomBarrage2 = 48234, // LoosefroxInkyjots->self, 3.0s cast, single-target
     _Weaponskill_1 = 50452, // Helper->location, no cast, range 6 circle
     Explosion = 48235, // 4C69->self, 2.0s cast, range 12 circle
-    _Weaponskill_BombToss = 48518, // LoosefroxInkyjots->location, 3.0+1.0s cast, single-target
+    BombTossVisual = 48518, // LoosefroxInkyjots->location, 3.0+1.0s cast, single-target
     BombToss = 48519, // Helper->location, 4.0s cast, range 6 circle
-    _Weaponskill_GobbieboomBarrage1 = 48234, // LoosefroxInkyjots->self, 3.0s cast, single-target
-    _Weaponskill_GobspinHeadlops2 = 48230, // LoosefroxInkyjots->self, 5.3+0.7s cast, single-target
+
+    GobspinHeadlopsDonutVisual = 48230, // LoosefroxInkyjots->self, 5.3+0.7s cast, single-target
     GobspinHeadlopsDonut = 48231, // Helper->self, 6.0s cast, range 4-40 donut
     ExplosionCross = 48236, // 4C67->self, 2.0s cast, range 40 width 8 cross
-    _Weaponskill_GoblinHammer = 48232, // LoosefroxInkyjots->self, 3.0s cast, single-target
+    GoblinHammerVisual = 48232, // LoosefroxInkyjots->self, 3.0s cast, single-target
     GoblinHammer = 48233, // Helper->self, 5.0s cast, range 8 circle
     Earthquake = 48239, // ChewchumPopoto->self, 5.0s cast, range 60 circle
     EarthquakeRest = 48240, // ChewchumPopoto->self, no cast, range 60 circle
@@ -92,10 +93,7 @@ sealed class GobbieBombs(BossModule module) : Components.AddsMulti(module, [(uin
 sealed class Earthquake(BossModule module) : Components.RaidwideCast(module, (uint)AID.Earthquake);
 sealed class Explosion(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Explosion, 12f)
 {
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-
-    }
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) { }
 
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {
@@ -112,10 +110,7 @@ sealed class Explosion(BossModule module) : Components.SimpleAOEs(module, (uint)
 }
 sealed class ExplosionCross(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ExplosionCross, new AOEShapeCross(40f, 4f))
 {
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-
-    }
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) { }
 
     public override void OnActorModelStateChange(Actor actor, byte modelState, byte animState1, byte animState2)
     {
@@ -160,7 +155,7 @@ public sealed class LoosefroxInkyjots(WorldState ws, Actor primary) : BossModule
     public Actor? Loosefrom() => _loosefrox;
     public Actor? Chewchum() => _chewchum;
 
-    protected override void UpdateModule()
+    protected override void UpdatePreModuleActivation()
     {
         _loosefrox ??= GetActor((uint)OID.LoosefroxInkyjots);
         _chewchum ??= GetActor((uint)OID.ChewchumPopoto);

@@ -190,7 +190,7 @@ public static class UIStrategyValue
                 if (moduleInfo?.ObjectIDType != null)
                 {
                     var v = GeneratedEnumMetadata.ValueByRaw(moduleInfo.ObjectIDType, (uint)value.TargetParam);
-                    if (UICombo.Enum("对象ID", ref v))
+                    if (UICombo.Enum("对象ID", moduleInfo.ObjectIDType, ref v))
                     {
                         value.TargetParam = (int)(uint)(object)v;
                         modified = true;
@@ -248,7 +248,7 @@ public static class UIStrategyValue
             + excludeIfSet(StrategyPartyFiltering.ExcludeNoPredictedDamage, "预计无伤害的玩家");
     }
 
-    private static bool DrawEditorTargetParamCombo<E>(ref int current, string text) where E : Enum
+    private static bool DrawEditorTargetParamCombo<E>(ref int current, string text) where E : struct, Enum
     {
         var value = (E)(object)current;
         if (!UICombo.Enum(text, ref value))
@@ -318,7 +318,7 @@ public class TrackRenderer : IStrategyRenderer
     {
         string print(int ix) => config.Options[ix].DisplayName.Length > 0
             ? config.Options[ix].DisplayName
-            : UICombo.EnumString((Enum)GeneratedEnumMetadata.Values(config.OptionEnum).GetValue(ix)!);
+            : UICombo.EnumString(config.OptionEnum, (Enum)GeneratedEnumMetadata.Values(config.OptionEnum).GetValue(ix)!);
         bool filter(int ix) => (config.Options[ix].Context & context) != StrategyContext.None;
 
         return UICombo.EnumIndex(

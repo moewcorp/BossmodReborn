@@ -11,7 +11,7 @@ public sealed class UIRotationModule
         ImGui.TextUnformatted(definition.Description);
         ImGui.TextUnformatted($"L{definition.MinLevel}-{definition.MaxLevel} {string.Join(" ", GetClasses(definition))}");
         ImGui.TextUnformatted($"作者/贡献者：{definition.Author}");
-        ImGui.TextUnformatted($"质量：{(int)definition.Quality}/{(int)RotationModuleQuality.Count - 1} {GeneratedEnumMetadata.Attribute<PropertyDisplayAttribute>(definition.Quality)?.Label ?? ""}");
+        ImGui.TextUnformatted($"质量：{(int)definition.Quality}/{(int)RotationModuleQuality.Count - 1} {GeneratedEnumMetadata.For(definition.Quality).Attribute<PropertyDisplayAttribute>()?.Label ?? ""}");
         using (ImRaii.Disabled())
         {
             ImGui.TextUnformatted($"职业：{type.FullName}");
