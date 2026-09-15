@@ -25,6 +25,7 @@ public enum AID : uint {
     WrigglingPhlegmBoss = 48817, // BorgnyTheVenomous->self, 7.9s cast, single-target
     WrigglingPhlegmTeleport = 48818, // BorgnyTheVenomous->location, no cast, single-target
     WrigglingPhlegm = 48819, // Helper->location, 4.0s cast, range 6 circle
+    NoxiousExplosion = 48821, // ToxicMass->self, no cast, range 60 circle
 }
 
 public enum SID : uint {
