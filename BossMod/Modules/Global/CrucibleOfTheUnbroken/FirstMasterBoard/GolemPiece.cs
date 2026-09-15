@@ -29,7 +29,7 @@ public enum AID : uint {
     SelfDestruct = 48766, // 4D5A->self, 20.0s cast, range 100 circle
 
     // Most likely to do with them swapping / turning into enrage heart
-    Unknown = 48761, // Helper->4CCC/GolemPiece, no cast, single-target
+    GolemDeath = 48761, // Helper->4CCC/GolemPiece, no cast, single-target
     Unknown1 = 50687, // 4CCC/GolemPiece->self, no cast, single-target
 }
 
@@ -46,6 +46,14 @@ sealed class SelfDestruct(BossModule module) : Components.RaidwideCast(module, (
 sealed class Shockwave(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Shockwave, new AOEShapeRect(5.0f, 2.5f)) {
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) { }
 
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.GolemDeath) {
+            if (Casters.Count > 0) {
+                Casters.Clear();
+            }
+        }
+    }
+
     public override void OnMapEffect(byte index, uint state) {
         if (state == 4194308 || state == 524292) {
             Casters.Clear();
@@ -57,6 +65,14 @@ sealed class Shockwave(BossModule module) : Components.SimpleAOEs(module, (uint)
 sealed class Rockslide(BossModule module) : Components.GenericAOEs(module) {
     private readonly List<AOEInstance> aoes = [];
     private readonly AOEShapeRect shape = new(15.0f, 5.0f, 15.0f);
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.GolemDeath) {
+            if (aoes.Count > 0) {
+                aoes.Clear();
+            }
+        }
+    }
 
     public override void OnMapEffect(byte index, uint state) {
         Service.Logger.Info("Map effect " + index);
@@ -160,13 +176,14 @@ sealed class GolemPieceStates : StateMachineBuilder {
             .ActivateOnEnter<Outcrop>()
             .ActivateOnEnter<PlaincrackerSwap>()
             .ActivateOnEnter<SkyRock>()
-            .ActivateOnEnter<SelfDestruct>();
+            .ActivateOnEnter<SelfDestruct>()
+            .Raw.Update = () => AllDeadOrDestroyed(GolemPiece.Bosses);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.GolemPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14617u, SortOrder = 7)]
 public sealed class GolemPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(520f, 0f), new ArenaBoundsRect(20.0f, 15.0f)) {
-    public static readonly uint[] Bosses = [(uint)OID.GolemPiece, (uint)OID.GolemPiece1];
+    public static readonly uint[] Bosses = [(uint)OID.GolemPiece, (uint)OID.GolemPiece1, (uint)OID.GolemPieceHeart];
 
     protected override void DrawEnemies(int pcSlot, Actor pc) {
         Arena.Actors(this, Bosses);
