@@ -41,7 +41,7 @@ public enum TetherID : uint {
 }
 
 sealed class Cauterize(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Cauterize, new AOEShapeRect(40.0f, 10.0f));
-sealed class TouchdownKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.TouchdownKnockback, 30.0f);
+sealed class TouchdownKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.TouchdownKnockback, 30.0f, stopAtWall: true);
 sealed class TouchdownAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.TouchdownAOE, 6.0f);
 sealed class FumingVomit(BossModule module) : Components.SimpleAOEs(module, (uint)AID.FumingVomit, 6.0f);
 
@@ -74,7 +74,6 @@ sealed class ToxicVomit(BossModule module) : Components.BaitAwayIcon(module, 6.0
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID is (uint)AID.ToxicVomitBoss or (uint)AID.ToxicVomit) {
             NumCasts++;
-            Service.Logger.Info("vomit cast");
 
             if (NumCasts == 4) {
                 CurrentBaits.Clear();
