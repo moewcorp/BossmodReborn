@@ -327,7 +327,7 @@ sealed class GargoylePieceStates : StateMachineBuilder {
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.GargoylePiece, Contributors = "Equilius",
-    GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14608u, SortOrder = 3)]
+    GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14608u, SortOrder = 5)]
 public sealed class GargoylePiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsRect(20f, 20f)) {
     private readonly string[] _prePullHints = [
         "During this fight 10 orbs will spawn, collecting an orb will give a stack of GrowingDread, reaching 5 stacks will turn it into Hysteria. So, " +
