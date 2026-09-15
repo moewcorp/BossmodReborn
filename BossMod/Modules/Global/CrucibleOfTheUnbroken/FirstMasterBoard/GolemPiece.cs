@@ -84,6 +84,7 @@ sealed class Rockslide(BossModule module) : Components.GenericAOEs(module) {
 sealed class PlaincrackerSwap(BossModule module) : Components.GenericAOEs(module) {
     private readonly List<AOEInstance> aoes = [];
     private readonly AOEShapeCircle shape = new(20.0f);
+    private Actor? swapSource; // Used to track is the main source dies before the cast finishes
 
     public override void OnTethered(Actor source, in ActorTetherInfo tether) {
         if (tether.ID == (uint)TetherID.SwapTether) {
@@ -92,7 +93,21 @@ sealed class PlaincrackerSwap(BossModule module) : Components.GenericAOEs(module
                 return;
             }
 
+            swapSource = source;
             aoes.Add(new(shape, target.Position, target.Rotation));
+        }
+    }
+
+    // If the source of the cast dies before the cast finishes then the swapped boss will not cast PlainCracker
+    public override void OnActorDeath(Actor actor) {
+        if (swapSource == null) {
+            return;
+        }
+
+        if (actor.InstanceID == swapSource.InstanceID) {
+            if (aoes.Count > 0) {
+                aoes.RemoveAt(0);
+            }
         }
     }
 
@@ -103,7 +118,6 @@ sealed class PlaincrackerSwap(BossModule module) : Components.GenericAOEs(module
             }
         }
     }
-
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(aoes);
 }
