@@ -34,6 +34,7 @@ public enum SID : uint {
     WaterResistanceDown = 5021, // Helper->player, extra=0x1/0x2
     LightningResistanceDownII = 4456, // none->player, extra=0x0
     SustainedDamage = 3795, // none->4CE1, extra=0x1
+    Paralysis = 5382, // MindflayerPiece->player, extra=0x0
 }
 
 public enum IconID : uint {
@@ -48,7 +49,7 @@ public enum TetherID : uint {
 sealed class VoidWaterIII(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.VoidWaterIIIIcon, (uint)AID.VoidWaterIII, 8.0f, 5.1f);
 sealed class VoidThunderIII(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.VoidThunderIIITankBuster, (uint)AID.VoidThunderIIITB, 6.0f, 5.1f);
 sealed class VoidThunderIIICross(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidThunderIIICross, new AOEShapeCross(50.0f, 5.0f));
-sealed class VoidParalyzeIII(BossModule module) : Components.RaidwideCast(module, (uint)AID.VoidParalyzeIII);
+sealed class VoidParalyzeIII(BossModule module) : Components.RaidwideCast(module, (uint)AID.VoidParalyzeIII, "Raidwide + Applies Paralysis");
 
 sealed class WaterPuddles : Components.PersistentInvertibleVoidzone {
 
@@ -204,7 +205,6 @@ public sealed class MindflayerPiece(WorldState ws, Actor primary) : BossModule(w
     }
 
     private readonly string[] _prePullHints = [
-        "Place the water puddles apart, but close together.",
         "Kill the MyconidPiece inside the water puddles to solve the mechanic correctly"
     ];
 
