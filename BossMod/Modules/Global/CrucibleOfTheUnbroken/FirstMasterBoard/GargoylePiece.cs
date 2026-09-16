@@ -109,6 +109,7 @@ sealed class RipplingEvisceration(BossModule module) : Components.GenericAOEs(mo
         {
             ref var aoe = ref nextAOEs[i];
             aoe.Color = i == 0 ? Colors.Danger : Colors.AOE;
+            aoe.Risky = i == 0;
         }
 
         return nextAOEs;
@@ -116,13 +117,14 @@ sealed class RipplingEvisceration(BossModule module) : Components.GenericAOEs(mo
 }
 
 sealed class SweepingEviscerationTether(BossModule module) : Components.StretchTetherDuo(module, 21.0f, 8.1f);
-sealed class SweepingEvisceration(BossModule module) : Components.GenericBaitAway(module)
+sealed class SweepingEvisceration(BossModule module) : Components.GenericAOEs(module)
 {
     private readonly AOEShapeCone shape = new(60.0f, 90.0f.Degrees());
     private Actor? tetherTarget;
     private Actor? tetherSource;
     private DateTime activation;
     private bool baitLocked = false;
+    private readonly List<AOEInstance> aoes = [];
 
     public override void OnTethered(Actor source, in ActorTetherInfo tether)
     {
@@ -146,11 +148,11 @@ sealed class SweepingEvisceration(BossModule module) : Components.GenericBaitAwa
     {
         if (spell.Action.ID == (uint)AID.SweepingEvisceration)
         {
-            if (CurrentBaits.Count > 0)
+            if (aoes.Count > 0)
             {
-                CurrentBaits.RemoveAt(0);
+                aoes.RemoveAt(0);
 
-                if (CurrentBaits.Count == 0)
+                if (aoes.Count == 0)
                 {
                     tetherTarget = null;
                     tetherSource = null;
@@ -168,64 +170,46 @@ sealed class SweepingEvisceration(BossModule module) : Components.GenericBaitAwa
             }
 
             baitLocked = true;
-            CurrentBaits.Clear();
-            var newPosition = spell.TargetXZ;
-            CurrentBaits.Add(new(newPosition, tetherSource, shape, WorldState.FutureTime(2.8f), customRotation: spell.Rotation));
-            CurrentBaits.Add(new(newPosition, tetherSource, shape, WorldState.FutureTime(4.8f), customRotation: spell.Rotation - 180.0f.Degrees()));
+            aoes.Clear();
+            aoes.Add(new(shape, spell.TargetXZ, spell.Rotation, WorldState.FutureTime(2.8f)));
+            aoes.Add(new(shape, spell.TargetXZ, spell.Rotation - 180.0f.Degrees(), WorldState.FutureTime(4.8f)));
         }
     }
 
-    public override void DrawArenaBackground(int pcSlot, Actor pc)
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
-        if (OnlyShowOutlines || IgnoreOtherBaits)
+        if (baitLocked)
         {
-            return;
+            return CollectionsMarshal.AsSpan(aoes);
         }
 
-        var baits = CollectionsMarshal.AsSpan(CurrentBaits);
-        var len = baits.Length;
-        for (var i = 0; i < len; ++i)
-        {
-            ref var b = ref baits[i];
-            if (!b.Source.IsDead && b.Target != pc && (AlwaysDrawOtherBaits || IsClippedBy(pc, ref b)))
-            {
-                using (Arena.WorldProjectionLayer(b.ResolveArenaProjectionLayer(Module), b.RestrictToArenaProjectionLayer))
-                    b.Shape.Draw(Arena, BaitOrigin(ref b), b.Rotation, i == 0 ? Colors.Danger : Colors.AOE);
-            }
+        if (tetherTarget == null || tetherSource == null || activation == default) {
+            return [];
         }
+
+        var offset = Angle.FromDirection(tetherTarget.Position - tetherSource.Position);
+        return new AOEInstance[] { new(shape, tetherTarget.Position, offset, risky: actor != tetherTarget) };
     }
 
-    public override void DrawArenaForeground(int pcSlot, Actor pc)
-    {
-        var baits = CollectionsMarshal.AsSpan(CurrentBaits);
-        var len = baits.Length;
+    public override void DrawArenaBackground(int pcSlot, Actor pc) { }
 
-        for (var i = 0; i < len; ++i)
-        {
-            ref var b = ref baits[i];
-            if (!b.Source.IsDead && (OnlyShowOutlines || !OnlyShowOutlines && b.Target == pc))
-            {
-                using (Arena.WorldProjectionLayer(b.ResolveArenaProjectionLayer(Module), b.RestrictToArenaProjectionLayer))
-                    b.Shape.Outline(Arena, BaitOrigin(ref b), b.Rotation, i == 0 ? Colors.Danger : Colors.AOE);
-            }
-        }
-    }
-
-    public override void Update()
-    {
-        if (tetherTarget == null || tetherSource == null || activation == default)
-        {
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (tetherTarget == null || tetherSource == null || activation == default) {
             return;
         }
 
         if (baitLocked)
         {
+            var incomingAOEs = CollectionsMarshal.AsSpan(aoes);
+            for (var i = 0; i < incomingAOEs.Length; i++) {
+                ref var aoe = ref incomingAOEs[i];
+                shape.Draw(Arena, aoe.Origin, aoe.Rotation, i == 0 ? Colors.Danger : Colors.AOE);
+            }
             return;
         }
 
-        CurrentBaits.Clear();
-        var direction = Angle.FromDirection(tetherTarget.Position - tetherSource.Position);
-        CurrentBaits.Add(new(tetherSource, tetherTarget, shape, activation, customRotation: direction));
+        var offset = Angle.FromDirection(tetherTarget.Position - tetherSource.Position);
+        shape.Outline(Arena, tetherTarget.Position, offset);
     }
 }
 
@@ -277,7 +261,7 @@ sealed class MaladyOrbs : Components.PersistentInvertibleVoidzone
 
     public override void AddHints(int slot, Actor actor, TextHints hints)
     {
-        if (orbs.Count == 0)
+        if (orbs.Count == 0 )
         {
             return;
         }
@@ -405,5 +389,14 @@ sealed class GargoylePieceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.GargoylePiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14608u, SortOrder = 3)]
-public sealed class GargoylePiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsSquare(20f));
+[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.GargoylePiece, Contributors = "Equilius",
+    GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14608u, SortOrder = 5)]
+public sealed class GargoylePiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsSquare(20f)) {
+    private readonly string[] _prePullHints = [
+        "During this fight 10 orbs will spawn, collecting an orb will give a stack of GrowingDread, reaching 5 stacks will turn it into Hysteria. So, " +
+        "you will need to soak 4 orbs then wait for the GrowingDread debuff to fall off then continue soaking the orbs.",
+        "Each orb on the map will grant the boss a stack of damage up"
+    ];
+
+    public override string[] PrePullHints => _prePullHints;
+}
