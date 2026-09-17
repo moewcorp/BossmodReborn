@@ -196,6 +196,10 @@ sealed class MnemonicRiddle(BossModule module) : BossComponent(module) {
             animal = OID.PukPiece;
         }
 
+        if (param1 == 5) { // BEAST: director update: 2147483687 param1: 5 param2: 2 param3: 14665 param4: 1073761111
+            animal = OID.OpoOpoPiece;
+        }
+
         if (param1 == 6) { // WATER: director update: 2147483687 param1: 6 param2: 2 param3: 14665 param4: 1073885145
             animal = OID.PugilPiece;
         }
@@ -204,12 +208,11 @@ sealed class MnemonicRiddle(BossModule module) : BossComponent(module) {
             active = true;
         }
 
-        if (param1 == 7) { // SUCCESS: director update: 2147483687 param1: 7 param2: 2 param3: 14665 param4: 1073952921
+        // SUCCESS: director update: 2147483687 param1: 7 param2: 2 param3: 14665 param4: 1073952921
+        // FAIL: director update: 2147483687 param1: 8 param2: 2 param3: 14665 param4: 1073761111
+        if (param1 == 7 || param1 == 8) {
             active = false;
         }
-
-        // TODO add fail case + other two
-        Service.Logger.Info("director update: " + updateID + " param1: " + param1 + " param2: " +  param2 + " param3: " + param3 + " param4: " + param4);
     }
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
@@ -220,6 +223,36 @@ sealed class MnemonicRiddle(BossModule module) : BossComponent(module) {
         var target = Module.Enemies((uint)animal).FirstOrDefault();
         if (target != null) {
             Arena.ZoneCircleOutline(target.Position, 1.0f, Colors.Safe);
+        }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        if (animal == null || !active) {
+            return;
+        }
+
+        var target = Module.Enemies((uint)animal).FirstOrDefault();
+        if (target == null) {
+            return;
+        }
+
+        Actor? closest = null;
+        var bestDistance = float.MaxValue;
+        foreach (var beast in Module.Enemies((uint)OID.ThisBeast)) {
+            if (!beast.IsTargetable) {
+                continue;
+            }
+
+            var distance = (beast.Position - target.Position).LengthSq();
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                closest = beast;
+            }
+        }
+
+        if (closest != null) {
+            hints.InteractWithTarget = closest;
+            hints.GoalZones.Add(AIHints.GoalSingleTarget(closest.Position, 1.0f, 5f));
         }
     }
 
@@ -245,7 +278,7 @@ sealed class SphinxPieceStates : StateMachineBuilder {
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.SphinxPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14665u, SortOrder = 6)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.SphinxPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14665u, SortOrder = 6)]
 public sealed class SphinxPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsRect(20f, 20f)) {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var count = hints.PotentialTargets.Count;
@@ -268,5 +301,6 @@ public sealed class SphinxPiece(WorldState ws, Actor primary) : BossModule(ws, p
         Arena.Actors(Enemies((uint)OID.PugilPiece));
         Arena.Actors(Enemies((uint)OID.PukPiece));
         Arena.Actors(Enemies((uint)OID.OpoOpoPiece));
+        Arena.Actors(Enemies((uint)OID.ThisBeast));
     }
 }

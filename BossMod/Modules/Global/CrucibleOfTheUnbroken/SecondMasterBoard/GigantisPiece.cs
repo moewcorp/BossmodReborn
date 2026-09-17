@@ -16,6 +16,8 @@ public enum AID : uint {
     GiganticRageCircle = 49359, // Helper->self, 6.0s cast, range 15 circle
     GiganticRageConeBoss = 49360, // GigantisPiece->self, 5.0+1.0s cast, single-target
     GiganticRageCone = 49361, // Helper->self, 6.0s cast, range 40 180.000-degree cone
+    GiganticRageConeBoss1 = 49362, // GigantisPiece->self, 5.0+1.0s cast, single-target
+    GiganticRageCone1 = 49363, // Helper->self, 6.0s cast, range 40 180.000-degree cone
     AftersparkTower = 49364, // Helper->location, 3.0s cast, range 2 circle
     Afterspark = 49365, // Helper->self, no cast, range 60 circle - happens if you miss the tower
     AfterburnAOE = 49366, // Helper->self, 3.0s cast, range 6 circle
@@ -26,6 +28,7 @@ public enum AID : uint {
     // CyclopsPiece
     AutoAttackCyclopsPiece = 50398, // 4D04->player, no cast, single-target
     Glower = 49367, // 4D04->self, 4.0s cast, range 40 width 3 rect
+    Camaraderie = 49368, // CyclopsPiece->GigantisPiece, 8.0s cast, single-target
 
     // Slimes
     RuptureFire = 49375, // 4D07->self, 7.0s cast, range 40 circle
@@ -50,6 +53,7 @@ sealed class SmashingStampBait(BossModule module) : Components.GenericBaitProxim
     private readonly List<Actor> slimes = [];
     private readonly AOEShapeRect shape = new(7.0f, 2.0f);
     private bool active = false;
+    public bool weaponRecentlyChanged = false;
 
     public enum Element { NONE, LIGHTNING, FIRE }
     public Element weaponElement = Element.NONE;
@@ -57,6 +61,7 @@ sealed class SmashingStampBait(BossModule module) : Components.GenericBaitProxim
     public override void OnActorCreated(Actor actor) {
         if (actor.OID is (uint)OID.CongealedLightning or (uint)OID.CongealedKindling) {
             slimes.Add(actor);
+            weaponRecentlyChanged = false;
         }
     }
 
@@ -69,10 +74,12 @@ sealed class SmashingStampBait(BossModule module) : Components.GenericBaitProxim
     public override void OnStatusGain(Actor actor, ref ActorStatus status) {
         if (status.ID == (uint)SID.WeaponElement && status.Extra == 0x499) {
             weaponElement = Element.LIGHTNING;
+            weaponRecentlyChanged = true;
         }
 
         if (status.ID == (uint)SID.WeaponElement && status.Extra == 0x49A) {
             weaponElement = Element.FIRE;
+            weaponRecentlyChanged = true;
         }
     }
 
@@ -178,7 +185,7 @@ sealed class SmashingStampBait(BossModule module) : Components.GenericBaitProxim
 
         CurrentBaits.Clear();
 
-        if (slimes.Count == 0 || !active) {
+        if (!active) {
             return;
         }
 
@@ -189,7 +196,8 @@ sealed class SmashingStamp(BossModule module) : Components.SimpleAOEs(module, (u
 sealed class SmashingStampBaitAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SmashingStamp, new AOEShapeRect(7.0f, 2.0f));
 
 sealed class GiganticRageCircle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GiganticRageCircle, 15.0f);
-sealed class GiganticRageCone(BossModule module) : Components.SimpleAOEs(module, (uint)AID.GiganticRageCone, new AOEShapeCone(40.0f, 90.0f.Degrees()));
+sealed class GiganticRageCone(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.GiganticRageCone, (uint)AID.GiganticRageCone1],
+    new AOEShapeCone(40.0f, 90.0f.Degrees()));
 sealed class AftersparkTower(BossModule module) : Components.CastTowers(module, (uint)AID.AftersparkTower, 2.0f);
 sealed class AfterburnAOE(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AfterburnAOE, 6.0f);
 sealed class GiganticRageType(BossModule module) : Components.GenericBaitAway(module, centerAtTarget: true, onlyShowOutlines: true) {
@@ -199,13 +207,13 @@ sealed class GiganticRageType(BossModule module) : Components.GenericBaitAway(mo
     private bool active = false;
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID is (uint)AID.GiganticRageCircle or (uint)AID.GiganticRageCone) {
+        if (spell.Action.ID is (uint)AID.GiganticRageCircle or (uint)AID.GiganticRageCone or (uint)AID.GiganticRageCone1) {
             active = true;
         }
     }
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID is (uint)AID.GiganticRageCircle or (uint)AID.GiganticRageCone) {
+        if (spell.Action.ID is (uint)AID.GiganticRageCircle or (uint)AID.GiganticRageCone or (uint)AID.GiganticRageCone1) {
             active = false;
         }
     }
@@ -323,8 +331,6 @@ sealed class SlimesInterrupt(BossModule module) : Components.CastInterruptHint(m
     }
 }
 
-// TODO slime target
-
 sealed class GigantisPieceStates : StateMachineBuilder {
     public GigantisPieceStates(BossModule module) : base(module) {
         TrivialPhase()
@@ -341,22 +347,40 @@ sealed class GigantisPieceStates : StateMachineBuilder {
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.GigantisPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14670u, SortOrder = 8)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.GigantisPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14670u, SortOrder = 8)]
 public sealed class GigantisPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f)) {
+
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        SmashingStampBait? smashingStampBait = FindComponent<SmashingStampBait>()!;
+        var element = smashingStampBait.weaponElement;
+
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i) {
             var e = hints.PotentialTargets[i];
             e.Priority = e.Actor.OID switch {
-                (uint)OID.CyclopsPiece => 3,
-                (uint)OID.CongealedLightning => 2,
-                (uint)OID.CongealedKindling => 2,
-                (uint)OID.CongealedLightningSmall => 1,
-                (uint)OID.CongealedKindlingSmall => 1,
+                (uint)OID.CyclopsPiece => 4,
+                (uint)OID.CongealedLightning => slimePriority(element, false),
+                (uint)OID.CongealedKindling => slimePriority(element, true),
+                (uint)OID.CongealedLightningSmall => 2,
+                (uint)OID.CongealedKindlingSmall => 2,
                 (uint)OID.GigantisPiece => 1,
                 _ => 0
             };
         }
+    }
+
+    private int slimePriority(SmashingStampBait.Element element, bool isFire) {
+        SmashingStampBait? smashingStampBait = FindComponent<SmashingStampBait>()!;
+        if (smashingStampBait.weaponRecentlyChanged) {
+            return 3;
+        }
+
+        return element switch {
+            SmashingStampBait.Element.NONE => 3,
+            SmashingStampBait.Element.FIRE => isFire ? 3 : AIHints.Enemy.PriorityForbidden,
+            SmashingStampBait.Element.LIGHTNING => isFire ? AIHints.Enemy.PriorityForbidden : 3,
+            _ => 2
+        };
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc) {
