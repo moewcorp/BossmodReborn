@@ -43,7 +43,7 @@ public enum SID : uint {
 }
 
 public enum IconID : uint {
-    _Gen_Icon_tank_lockon02k1 = 218, // player->self
+    ManglingFangTankBuster = 218, // player->self
 }
 
 public enum TetherID : uint {
@@ -51,6 +51,8 @@ public enum TetherID : uint {
 }
 
 sealed class ManglingFang(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ManglingFang);
+sealed class SeedingNeedles(BossModule module) : Components.SimpleAOEs(module, (uint)AID.SeedingNeedles, 20.0f);
+
 sealed class BlazeSpikes(BossModule module) : Components.Dispel(module, (uint)SID.BlazeSpikes, (uint)AID.BlazeSpikes);
 sealed class BlazeSpikesTarget(BossModule module) : Components.GenericInvincible(module, "Attacking boss with spikes debuff!") {
     private readonly List<Actor> avoidBosses = [];
@@ -178,6 +180,7 @@ sealed class DrakePieceStates : StateMachineBuilder {
             .ActivateOnEnter<BlazeSpikes>()
             .ActivateOnEnter<BlazeSpikesTarget>()
             .ActivateOnEnter<AbaddonEat>()
+            .ActivateOnEnter<SeedingNeedles>()
             .Raw.Update = () => AllDeadOrDestroyed(DrakePiece.Bosses);
     }
 }
