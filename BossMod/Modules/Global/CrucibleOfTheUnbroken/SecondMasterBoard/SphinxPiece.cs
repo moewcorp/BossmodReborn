@@ -26,6 +26,10 @@ public enum AID : uint {
     BanishDonut = 49335, // Helper->self, 6.0s cast, range 10-60 donut
     BanishConeBoss = 49338, // SphinxPiece->self, 5.0s cast, single-target
     BanishCone = 49339, // Helper->self, 6.0s cast, range 60 180.000-degree cone
+    BanishConeBoss1 = 49340, // SphinxPiece->self, 5.0s cast, single-target
+    BanishCone2 = 49341, // Helper->self, 6.0s cast, range 60 180.000-degree cone
+    BanishCircleBoss = 49336, // SphinxPiece->self, 5.0s cast, single-target
+    BanishCircle = 49337, // Helper->self, 6.0s cast, range 18 circle
     NumericRiddleBoss = 49352, // SphinxPiece->self, 4.0s cast, single-target
     NumericRiddle = 49353, // Helper->self, 5.0s cast, range 40 circle
     Assignment = 49354, // SphinxPiece->self, 3.0s cast, single-target
@@ -33,6 +37,8 @@ public enum AID : uint {
     MnemonicRiddle = 49343, // SphinxPiece->self, 4.0s cast, single-target
     MnemonicRiddle1 = 49344, // Helper->self, 5.0s cast, range 40 circle
     Transfigure = 49345, // SphinxPiece->self, 2.0s cast, single-target
+    RiddleSolved = 49348, // SphinxPiece->self, 2.0s cast, single-target
+    RiddleSolved1 = 49349, // Helper->self, 3.0s cast, range 50 circle
 
     // Adds
     AutoAttackOpoOpoPiece = 49680, // 4D01->player, no cast, single-target
@@ -53,6 +59,9 @@ public enum SID : uint {
     AllPrime = 5150, // none->player, extra=0x0
     AllThree = 5151, // none->player, extra=0x0
     AllEvens = 5148, // none->player, extra=0x0
+    AllOdds = 5149, // none->player, extra=0x0
+    DamageUp = 5147, // Helper->player, extra=0x0
+    Bleeding = 3077, // none->player, extra=0x0
 }
 
 public enum IconID : uint {
@@ -62,15 +71,16 @@ public enum IconID : uint {
 }
 
 sealed class BanishDonut(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BanishDonut, new AOEShapeDonut(10.0f, 60.0f));
-sealed class BanishCone(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BanishCone, new AOEShapeCone(60.0f, 90.0f.Degrees()));
+sealed class BanishCone(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.BanishCone, (uint)AID.BanishCone2],
+    new AOEShapeCone(60.0f, 90.0f.Degrees()));
+sealed class BanishCircle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BanishCircle, 18.0f);
 sealed class NumericRiddle(BossModule module) : Components.RaidwideCast(module, (uint)AID.NumericRiddle);
 
-// TODO add AI - check if needed
 sealed class LostHope(BossModule module) : Components.TemporaryMisdirection(module, (uint)AID.LostHope);
 
-// TODO add AI - we show which are safe, so we have to aim for them - we have the list of aoes, so we can just use that
 sealed class Assignment : Components.GenericAOEs {
     private readonly AOEShapeRect shape = new(6.0f, 6.0f, 6.0f);
+    private readonly AOEShapeRect shapeForAI = new(4.0f, 4.0f, 4.0f); // Used to make the AI not stand on the edge of squares
     private readonly List<AOEInstance> aoes = [];
     private readonly List<List<ActorStatus>> debuffs = [];
 
@@ -81,7 +91,8 @@ sealed class Assignment : Components.GenericAOEs {
     }
 
     public override void OnStatusGain(Actor actor, ref ActorStatus status) {
-        if (status.ID != (uint)SID.AllPrime && status.ID != (uint)SID.AllEvens && status.ID != (uint)SID.AllThree) {
+        if (status.ID != (uint)SID.AllPrime && status.ID != (uint)SID.AllEvens &&
+            status.ID != (uint)SID.AllThree && status.ID != (uint)SID.AllOdds) {
             return;
         }
 
@@ -95,7 +106,8 @@ sealed class Assignment : Components.GenericAOEs {
     }
 
     public override void OnStatusLose(Actor actor, ref ActorStatus status) {
-        if (status.ID != (uint)SID.AllPrime && status.ID != (uint)SID.AllEvens && status.ID != (uint)SID.AllThree) {
+        if (status.ID != (uint)SID.AllPrime && status.ID != (uint)SID.AllEvens &&
+            status.ID != (uint)SID.AllThree && status.ID != (uint)SID.AllOdds) {
             return;
         }
 
@@ -121,6 +133,7 @@ sealed class Assignment : Components.GenericAOEs {
                 (uint)SID.AllPrime => i is 2 or 3 or 5 or 7,
                 (uint)SID.AllThree => i % 3 == 0,
                 (uint)SID.AllEvens => i % 2 == 0,
+                (uint)SID.AllOdds => i % 2 != 0,
                 _ => false
             };
 
@@ -133,6 +146,19 @@ sealed class Assignment : Components.GenericAOEs {
         }
 
         return CollectionsMarshal.AsSpan(aoes);
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        if (aoes.Count == 0 || debuffs[slot].Count == 0) {
+            return;
+        }
+
+        var shapes = new List<ShapeDistance>();
+        foreach (var aoe in aoes) {
+            shapes.Add(shapeForAI.Distance(aoe.Origin, aoe.Rotation));
+        }
+
+        hints.AddForbiddenZone(new SDInvertedUnion([.. shapes]), debuffs[slot][0].ExpireAt);
     }
 
     private Actor? tileNumber(int n) {
@@ -153,20 +179,73 @@ sealed class Assignment : Components.GenericAOEs {
     }
 }
 
-// TODO add animal puzzle
+sealed class MnemonicRiddle(BossModule module) : BossComponent(module) {
+    private OID? animal;
+    private bool active = false;
+
+    public override void OnEventDirectorUpdate(uint updateID, uint param1, uint param2, uint param3, uint param4) {
+        if (updateID != 2147483687) {
+            return;
+        }
+
+        if (param1 == 3) { // CLOUD: director update: 2147483687 param1: 3 param2: 2 param3: 14665 param4: 1073884536
+            animal = OID.DodoPiece;
+        }
+
+        if (param1 == 4) { // SCALES: director update: 2147483687 param1: 4 param2: 2 param3: 14665 param4: 1073952921
+            animal = OID.PukPiece;
+        }
+
+        if (param1 == 6) { // WATER: director update: 2147483687 param1: 6 param2: 2 param3: 14665 param4: 1073885145
+            animal = OID.PugilPiece;
+        }
+
+        if (param1 == 32) { // PICK TARGET: director update: 2147483687 param1: 32 param2: 2 param3: 14665 param4: 1073933173
+            active = true;
+        }
+
+        if (param1 == 7) { // SUCCESS: director update: 2147483687 param1: 7 param2: 2 param3: 14665 param4: 1073952921
+            active = false;
+        }
+
+        // TODO add fail case + other two
+        Service.Logger.Info("director update: " + updateID + " param1: " + param1 + " param2: " +  param2 + " param3: " + param3 + " param4: " + param4);
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        if (animal == null || !active) {
+            return;
+        }
+
+        var target = Module.Enemies((uint)animal).FirstOrDefault();
+        if (target != null) {
+            Arena.ZoneCircleOutline(target.Position, 1.0f, Colors.Safe);
+        }
+    }
+
+    public override void AddHints(int slot, Actor actor, TextHints hints) {
+        if (animal == null || !active) {
+            return;
+        }
+
+        hints.Add("Interact with the actor on the green circle", false);
+    }
+}
 
 sealed class SphinxPieceStates : StateMachineBuilder {
     public SphinxPieceStates(BossModule module) : base(module) {
         TrivialPhase()
             .ActivateOnEnter<BanishDonut>()
             .ActivateOnEnter<BanishCone>()
+            .ActivateOnEnter<BanishCircle>()
             .ActivateOnEnter<NumericRiddle>()
             .ActivateOnEnter<Assignment>()
-            .ActivateOnEnter<LostHope>();
+            .ActivateOnEnter<LostHope>()
+            .ActivateOnEnter<MnemonicRiddle>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Dummy, PrimaryActorOID = (uint)OID.SphinxPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14665u, SortOrder = 6)]
+[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.SphinxPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14665u, SortOrder = 6)]
 public sealed class SphinxPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsRect(20f, 20f)) {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var count = hints.PotentialTargets.Count;
