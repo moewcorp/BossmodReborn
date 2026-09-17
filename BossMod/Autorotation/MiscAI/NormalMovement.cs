@@ -196,10 +196,9 @@ public sealed class NormalMovement : RotationModule
 
             if (enemy.DesiredRotation is { } rot)
             {
-                var dist = (enemy.Actor.Position - Player.Position).Length();
-                var goal = enemy.Actor.Position + rot.ToDirection() * dist;
+                var goal = enemy.Actor.Position + rot.ToDirection() * enemy.Actor.HitboxRadius;
                 var sh = new SDPrecisePosition(goal, new(0f, 1f), Hints.PathfindMapBounds.MapResolution, Player.Position, 0.1f);
-                Hints.GoalZones.Add(p => sh.Distance(p) > 0f ? 0.5f : 0f);
+                Hints.GoalZones.Add(p => sh.Distance(p) >= 0f ? 0.5f : 0f);
             }
         }
 
