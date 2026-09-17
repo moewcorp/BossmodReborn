@@ -43,6 +43,15 @@ sealed class ChargedLightning(BossModule module) : Components.SimpleAOEs(module,
 sealed class ElectricShock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ElectricShock, 16.0f);
 sealed class ErraticBlaster(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ErraticBlaster, "TankBuster + applies Paralysis");
 
+sealed class AddMovement(BossModule module) : Components.Adds(module, (uint)OID.LightningSprite) {
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        var sprites = ActiveActors;
+        foreach (var sprite in sprites) {
+            hints.GoalZones.Add(AIHints.GoalProximity(sprite.Position, 5.0f, 1.0f));
+        }
+    }
+}
+
 sealed class FlaurosPieceStates : StateMachineBuilder {
     public FlaurosPieceStates(BossModule module) : base(module) {
         TrivialPhase()
@@ -51,7 +60,8 @@ sealed class FlaurosPieceStates : StateMachineBuilder {
             .ActivateOnEnter<LineVoltageBig>()
             .ActivateOnEnter<ChargedLightning>()
             .ActivateOnEnter<ElectricShock>()
-            .ActivateOnEnter<ErraticBlaster>();
+            .ActivateOnEnter<ErraticBlaster>()
+            .ActivateOnEnter<AddMovement>();
     }
 }
 
