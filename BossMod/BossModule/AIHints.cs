@@ -178,6 +178,7 @@ public sealed class AIHints
     // misc stuff to execute
     public bool WantJump;
     public bool WantDismount;
+    public bool ForbidDashes; // if set, gap closers/dashes will be prevented
     public FateSync WantFateSync;
     public bool ShouldLeaveDuty;
 
@@ -215,6 +216,7 @@ public sealed class AIHints
         WantDismount = false;
         WantFateSync = FateSync.None;
         ShouldLeaveDuty = false;
+        ForbidDashes = false;
     }
 
     public void PrioritizeTargetsByOID(uint oid, int priority = default)
