@@ -140,7 +140,7 @@ sealed class ThermobaricChargeKnockback(BossModule module) : Components.SimpleKn
             return;
         }
 
-        hints.AddForbiddenZone(new SDKnockbackInAABBRectAwayFromOrigin(Arena.Center, knockback.Origin, 35.0f, 20.0f, 20.0f), activation);
+        hints.AddForbiddenZone(new SDKnockbackInAABBRectAwayFromOrigin(Arena.Center, knockback.Origin, 39.0f, 20.0f, 20.0f), activation);
     }
 }
 
