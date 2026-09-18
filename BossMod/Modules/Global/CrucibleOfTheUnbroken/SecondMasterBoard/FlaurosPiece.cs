@@ -47,7 +47,7 @@ sealed class AddMovement(BossModule module) : Components.Adds(module, (uint)OID.
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var sprites = ActiveActors;
         foreach (var sprite in sprites) {
-            hints.GoalZones.Add(AIHints.GoalProximity(sprite.Position, 5.0f, 1.0f));
+            hints.GoalZones.Add(AIHints.GoalSingleTarget(sprite.Position, 6.0f, 2.0f));
         }
     }
 }
