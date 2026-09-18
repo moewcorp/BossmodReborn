@@ -82,9 +82,9 @@ public enum AID : uint
     _Ability_12 = 47700, // 4C18->self, 6.0s cast, single-target
     ArcaneBeacon1 = 47721, // 4C22->self, 0.7s cast, range 60 width 5 rect
     ArcaneBeacon2 = 47722, // 4C23->self, 0.7s cast, range 60 width 5 rect
+    TwoTerrorsVisual = 47697, // GreenHead/BlueHead->self, 7.0s cast, single-target
     TwoTerrors1 = 47702, // Helper->self, 7.0s cast, range 40 width 20 rect
     TwoTerrors2 = 47703, // Helper->self, 7.0s cast, range 40 width 10 rect
-    _Ability_TwoTerrors1 = 47697, // GreenHead/BlueHead->self, 7.0s cast, single-
 
     Summon = 47710, // GreenHead/BlueHead->self, 3.0s cast, single-target
     _Ability_13 = 47711, // 4C18->self, 3.0s cast, single-target
