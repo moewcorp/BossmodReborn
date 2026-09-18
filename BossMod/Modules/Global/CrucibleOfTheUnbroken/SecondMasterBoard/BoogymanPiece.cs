@@ -109,31 +109,58 @@ sealed class Swoop(BossModule module) : Components.GenericAOEs(module) {
 }
 
 // Used to track where the adds are base on if they're dead or not - They go invisible, so we have to manually draw them like this
-sealed class AddTrack(BossModule module) : Components.AddsMulti(module, [(uint)OID.BombPiece, (uint)OID.DeepeyePiece, (uint)OID.LightSprite]) {
-    private new List<Actor> ActiveActors {
-        get {
-            var enemies = Module.Enemies(OIDs);
-            var count = enemies.Count;
-            List<Actor> activeActors = [with(count)];
-            for (var i = 0; i < count; ++i) {
-                var actor = enemies[i];
-                if (!actor.IsDead) {
-                    activeActors.Add(actor);
-                }
+sealed class AddTrack(BossModule module) : Components.AddsMulti(module, [(uint)OID.BombPiece, (uint)OID.DeepeyePiece]) {
+    private new List<Actor> ActiveActors() {
+        var enemies = Module.Enemies(OIDs);
+        var result = new List<Actor>(enemies.Count);
+        foreach (var actor in enemies) {
+            if (!actor.IsDead) {
+                result.Add(actor);
             }
-            return activeActors;
+        }
+        return result;
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        foreach (var a in ActiveActors()) {
+            var priority = a.OID switch {
+                (uint)OID.BombPiece => 4,
+                (uint)OID.DeepeyePiece => 3,
+                _ => 0
+            };
+
+            if (priority > 0) {
+                hints.GoalZones.Add(AIHints.GoalSingleTarget(a.Position, 3.0f, priority));
+            }
         }
     }
 
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) { }
-
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
-        var actors = ActiveActors;
+        var actors = ActiveActors();
 
         foreach (var actor in actors) {
             Arena.Actor(ref actor.PosRot, Colors.Enemy);
         }
     }
+}
+
+sealed class RevealMainBoss(BossModule module) : BossComponent(module) {
+    private bool reveal => !Module.PrimaryActor.IsTargetable && Module.Enemies((uint)OID.LightSprite).Any(actor => !actor.IsDead);
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        if (!reveal) {
+            return;
+        }
+
+        var lightSprites = Module.Enemies((uint)OID.LightSprite).FirstOrDefault(sprite => !sprite.IsDead);
+        if (lightSprites == null) {
+            return;
+        }
+
+        var spriteToBoss = lightSprites.Position - Module.PrimaryActor.Position;
+        hints.GoalZones.Add(AIHints.GoalSingleTarget(lightSprites.Position + 2.0f * spriteToBoss.Normalized(), 1.0f, 2.0f));
+    }
+
 }
 
 sealed class BoogymanPieceStates : StateMachineBuilder {
@@ -147,11 +174,12 @@ sealed class BoogymanPieceStates : StateMachineBuilder {
             .ActivateOnEnter<DiffuseLight>()
             .ActivateOnEnter<SwoopCharge>()
             .ActivateOnEnter<Swoop>()
-            .ActivateOnEnter<AddTrack>();
+            .ActivateOnEnter<AddTrack>()
+            .ActivateOnEnter<RevealMainBoss>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.BoogymanPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14638u, SortOrder = 1)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.BoogymanPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14638u, SortOrder = 3)]
 public sealed class BoogymanPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f)) {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var count = hints.PotentialTargets.Count;
@@ -164,15 +192,12 @@ public sealed class BoogymanPiece(WorldState ws, Actor primary) : BossModule(ws,
                 (uint)OID.BoogymanPiece => 1,
                 _ => 0
             };
-
-            if (e.Priority >= 2) {
-                hints.GoalZones.Add(AIHints.GoalProximity(e.Actor.Position, 3.0f, e.Priority * 0.5f));
-            }
         }
     }
 
     protected override void DrawEnemies(int pcSlot, Actor pc) {
         Arena.Actor(PrimaryActor);
+        Arena.Actors(Enemies((uint)OID.LightSprite));
     }
 
     private readonly string[] _prePullHints = [

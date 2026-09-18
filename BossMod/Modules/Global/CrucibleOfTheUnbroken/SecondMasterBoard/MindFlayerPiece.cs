@@ -46,15 +46,211 @@ public enum TetherID : uint {
     ArcaneEnhancementTether = 426, // 4CE1->MindflayerPiece
 }
 
-sealed class VoidWaterIII(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.VoidWaterIIIIcon, (uint)AID.VoidWaterIII, 8.0f, 5.1f);
 sealed class VoidThunderIII(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.VoidThunderIIITankBuster, (uint)AID.VoidThunderIIITB, 6.0f, 5.1f);
 sealed class VoidThunderIIICross(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidThunderIIICross, new AOEShapeCross(50.0f, 5.0f));
 sealed class VoidParalyzeIII(BossModule module) : Components.RaidwideCast(module, (uint)AID.VoidParalyzeIII, "Raidwide + Applies Paralysis");
 
-sealed class WaterPuddles : Components.PersistentInvertibleVoidzone {
+sealed class VoidWaterIII(BossModule module) : Components.SpreadFromIcon(module, (uint)IconID.VoidWaterIIIIcon, (uint)AID.VoidWaterIII, 8.0f, 5.1f) {
+    // TODO consider fixing the actual problem, since the other spread is a pet its not include in the Raid.WithSlot
+    //  Function is copied for now, until fixed - could also just remove most of the code since we only need to consider spreads - no stacks/damage hints
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        if (!EnableHints) {
+            return;
+        }
 
+        var spreads = CollectionsMarshal.AsSpan(ActiveSpreads);
+        var stacks = CollectionsMarshal.AsSpan(ActiveStacks);
+        var lenSpreads = spreads.Length;
+        var lenStacks = stacks.Length;
+
+        // nothing to do
+        if (lenStacks == 0 && lenSpreads == 0) {
+            return;
+        }
+        var isSpreadTarget = false;
+
+        var partyWOS = Raid.WithSlot(includeDead: IncludeDeadTargets);
+        var lenPWOS = partyWOS.Length;
+
+        for (var i = 0; i < lenSpreads; ++i) {
+            ref var s = ref spreads[i];
+            if (!SpreadAppliesToArenaProjectionLayer(actor, s)) {
+                continue;
+            }
+            var t = s.Target;
+            if (t != actor || !SpreadParticipantAppliesToArenaProjectionLayer(actor, s)) {
+                hints.AddForbiddenZone(new SDCircle(t.Position.Quantized(), s.Radius + ExtraAISpreadThreshold), s.Activation,
+                    arenaProjectionLayer: ArenaProjectionLayerForAI(s.ResolveArenaProjectionLayer(Module), s.RestrictToArenaProjectionLayer));
+            } else {
+                isSpreadTarget = true;
+
+                var radius = s.Radius;
+                var act = s.Activation;
+                for (var j = 0; j < lenPWOS; ++j) {
+                    var p = partyWOS[j].Item2;
+                    if (!SpreadParticipantAppliesToArenaProjectionLayer(p, s)) {
+                        continue;
+                    }
+
+                    for (var k = 0; k < lenSpreads; ++k) {
+                        if (SpreadAppliesToArenaProjectionLayer(actor, spreads[k]) && spreads[k].Target == p
+                            && SpreadParticipantAppliesToArenaProjectionLayer(p, spreads[k])) {
+                            goto done; // no need to add avoid hints for players who are also spread targets
+                        }
+                    }
+
+                    hints.AddForbiddenZone(new SDCircle(p.Position.Quantized(), radius + ExtraAISpreadThreshold), act,
+                        arenaProjectionLayer: ArenaProjectionLayerForAI(s.ResolveArenaProjectionLayer(Module), s.RestrictToArenaProjectionLayer));
+                done:
+                    ;
+                }
+            }
+        }
+
+        var isStackTarget = false;
+
+        for (var i = 0; i < lenStacks; ++i) {
+            ref var s = ref stacks[i];
+            if (!StackParticipantAppliesToArenaProjectionLayer(actor, s)) {
+                continue;
+            }
+            var t = s.Target;
+            if (s.Target == actor) {
+                isStackTarget = true;
+
+                var stacksIFzTarget = new List<ShapeDistance>(lenPWOS - 1);
+                var radius = s.Radius;
+
+                for (var j = 0; j < lenPWOS; ++j) { // if player got stackmarker we should try finding a good candidate to stack with
+                    ref var p = ref partyWOS[j];
+                    var a = p.Item2;
+                    if (t != a && StackParticipantAppliesToArenaProjectionLayer(a, s)) {
+                        if (s.ForbiddenPlayers[p.Item1]) { // party member is forbidden from stacking
+                            continue;
+                        }
+
+                        for (var k = 0; k < lenSpreads; ++k) {
+                            if (SpreadAppliesToArenaProjectionLayer(actor, spreads[k]) && spreads[k].Target == a
+                                && SpreadParticipantAppliesToArenaProjectionLayer(a, spreads[k])) {
+                                goto skip; // player got a spread marker
+                            }
+                        }
+
+                        for (var k = 0; k < lenStacks; ++k) {
+                            if (StackAppliesToArenaProjectionLayer(actor, stacks[k]) && stacks[k].Target == a
+                                && StackParticipantAppliesToArenaProjectionLayer(a, stacks[k])) {
+                                goto skip; // player got a stack marker and we don't want to stack stacks
+                            }
+                        }
+                        // buddy is not target of stacks or spreads, so a good candidate
+                        stacksIFzTarget.Add(new SDInvertedCircle(a.Position, radius * 0.5f));
+                    skip:
+                        ;
+                    }
+                }
+
+                if (stacksIFzTarget.Count > 0) {
+                    hints.AddForbiddenZone(new SDIntersection([.. stacksIFzTarget]), s.Activation,
+                        arenaProjectionLayer: ArenaProjectionLayerForAI(s.ResolveArenaProjectionLayer(Module), s.RestrictToArenaProjectionLayer));
+                }
+            }
+        }
+
+        var stacksIFz = new List<ShapeDistance>();
+        var stacksIFzLayer = -2; // -2 = empty, -1 = unlayered/mixed
+        var stacksIFzActivation = DateTime.MaxValue;
+        for (var i = 0; i < lenStacks; ++i) {
+            ref var s = ref stacks[i];
+            if (!StackParticipantAppliesToArenaProjectionLayer(actor, s)) {
+                continue;
+            }
+            var t = s.Target;
+            var targetPos = t.Position.Quantized();
+            var act = s.Activation;
+            var radius = s.Radius;
+
+            if (s.Target != actor) {
+                if (s.ForbiddenPlayers[slot]) {
+                    goto addfz;
+                }
+                var numInside = s.NumInside(Module);
+                var isInside = s.IsInside(actor);
+                var max = s.MaxSize;
+                if (!isSpreadTarget && (!isInside && numInside < max || isInside && numInside <= max)) { // don't try to stack if spread target
+                    stacksIFz.Add(new SDInvertedCircle(targetPos, radius));
+                    var layer = ArenaProjectionLayerForAI(s.ResolveArenaProjectionLayer(Module), s.RestrictToArenaProjectionLayer) ?? -1;
+                    stacksIFzLayer = stacksIFzLayer == -2 || stacksIFzLayer == layer ? layer : -1;
+                    stacksIFzActivation = stacksIFzActivation < act ? stacksIFzActivation : act;
+                    continue;
+                }
+            addfz:
+                // avoid stack if forbidden or enough players inside
+                // double radius if stack target to prevent standing next to other stack markers or overlapping them
+                hints.AddForbiddenZone(new SDCircle(targetPos, !isStackTarget ? radius : 2f * radius), act,
+                    arenaProjectionLayer: ArenaProjectionLayerForAI(s.ResolveArenaProjectionLayer(Module), s.RestrictToArenaProjectionLayer));
+            }
+        }
+
+        var countIFz = stacksIFz.Count;
+        if (countIFz > 0) {
+            if (countIFz == 1) {
+                hints.AddForbiddenZone(stacksIFz[0], stacksIFzActivation,
+                    arenaProjectionLayer: stacksIFzLayer >= 0 ? stacksIFzLayer : null);
+            } else {
+                hints.AddForbiddenZone(new SDOutsideOfUnion([.. stacksIFz]), stacksIFzActivation,
+                    arenaProjectionLayer: stacksIFzLayer >= 0 ? stacksIFzLayer : null);
+            }
+        }
+
+        if (RaidwideOnResolve) {
+            BitMask spreadMask = default;
+            var firstSpreadActivation = DateTime.MaxValue;
+            for (var i = 0; i < lenSpreads; ++i) {
+                ref var s = ref spreads[i];
+                if (SpreadAppliesToArenaProjectionLayer(actor, s) && SpreadParticipantAppliesToArenaProjectionLayer(s.Target, s)) {
+                    spreadMask.Set(Raid.FindSlot(s.Target.InstanceID));
+                    firstSpreadActivation = firstSpreadActivation < s.Activation ? firstSpreadActivation : s.Activation;
+                }
+            }
+
+            if (spreadMask != default) {
+                hints.AddPredictedDamage(spreadMask, firstSpreadActivation, AIHints.PredictedDamageType.Raidwide);
+            }
+
+            BitMask stackMask = default;
+            var firstStackActivation = DateTime.MaxValue;
+            var participants = Raid.WithSlot(includeDead: IncludeDeadTargets);
+            for (var i = 0; i < lenStacks; ++i) {
+                ref var s = ref stacks[i];
+                if (StackAppliesToArenaProjectionLayer(actor, s)) {
+                    for (var j = 0; j < participants.Length; ++j) {
+                        ref var participant = ref participants[j];
+                        if (!s.ForbiddenPlayers[participant.Item1] && StackParticipantAppliesToArenaProjectionLayer(participant.Item2, s)) {
+                            stackMask.Set(participant.Item1);
+                        }
+                    }
+                    firstStackActivation = firstStackActivation < s.Activation ? firstStackActivation : s.Activation;
+                }
+            }
+
+            if (stackMask != default) {
+                hints.AddPredictedDamage(stackMask, firstStackActivation, AIHints.PredictedDamageType.Shared);
+            }
+        }
+    }
+}
+
+sealed class WaterPuddles : Components.PersistentInvertibleVoidzone {
     public WaterPuddles(BossModule module) : base(module, 8.0f, GetVoidzones) {
         InvertResolveAt = WorldState.CurrentTime;
+    }
+
+    public override void AddHints(int slot, Actor actor, TextHints hints) {
+        if (!Sources(Module).Any()) {
+            return;
+        }
+
+        base.AddHints(slot, actor, hints);
     }
 
     public static Actor[] GetVoidzones(BossModule module) {
@@ -72,6 +268,27 @@ sealed class WaterPuddles : Components.PersistentInvertibleVoidzone {
         }
         return voidzones[..index];
     }
+}
+
+sealed class SporeSpill(BossModule module) : Components.GenericAOEs(module) {
+    private readonly List<AOEInstance> aoes = [];
+    private readonly AOEShapeCircle shape = new(6.0f);
+
+    public override void OnActorDeath(Actor actor) {
+        if (actor.OID == (uint)OID.MyconidPiece) {
+            aoes.Add(new(shape, actor.Position, actor.Rotation));
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.SporeSpill) {
+            if (aoes.Count > 0) {
+                aoes.RemoveAt(0);
+            }
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(aoes);
 }
 
 sealed class ShroombedPuddles(BossModule module) : Components.Voidzone(module, 6.0f, GetVoidzones) {
@@ -169,11 +386,12 @@ sealed class MindflayerPieceStates : StateMachineBuilder {
             .ActivateOnEnter<VoidParalyzeIII>()
             .ActivateOnEnter<WaterPuddles>()
             .ActivateOnEnter<ShroombedPuddles>()
-            .ActivateOnEnter<ArcaneEnhancement>();
+            .ActivateOnEnter<ArcaneEnhancement>()
+            .ActivateOnEnter<SporeSpill>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.Dummy, PrimaryActorOID = (uint)OID.MindflayerPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14633u, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.MindflayerPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14633u, SortOrder = 2)]
 public sealed class MindflayerPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsRect(20f, 20f)) {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var puddles = WaterPuddles.GetVoidzones(this);
