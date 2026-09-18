@@ -561,7 +561,7 @@ sealed class BladeBlitz(BossModule module) : Components.SimpleAOEs(module, (uint
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.Index, Contributors = "gynorhino", GroupType = BossModuleInfo.GroupType.TheForkedTowerMagicExtreme, GroupID = 1114u, NameID = 14717u, PlanLevel = 100)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.Index, Contributors = "gynorhino", GroupType = BossModuleInfo.GroupType.TheForkedTowerMagicExtreme, GroupID = 1114u, NameID = 14717u, PlanLevel = 100)]
 public sealed class FTME4Index : BossModule
 {
     public FTME4Index(WorldState ws, Actor primary) : this(ws, primary, Normal.FTMN4Index.FTMN4Index.BuildInitialArena()) { }

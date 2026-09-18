@@ -178,6 +178,7 @@ public sealed class AIHints
     // misc stuff to execute
     public bool WantJump;
     public bool WantDismount;
+    public bool ForbidDashes; // if set, gap closers/dashes will be prevented
     public FateSync WantFateSync;
     public bool ShouldLeaveDuty;
 
@@ -215,6 +216,7 @@ public sealed class AIHints
         WantDismount = false;
         WantFateSync = FateSync.None;
         ShouldLeaveDuty = false;
+        ForbidDashes = false;
     }
 
     public void PrioritizeTargetsByOID(uint oid, int priority = default)
@@ -849,9 +851,7 @@ public sealed class AIHints
 
         // try to stay within pull range
         if (dirToGoal.LengthSq() <= leewaySq)
-        {
-            return GoalSingleTarget(target.Position, adjRange, 0.5f);
-        }
+            return GoalSingleTarget(target.Position, adjRange, 0.1f);
 
         var distance = distToGoal;
         if (gcd < 0.5f)
@@ -861,7 +861,7 @@ public sealed class AIHints
         }
 
         var sh = new SDPrecisePosition(target.Position + dirToGoal.Normalized() * distToGoal, new(0f, 1f), PathfindMapBounds.MapResolution, player.Position, 0.1f);
-        return p => sh.Distance(p) > 0f ? 10f : 0f;
+        return p => sh.Distance(p) >= 0f ? 10f : 0f;
     }
 
     public static Func<WPos, float> GoalRectangle(WPos center, WDir direction, float halfWidth, float halfHeight, float weight = 1f)
