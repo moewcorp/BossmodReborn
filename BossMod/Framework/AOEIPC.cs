@@ -21,6 +21,7 @@ public enum AOEIPCShapeType : byte
     Spread,  // ground circle on a spread target (danger), P1=radius
     Tower,   // ground circle on a tower position (friendly), P1=radius
     FriendlyRect, // stack line (LineStack), P1=lenFront P2=lenBack P3=halfWidth
+    Knockback, // knockback arrow on the local player: Origin=push start, Rotation=push direction, P1=distance
 }
 
 public sealed class AOEIPCDto
@@ -232,6 +233,44 @@ public static class AOEIPC
                 && MathF.Abs(z.P2 - dto.P2) < 0.01f))
                 continue;
             list.Add(dto);
+        }
+
+        // knockbacks: GenericKnockback renders them as world-projected lines (DrawArenaForeground ->
+        // Arena.ActorProjected + AddLine), which never enter DrawnZones; expose the local player's own
+        // push as an arrow instead. The movement comes from the component's CalculateMovements, so the
+        // kind (away / towards / directional), the shape containment test, knockback immunity (Arm's
+        // Length & friends) and the StopAtWall/StopAfterWall arena clamps are all inherited from
+        // BossMod - no per-mechanic guessing here.
+        var pc = module.WorldState.Party.Player();
+        if (pc != null)
+        {
+            batch = 0;
+            foreach (var comp in module.Components)
+            {
+                ++batch;
+                if (comp is not GenericKnockback kb)
+                    continue;
+                var movements = kb.CalculateMovements(PartyState.PlayerSlot, pc);
+                var count = movements.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    var (from, to) = movements[i];
+                    var dir = to - from;
+                    var distance = dir.Length();
+                    if (distance < 0.1f)
+                        continue; // no actual movement (inside min distance / blocked by a wall)
+                    list.Add(new AOEIPCDto
+                    {
+                        ShapeType = (int)AOEIPCShapeType.Knockback,
+                        OriginX = from.X,
+                        OriginZ = from.Z,
+                        OriginY = defaultY,
+                        Rotation = Angle.FromDirection(dir).Rad,
+                        P1 = distance,
+                        Batch = batch,
+                    });
+                }
+            }
         }
 
         var sig = string.Join(",", list.Select(d => $"{(AOEIPCShapeType)d.ShapeType}@({d.OriginX:0},{d.OriginZ:0}){(d.IsDanger ? "*" : "")}"));
