@@ -22,7 +22,7 @@ public enum AID : uint
     AncientAero = 46869, // BoneBishop->self, 5.0+0.7s cast, single-target
     AncientAero1 = 46870, // Helper->self, 5.7s cast, range 40 width 8 rect
     _Ability_ = 46865, // BoneKnight->self, no cast, single-target
-    Tumulus = 46866, // BoneKnight->self, 5.0s cast, range 6 circle
+    Tumulus = 46866 // BoneKnight->self, 5.0s cast, range 6 circle
 }
 
 public enum SID : uint
@@ -36,8 +36,19 @@ public enum SID : uint
 sealed class DeathSpiral(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DeathSpiral1, new AOEShapeDonut(4f, 40f));
 
 // Puts a shield in front of himself. Player should have pet snarl why they get behind and beat him up.
-sealed class ForwardGuard(BossModule module) : Components.DirectionalParry(module, [(uint)OID.BoneKnight])
+sealed class ForwardGuard(BoneBishop module) : Components.DirectionalParry(module, [(uint)OID.BoneKnight])
 {
+    private bool active;
+    private readonly Actor boneKnight = module.BoneKnight!;
+
+    public override void OnStatusGain(Actor actor, ref ActorStatus status)
+    {
+        if (status.ID == (uint)SID.DirectionalParry)
+        {
+            active = true;
+        }
+    }
+
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
         if (spell.Action.ID == (uint)AID.ForwardGuard)
@@ -50,17 +61,27 @@ sealed class ForwardGuard(BossModule module) : Components.DirectionalParry(modul
     {
         if (status.ID == (uint)SID.DirectionalParry)
         {
+            active = false;
             UpdateState(actor.InstanceID, 0);
+        }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        if (active && boneKnight.TargetID != actor.InstanceID)
+        {
+            base.AddAIHints(slot, actor, assignment, hints);
         }
     }
 }
 
 sealed class AncientAero(BossModule module) : Components.SimpleAOEs(module, (uint)AID.AncientAero1, new AOEShapeRect(40f, 4f));
 
-sealed class Tumulus(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Tumulus, new AOEShapeCircle(6f));
+sealed class Tumulus(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Tumulus, 6f);
+
 sealed class BlackEruption(BossModule module) : Components.GenericAOEs(module)
 {
-    private readonly List<AOEInstance> _aoes = [];
+    private readonly List<AOEInstance> _aoes = [with(24)];
     private readonly AOEShapeCircle _circle = new(5f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
@@ -80,41 +101,79 @@ sealed class BlackEruption(BossModule module) : Components.GenericAOEs(module)
     {
         if (spell.Action.ID == (uint)AID.BlackEruption1)
         {
-            _aoes.Add(new(_circle, spell.LocXZ, spell.Rotation, Module.CastFinishAt(spell), actorID: caster.InstanceID));
+            var loc = spell.LocXZ;
+            _aoes.Add(new(_circle, loc, default, Module.CastFinishAt(spell), shapeDistance: _circle.Distance(loc, default)));
         }
     }
 
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell) // actor can die during cast
     {
-        if (spell.Action.ID == (uint)AID.BlackEruption1)
+        if (_aoes.Count == 1 && spell.Action.ID == (uint)AID.BlackEruption1)
         {
-            ++NumCasts;
-            if (_aoes.Count != 0)
+            _aoes.Clear();
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell)
+    {
+        if (spell.Action.ID is var id && id == (uint)AID.BlackEruption1) // only add aoes if cast actually happened
+        {
+            _aoes.Clear();
+            var position = spell.TargetXZ;
+            var rotation = caster.Rotation;
+            var distance = 3f;
+            var remaining = 24;
+            var castFinish = WorldState.CurrentTime;
+            var rays = new (Angle, WDir)[4];
+            for (var i = 0; i < 4; ++i)
             {
-                _aoes.RemoveAt(0);
+                var rot = rotation + i * 90f.Degrees();
+                rays[i] = new(rot, rot.ToDirection() * distance);
             }
-            if (!caster.IsDeadOrDestroyed)
+
+            // 24 aoes in total, if more than 2.5y outside of arena radius line ends and other lines become longer
+            for (var i = 1; remaining > 0; ++i)
             {
-                var position = spell.LocXZ;
-                var rotation = caster.Rotation;
-                var distance = 3f;
-                for (var i = 1; i <= 7; i++)
+                var addedThisStep = false;
+
+                for (var j = 0; j < 4; ++j)
                 {
-                    for (var j = 0; j < 4; j++)
+                    ref var ray = ref rays[j];
+                    var loc = (position + ray.Item2 * i).Quantized();
+
+                    if (!loc.InCircle(Arena.Center, 22.5f))
                     {
-                        var rot = rotation + (j * 90f).Degrees();
-                        var dir = rot.ToDirection() * distance * i;
-                        _aoes.Add(new(_circle, position + dir, rot, Module.CastFinishAt(spell).AddSeconds(i * 2.5d)));
+                        continue;
                     }
+                    _aoes.Add(new(_circle, loc, ray.Item1, castFinish.AddSeconds(i * 2.5d), shapeDistance: _circle.Distance(loc, default)));
+
+                    addedThisStep = true;
+
+                    if (--remaining == 0)
+                    {
+                        return;
+                    }
+                }
+
+                if (!addedThisStep)
+                {
+                    ReportError($"Cannot place 24 AoEs: only {24 - remaining} positions fit with the current directions and spacing.");
+                    return;
                 }
             }
         }
-        else if (spell.Action.ID == (uint)AID.BlackEruption2)
+        else if (id == (uint)AID.BlackEruption2)
         {
-            ++NumCasts;
-            if (_aoes.Count != 0)
+            var aoes = CollectionsMarshal.AsSpan(_aoes);
+            var len = aoes.Length;
+            var pos = caster.Position;
+            for (var i = 0; i < len; ++i)
             {
-                _aoes.RemoveAt(0);
+                if (pos.AlmostEqual(aoes[i].Origin, 1f))
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
             }
         }
     }
@@ -130,24 +189,34 @@ sealed class BlackEruption(BossModule module) : Components.GenericAOEs(module)
 
 sealed class BoneBishopStates : StateMachineBuilder
 {
-    public BoneBishopStates(BossModule module) : base(module)
+    private readonly BoneBishop _module;
+
+    public BoneBishopStates(BoneBishop module) : base(module)
     {
+        _module = module;
         TrivialPhase()
             .ActivateOnEnter<DeathSpiral>()
             .ActivateOnEnter<ForwardGuard>()
             .ActivateOnEnter<BlackEruption>()
             .ActivateOnEnter<AncientAero>()
             .ActivateOnEnter<Tumulus>()
-            .Raw.Update = () => AllDeadOrDestroyed([(uint)OID.BoneKnight, (uint)OID.BoneBishop]);
+            .Raw.Update = () => Module.PrimaryActor.IsDeadOrDestroyed && (_module.BoneKnight?.IsDeadOrDestroyed ?? true);
     }
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.BoneBishop, Contributors = "wen", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1088u, NameID = 14532u, SortOrder = 3)]
 public sealed class BoneBishop(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f))
 {
+    public Actor? BoneKnight;
+
+    protected override void UpdatePreModuleActivation()
+    {
+        BoneKnight ??= GetActor((uint)OID.BoneKnight);
+    }
+
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies((uint)OID.BoneKnight));
+        Arena.Actor(BoneKnight);
     }
 }

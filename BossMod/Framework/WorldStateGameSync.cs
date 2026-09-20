@@ -36,6 +36,7 @@ sealed class WorldStateGameSync : IDisposable
     private readonly Dictionary<ulong, List<WorldState.Operation>> _actorOps = [];
     private readonly Dictionary<ulong, Vector3> _lastCastPositions = []; // unfortunately, game only saves cast location for area-targeted spells
     private readonly Actor?[] _actorsByIndex = new Actor?[ObjectTableSize];
+    private readonly ActorNameCacheEntry[] _actorNamesByIndex = new ActorNameCacheEntry[ObjectTableSize];
 
     private bool _needInventoryUpdate = true;
 
@@ -236,7 +237,9 @@ sealed class WorldStateGameSync : IDisposable
 
         var isPVP = GameMain.IsInPvPArea();
         if (_ws.IsPvPArea != isPVP)
+        {
             _ws.Execute(new WorldState.OpPvPArea(isPVP));
+        }
 
         var proxy = fwk->NetworkModuleProxy->ReceiverCallback;
         var scramble = Network.IDScramble.Get();
@@ -254,9 +257,11 @@ sealed class WorldStateGameSync : IDisposable
 
         _playerEnmity.Clear();
         var uiState = UIState.Instance();
-        for (var i = 0; i < uiState->Hater.HaterCount; ++i)
+        ref var haters = ref uiState->Hater;
+        var countHaters = haters.HaterCount;
+        for (var i = 0; i < countHaters; ++i)
         {
-            _playerEnmity.Add(uiState->Hater.Haters[i].EntityId);
+            _playerEnmity.Add(haters.Haters[i].EntityId);
         }
 
         UpdateWaymarks();
@@ -322,6 +327,7 @@ sealed class WorldStateGameSync : IDisposable
             if (actor != null && (obj == null || existing == null || actor.InstanceID != obj->EntityId))
             {
                 _actorsByIndex[i] = null;
+                _actorNamesByIndex[i].Text = null; // invalidate the name, retaining the reusable byte buffer
                 RemoveActor(actor);
                 actor = null;
             }
@@ -359,10 +365,39 @@ sealed class WorldStateGameSync : IDisposable
         _ws.Execute(new ActorState.OpDestroy(id));
     }
 
+    private struct ActorNameCacheEntry
+    {
+        public byte[]? Buffer;
+        public int ByteLength;
+        public string? Text;
+    }
+
+    private unsafe string ReadActorName(GameObject* obj, int index)
+    {
+        ReadOnlySpan<byte> raw = obj->Name;
+        var terminator = raw.IndexOf((byte)0);
+        var bytes = terminator >= 0 ? raw[..terminator] : raw;
+
+        ref var cache = ref _actorNamesByIndex[index];
+        var saved = cache.Buffer ??= new byte[raw.Length];
+        var bLength = bytes.Length;
+        if (cache.Text != null && cache.ByteLength == bLength && bytes.SequenceEqual(saved.AsSpan(0, bLength)))
+        {
+            return cache.Text;
+        }
+
+        cache.Text = null;
+        bytes.CopyTo(saved);
+        cache.ByteLength = bytes.Length;
+        var text = Encoding.UTF8.GetString(saved.AsSpan(0, cache.ByteLength));
+        cache.Text = text;
+        return text;
+    }
+
     private unsafe void UpdateActor(GameObject* obj, int index, Actor? act)
     {
         var chr = obj->IsCharacter() ? (Character*)obj : null;
-        var name = obj->NameString;
+        var name = ReadActorName(obj, index);
         var nameID = chr != null ? chr->NameId : 0;
         var classID = chr != null ? (Class)chr->ClassJob : Class.None;
         var level = chr != null ? chr->Level : 0;
@@ -503,22 +538,7 @@ sealed class WorldStateGameSync : IDisposable
 
         DispatchActorEvents(instanceID);
 
-        var castInfo = chr != null ? chr->GetCastInfo() : null;
-        if (castInfo != null)
-        {
-            var curCast = castInfo->IsCasting
-                ? new ActorCastInfo
-                {
-                    Action = new((ActionType)castInfo->ActionType, castInfo->ActionId),
-                    TargetID = SanitizedObjectID(castInfo->TargetId),
-                    Rotation = chr->CastRotation.Radians(),
-                    Location = _lastCastPositions.GetValueOrDefault(act.InstanceID, castInfo->TargetLocation),
-                    ElapsedTime = castInfo->CurrentCastTime,
-                    TotalTime = castInfo->BaseCastTime,
-                    Interruptible = castInfo->Interruptible,
-                } : null;
-            UpdateActorCastInfo(act, curCast);
-        }
+        UpdateActorCastInfo(act, chr);
 
         var sm = chr != null ? chr->GetStatusManager() : null;
         if (sm != null)
@@ -565,6 +585,52 @@ sealed class WorldStateGameSync : IDisposable
         }
     }
 
+    private unsafe void UpdateActorCastInfo(Actor act, Character* chr)
+    {
+        var current = chr != null ? chr->GetCastInfo() : null;
+        if (current == null)
+        {
+            return; // was not casting and is not casting
+        }
+
+        var previous = act.CastInfo;
+
+        if (!current->IsCasting)
+        {
+            if (previous != null)
+            {
+                _ws.Execute(new ActorState.OpCastInfo(act.InstanceID, null));
+            }
+
+            return;
+        }
+
+        var action = new ActionID((ActionType)current->ActionType, current->ActionId);
+
+        var target = SanitizedObjectID(current->TargetId);
+        var elapsed = current->CurrentCastTime;
+        var total = current->BaseCastTime;
+
+        if (previous != null && previous.Action == action && previous.TargetID == target && previous.TotalTime == total && Math.Abs(elapsed - previous.ElapsedTime) < 0.2f)
+        {
+            // continuing casting same spell
+            // TODO: consider *not* ignoring elapsed differences, these probably mean we're doing something wrong...
+            previous.ElapsedTime = elapsed;
+            return;
+        }
+
+        _ws.Execute(new ActorState.OpCastInfo(act.InstanceID, new ActorCastInfo
+        {
+            Action = action,
+            TargetID = target,
+            Rotation = chr->CastRotation.Radians(),
+            Location = _lastCastPositions.GetValueOrDefault(act.InstanceID, current->TargetLocation),
+            ElapsedTime = elapsed,
+            TotalTime = total,
+            Interruptible = current->Interruptible
+        }));
+    }
+
     private unsafe Visibility DetermineVisibility(GameObject* obj)
     {
         var playerObj = GameObjectManager.Instance()->Objects.IndexSorted[0].Value;
@@ -585,29 +651,13 @@ sealed class WorldStateGameSync : IDisposable
         {
             return Visibility.Blocked;
         }
+        if (distanceSq <= 1e-5f)
+        {
+            return Visibility.Visible;
+        }
         var distance = MathF.Sqrt(distanceSq);
         var direction = offset / distance;
         return BGCollisionModule.RaycastMaterialFilter(sourcePos, direction, out _, distance) ? Visibility.Blocked : Visibility.Visible;
-    }
-
-    private void UpdateActorCastInfo(Actor act, ActorCastInfo? cast)
-    {
-        var castInfo = act.CastInfo;
-        if (cast == null && castInfo == null)
-        {
-            return; // was not casting and is not casting
-        }
-
-        if (cast != null && castInfo != null && cast.Action == castInfo.Action && cast.TargetID == castInfo.TargetID && cast.TotalTime == castInfo.TotalTime && Math.Abs(cast.ElapsedTime - castInfo.ElapsedTime) < 0.2)
-        {
-            // continuing casting same spell
-            // TODO: consider *not* ignoring elapsed differences, these probably mean we're doing something wrong...
-            castInfo.ElapsedTime = cast.ElapsedTime;
-            return;
-        }
-
-        // update cast info
-        _ws.Execute(new ActorState.OpCastInfo(act.InstanceID, cast));
     }
 
     private void UpdateActorStatus(Actor act, int index, ref readonly ActorStatus value)
@@ -713,19 +763,21 @@ sealed class WorldStateGameSync : IDisposable
     private unsafe void UpdatePartyNormal(GroupManager.Group* group, ulong playerContentId)
     {
         if (group == null)
+        {
             return;
-
+        }
+        var members = _ws.Party.Members.AsSpan();
         // first iterate over previous members, search for match in game state, and reconcile differences - update or remove
         for (var i = PartyState.PlayerSlot + 1; i < PartyState.MaxPartySize; ++i)
         {
-            ref var m = ref _ws.Party.Members[i];
-            if (m.ContentId != 0)
+            ref var m = ref members[i];
+            if (m.ContentId != 0ul)
             {
                 // slot was occupied by player => see if it's still in party; either update to current state or clear if it's no longer in party
                 var member = group->GetPartyMemberByContentId(m.ContentId);
                 UpdatePartySlot(i, BuildPartyMember(member));
             }
-            else if (m.InstanceId != 0)
+            else if (m.InstanceId != 0ul)
             {
                 // slot was occupied by trust => see if it's still in party
                 if (!HasBuddy(m.InstanceId))
@@ -738,11 +790,27 @@ sealed class WorldStateGameSync : IDisposable
         }
 
         // now iterate through game state and add new members; note that there's no need to update existing, it was done in the previous loop
-        for (var i = 0; i < group->MemberCount; ++i)
+        var countM = group->MemberCount;
+        for (var i = 0; i < countM; ++i)
         {
             var member = group->PartyMembers.GetPointer(i);
-            if (member->ContentId != playerContentId && Array.FindIndex(_ws.Party.Members, m => m.ContentId == member->ContentId) < 0)
-                AddPartyMember(BuildPartyMember(member));
+            var id = member->ContentId;
+            if (id != playerContentId)
+            {
+                var index = -1;
+                for (var j = 0; j < PartyState.MaxAllies; ++j)
+                {
+                    if (members[j].ContentId == id)
+                    {
+                        index = j;
+                        break;
+                    }
+                }
+                if (index < 0)
+                {
+                    AddPartyMember(BuildPartyMember(member));
+                }
+            }
             // else: member is either a player (it was handled by a different function) or already exists in party state
         }
         // consider buddies as party members too
@@ -865,7 +933,7 @@ sealed class WorldStateGameSync : IDisposable
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    private unsafe struct CharacterContainer
+    private struct CharacterContainer
     {
         [FieldOffset(0x8)] public Character* Character;
     }
@@ -892,7 +960,8 @@ sealed class WorldStateGameSync : IDisposable
         }
 
         var uiState = UIState.Instance();
-        var stats = new ClientState.Stats(uiState->PlayerState.Attributes[45], uiState->PlayerState.Attributes[46], uiState->PlayerState.Attributes[47]);
+        ref var playerstate = ref uiState->PlayerState;
+        var stats = new ClientState.Stats(playerstate.Attributes[45], playerstate.Attributes[46], playerstate.Attributes[47]);
         if (_ws.Client.PlayerStats != stats)
         {
             _ws.Execute(new ClientState.OpPlayerStatsChange(stats));
@@ -911,10 +980,11 @@ sealed class WorldStateGameSync : IDisposable
             }
         }
 
-        // TODO: use CS?
-        var isFlying = Service.Condition.Any(ConditionFlag.InFlight, ConditionFlag.Diving);
+        var isFlying = pc != null && (pc->MoveController.IsFlying() || pc->MoveController.IsDiving());
         if (isFlying != _ws.Client.Flying)
+        {
             _ws.Execute(new ClientState.OpFlyingChange(isFlying));
+        }
 
         Span<Cooldown> cooldowns = stackalloc Cooldown[_ws.Client.Cooldowns.Length];
         _amex.GetCooldowns(cooldowns);
@@ -985,7 +1055,7 @@ sealed class WorldStateGameSync : IDisposable
             _ws.Execute(new ClientState.OpActivePetChange(pet));
         }
 
-        var chocoinfo = uiState->Buddy.CompanionInfo;
+        ref var chocoinfo = ref uiState->Buddy.CompanionInfo;
         var chocobo = new ClientState.Companion(chocoinfo.Companion->EntityId, chocoinfo.ActiveCommand, chocoinfo.TimeLeft, PlayerState.Instance()->IsPlayerStateFlagSet(PlayerStateFlag.IsBuddyInStable));
         if (_ws.Client.ActiveCompanion != chocobo)
         {
@@ -1006,31 +1076,34 @@ sealed class WorldStateGameSync : IDisposable
         }
 
         var contentKeyValue = uiState->PlayerState.ContentKeyValueData;
-        var ckArray = new uint[]
-        {
+        Span<uint> ckValues =
+        [
             contentKeyValue[0].Item1,
             contentKeyValue[0].Item2,
             contentKeyValue[1].Item1,
             contentKeyValue[1].Item2,
             contentKeyValue[2].Item1,
             contentKeyValue[2].Item2
-        };
-        if (!MemoryExtensions.SequenceEqual(ckArray, _ws.Client.ContentKeyValueData))
+        ];
+        if (!ckValues.SequenceEqual(_ws.Client.ContentKeyValueData))
         {
-            _ws.Execute(new ClientState.OpContentKVDataChange(ckArray));
+            _ws.Execute(new ClientState.OpContentKVDataChange(ckValues.ToArray()));
         }
 
-        var hate = uiState->Hate;
+        ref var hate = ref uiState->Hate;
         var hatePrimary = hate.HateTargetId;
-        var hateTargets = new ClientState.Hate[32];
-        for (var i = 0; i < hate.HateArrayLength; ++i)
+        Span<ClientState.Hate> hateTargets = stackalloc ClientState.Hate[32];
+        hateTargets.Clear();
+        var hateCount = Math.Clamp(hate.HateArrayLength, 0, hateTargets.Length);
+        for (var i = 0; i < hateCount; ++i)
         {
-            hateTargets[i] = new(hate.HateInfo[i].EntityId, hate.HateInfo[i].Enmity);
+            ref var h = ref hate.HateInfo[i];
+            hateTargets[i] = new(h.EntityId, h.Enmity);
         }
 
-        if (hatePrimary != _ws.Client.CurrentTargetHate.InstanceID || !MemoryExtensions.SequenceEqual(hateTargets, _ws.Client.CurrentTargetHate.Targets))
+        if (hatePrimary != _ws.Client.CurrentTargetHate.InstanceID || !hateTargets.SequenceEqual(_ws.Client.CurrentTargetHate.Targets))
         {
-            _ws.Execute(new ClientState.OpHateChange(hatePrimary, hateTargets));
+            _ws.Execute(new ClientState.OpHateChange(hatePrimary, hateTargets.ToArray()));
         }
 
         var timers = actionManager->ProcTimers[1..];
@@ -1075,7 +1148,7 @@ sealed class WorldStateGameSync : IDisposable
 
             if (ic->IsLoaded)
             {
-                for (var i = 0; i < ic->Size; i++)
+                for (var i = 0; i < ic->Size; ++i)
                 {
                     var keyItem = ic->GetInventorySlot(i);
                     if (keyItem != null)
@@ -1170,7 +1243,7 @@ sealed class WorldStateGameSync : IDisposable
     }
 
     private byte SanitizeDeepDungeonRoom(sbyte room) => room < 0 ? (byte)0 : (byte)room;
-    private ulong SanitizedObjectID(ulong raw) => raw != InvalidEntityId ? raw : 0;
+    private ulong SanitizedObjectID(ulong raw) => raw != InvalidEntityId ? raw : 0u;
 
     private void DispatchActorEvents(ulong instanceID)
     {
