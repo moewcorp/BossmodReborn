@@ -225,7 +225,7 @@ sealed class DrakePieceStates : StateMachineBuilder {
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.DrakePiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14651u, SortOrder = 4)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.DrakePiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14651u, SortOrder = 4)]
 public sealed class DrakePiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(520f, 0f), new ArenaBoundsRect(20f, 15f)) {
     public static readonly uint[] Bosses = [(uint)OID.AbaddonPiece, (uint)OID.MorphoPiece, (uint)OID.BarbmolePiece, (uint)OID.DrakePiece];
 
