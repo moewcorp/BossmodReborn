@@ -72,6 +72,24 @@ sealed class BlazeSpikesTarget(BossModule module) : Components.GenericInvincible
     protected override ReadOnlySpan<Actor> ForbiddenTargets(int slot, Actor actor) => CollectionsMarshal.AsSpan(avoidBosses);
 }
 
+sealed class NeedlesOutTarget(BossModule module) : Components.GenericInvincible(module, "Attacking enemy with spikes debuff!") {
+    private readonly List<Actor> avoidBosses = [];
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.NeedlesOut) {
+            avoidBosses.Add(caster);
+        }
+    }
+
+    public override void OnStatusLose(Actor actor, ref ActorStatus status) {
+        if (status.ID == (uint)SID.NeedlesOut) {
+            avoidBosses.Remove(actor);
+        }
+    }
+
+    protected override ReadOnlySpan<Actor> ForbiddenTargets(int slot, Actor actor) => CollectionsMarshal.AsSpan(avoidBosses);
+}
+
 // Uses GenericAOEs component to show it sooner
 sealed class BurningCyclone(BossModule module) : Components.GenericAOEs(module) {
     private readonly List<AOEInstance> aoes = [];
@@ -146,6 +164,23 @@ sealed class BallOfFireRing(BossModule module) : Components.GenericAOEs(module) 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(aoes);
 }
 
+// Used to track the encounter state - we can only clear the encounter once the 2nd wave has spawned in otherwise, if we kill the first wave too fast, the
+// module will unload
+sealed class enemyTracker(BossModule module) : BossComponent(module) {
+    public bool morphoSpawn = false;
+    public bool abaddonSpawn = false;
+
+    public override void OnActorCreated(Actor actor) {
+        if (actor.OID == (uint)OID.MorphoPiece) {
+            morphoSpawn = true;
+        }
+
+        if (actor.OID == (uint)OID.AbaddonPiece) {
+            abaddonSpawn = true;
+        }
+    }
+}
+
 // TODO the player must have aggro - need a way to do this
 sealed class AbaddonEat(BossModule module) : BossComponent(module) {
     private readonly AOEShapeCircle shape = new(1.0f);
@@ -181,7 +216,12 @@ sealed class DrakePieceStates : StateMachineBuilder {
             .ActivateOnEnter<BlazeSpikesTarget>()
             .ActivateOnEnter<AbaddonEat>()
             .ActivateOnEnter<SeedingNeedles>()
-            .Raw.Update = () => AllDeadOrDestroyed(DrakePiece.Bosses);
+            .ActivateOnEnter<NeedlesOutTarget>()
+            .ActivateOnEnter<enemyTracker>()
+            .Raw.Update = () => {
+            var tracker = module.FindComponent<enemyTracker>();
+            return tracker != null && tracker.morphoSpawn && tracker.abaddonSpawn && AllDeadOrDestroyed(DrakePiece.Bosses);
+        };
     }
 }
 
