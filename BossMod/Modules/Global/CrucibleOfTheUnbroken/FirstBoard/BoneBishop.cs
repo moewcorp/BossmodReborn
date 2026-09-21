@@ -14,14 +14,14 @@ public enum AID : uint
     Blizzard = 50788, // BoneBishop->player, no cast, single-target
     DeathSpiral = 46867, // BoneBishop->self, 5.0s cast, single-target
     DeathSpiral1 = 46868, // Helper->self, 6.0s cast, range 4-40 donut
-    Ossify = 46871, // BoneKnight->self, 8.0s cast, single-target
+    Ossify = 46871, // BoneKnight->self, 8.0s cast, single-target, interruptible, applies Physical Damage Up 
     ForwardGuard = 46864, // BoneKnight->self, 5.0s cast, single-target
+    ForwardGuardEnd = 46865, // BoneKnight->self, no cast, single-target
     BlackEruption = 46873, // BoneBishop->self, 5.0+1.0s cast, single-target
     BlackEruption1 = 46874, // Helper->location, 6.0s cast, range 5 circle
     BlackEruption2 = 46900, // Helper->location, 1.5s cast, range 5 circle
     AncientAero = 46869, // BoneBishop->self, 5.0+0.7s cast, single-target
     AncientAero1 = 46870, // Helper->self, 5.7s cast, range 40 width 8 rect
-    _Ability_ = 46865, // BoneKnight->self, no cast, single-target
     Tumulus = 46866 // BoneKnight->self, 5.0s cast, range 6 circle
 }
 
@@ -29,10 +29,11 @@ public enum SID : uint
 {
     PhysicalDamageUp = 2074, // BoneKnight->BoneKnight, extra=0x0
     DirectionalParry = 680, // BoneKnight->BoneKnight, extra=0x1
-    _Gen_ = 2552, // BoneKnight->BoneKnight, extra=0x425 : Ossify maybe?
-    Rehabilitation = 1263, // BoneKnight->BoneKnight, extra=0x0
+    DirectionalParryHidden = 2552, // BoneKnight->BoneKnight, extra=0x425 : hidden status during directional parry
+    Rehabilitation = 1263 // BoneKnight->BoneKnight, extra=0x0
 }
 
+sealed class Ossify(BossModule module) : Components.CastInterruptHint(module, (uint)AID.Ossify, showNameInHint: true);
 sealed class DeathSpiral(BossModule module) : Components.SimpleAOEs(module, (uint)AID.DeathSpiral1, new AOEShapeDonut(4f, 40f));
 
 // Puts a shield in front of himself. Player should have pet snarl why they get behind and beat him up.
@@ -99,16 +100,47 @@ sealed class BlackEruption(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell)
     {
-        if (spell.Action.ID == (uint)AID.BlackEruption1)
+        if (spell.Action.ID is var id && id == (uint)AID.BlackEruption2) // ensure pixel perfectness, .Quantized() still introduces rounding errors
+        {
+            var aoes = CollectionsMarshal.AsSpan(_aoes);
+            var len = aoes.Length;
+            var pos = spell.LocXZ;
+            for (var i = 0; i < len; ++i)
+            {
+                ref var aoe = ref aoes[i];
+                if (pos.AlmostEqual(aoe.Origin, 1f))
+                {
+                    aoe.Origin = pos;
+                    return;
+                }
+            }
+            ReportError($"Failed to update AOE for location: {pos}"); // not sure if possible, maybe if radius = 22.5 assumption is wrong
+        }
+        else if (id == (uint)AID.BlackEruption1)
         {
             var loc = spell.LocXZ;
             _aoes.Add(new(_circle, loc, default, Module.CastFinishAt(spell), shapeDistance: _circle.Distance(loc, default)));
         }
     }
 
-    public override void OnCastFinished(Actor caster, ActorCastInfo spell) // actor can die during cast
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell)
     {
-        if (_aoes.Count == 1 && spell.Action.ID == (uint)AID.BlackEruption1)
+        if (spell.Action.ID is var id && id == (uint)AID.BlackEruption2)
+        {
+            var aoes = CollectionsMarshal.AsSpan(_aoes);
+            var len = aoes.Length;
+            var pos = spell.LocXZ;
+            for (var i = 0; i < len; ++i)
+            {
+                if (pos == aoes[i].Origin)
+                {
+                    _aoes.RemoveAt(i);
+                    return;
+                }
+            }
+            ReportError($"Failed to remove AOE for location: {pos}"); // not sure if possible, maybe if radius = 22.5 assumption is wrong
+        }
+        else if (_aoes.Count == 1 && id == (uint)AID.BlackEruption1) // actor can die during cast
         {
             _aoes.Clear();
         }
@@ -116,10 +148,10 @@ sealed class BlackEruption(BossModule module) : Components.GenericAOEs(module)
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID is var id && id == (uint)AID.BlackEruption1) // only add aoes if cast actually happened
+        if (spell.Action.ID == (uint)AID.BlackEruption1) // only add aoes if cast actually happened
         {
             _aoes.Clear();
-            var position = spell.TargetXZ;
+            var position = caster.Position;
             var rotation = caster.Rotation;
             var distance = 3f;
             var remaining = 24;
@@ -131,21 +163,23 @@ sealed class BlackEruption(BossModule module) : Components.GenericAOEs(module)
                 rays[i] = new(rot, rot.ToDirection() * distance);
             }
 
+            var center = Arena.Center;
             // 24 aoes in total, if more than 2.5y outside of arena radius line ends and other lines become longer
             for (var i = 1; remaining > 0; ++i)
             {
                 var addedThisStep = false;
+                var activation = castFinish.AddSeconds(i * 2.5d);
 
                 for (var j = 0; j < 4; ++j)
                 {
                     ref var ray = ref rays[j];
                     var loc = (position + ray.Item2 * i).Quantized();
 
-                    if (!loc.InCircle(Arena.Center, 22.5f))
+                    if (!loc.InCircle(center, 22.5f))
                     {
                         continue;
                     }
-                    _aoes.Add(new(_circle, loc, ray.Item1, castFinish.AddSeconds(i * 2.5d), shapeDistance: _circle.Distance(loc, default)));
+                    _aoes.Add(new(_circle, loc, ray.Item1, activation, shapeDistance: _circle.Distance(loc, default)));
 
                     addedThisStep = true;
 
@@ -157,21 +191,7 @@ sealed class BlackEruption(BossModule module) : Components.GenericAOEs(module)
 
                 if (!addedThisStep)
                 {
-                    ReportError($"Cannot place 24 AoEs: only {24 - remaining} positions fit with the current directions and spacing.");
-                    return;
-                }
-            }
-        }
-        else if (id == (uint)AID.BlackEruption2)
-        {
-            var aoes = CollectionsMarshal.AsSpan(_aoes);
-            var len = aoes.Length;
-            var pos = caster.Position;
-            for (var i = 0; i < len; ++i)
-            {
-                if (pos.AlmostEqual(aoes[i].Origin, 1f))
-                {
-                    _aoes.RemoveAt(i);
+                    ReportError($"Failed to place 24 AOEs: only {24 - remaining} positions fit with the current directions and spacing.");
                     return;
                 }
             }
@@ -195,6 +215,7 @@ sealed class BoneBishopStates : StateMachineBuilder
     {
         _module = module;
         TrivialPhase()
+            .ActivateOnEnter<Ossify>()
             .ActivateOnEnter<DeathSpiral>()
             .ActivateOnEnter<ForwardGuard>()
             .ActivateOnEnter<BlackEruption>()
