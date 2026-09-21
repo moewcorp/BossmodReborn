@@ -19,7 +19,7 @@ public enum AOEIPCShapeType : byte
     Custom,
     Stack,   // ground circle on a stack target (friendly), P1=radius
     Spread,  // ground circle on a spread target (danger), P1=radius
-    Tower,   // ground circle on a tower position (friendly), P1=radius
+    Tower,   // RESERVED - no longer sent (tower drawing was removed); value kept so later members keep their wire values
     FriendlyRect, // stack line (LineStack), P1=lenFront P2=lenBack P3=halfWidth
     Knockback, // knockback arrow on the local player: Origin=push start, Rotation=push direction, P1=distance
 }
@@ -181,29 +181,11 @@ public static class AOEIPC
             }
         }
 
-        // towers: GenericTowers also draws them as arena outlines; expose explicitly.
-        batch = 0;
-        foreach (var comp in module.Components)
-        {
-            ++batch;
-            if (comp is GenericTowers tw)
-            {
-                foreach (var t in tw.Towers)
-                {
-                    list.Add(new AOEIPCDto
-                    {
-                        ShapeType = (int)AOEIPCShapeType.Tower,
-                        OriginX = t.Position.X,
-                        OriginZ = t.Position.Z,
-                        OriginY = defaultY,
-                        Rotation = 0,
-                        P1 = TowerCoverRadius(t.Shape),
-                        IsDanger = true,
-                        Batch = batch,
-                    });
-                }
-            }
-        }
+        // towers (GenericTowers) are deliberately NOT exported any more: they are drawn as arena
+        // outlines only and the native omen approximation was redundant. The AOEIPCShapeType.Tower
+        // member stays reserved (it is a wire value - removing it would shift every later member),
+        // and the NyaDraw receiver keeps its explicit no-op case so an older bridge that still sends
+        // Tower dtos draws nothing either.
 
         // shared tankbusters: GenericSharedTankbuster draws the shape only for specific roles
         // (background fill for non-tanks, outline for tanks), so tanks never see it in
@@ -289,19 +271,6 @@ public static class AOEIPC
     // GenericSharedTankbuster keeps Source/Target protected; read them via cached reflection.
     private static readonly System.Reflection.FieldInfo? SharedSrcField = typeof(GenericSharedTankbuster).GetField("Source", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
     private static readonly System.Reflection.FieldInfo? SharedTgtField = typeof(GenericSharedTankbuster).GetField("Target", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-    private static float TowerCoverRadius(AOEShape shape) => shape switch
-    {
-        AOEShapeCircle c => c.Radius,
-        AOEShapeCone c => c.Radius,
-        AOEShapeDonut d => d.OuterRadius,
-        AOEShapeDonutSector d => d.OuterRadius,
-        AOEShapeRect r => MathF.Max(r.HalfWidth, r.LengthFront + r.LengthBack),
-        AOEShapeCross c => MathF.Max(c.Length, c.HalfWidth),
-        AOEShapeTriCone t => t.SideLength,
-        AOEShapeCapsule c => c.Radius + c.Length,
-        _ => 4f,
-    };
 
     private static AOEIPCDto? ConvertZone(in MiniArena.DrawnZone zone, float defaultY)
     {
