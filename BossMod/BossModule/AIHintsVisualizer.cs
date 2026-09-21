@@ -54,7 +54,7 @@ public sealed class AIHintsVisualizer(AIHints hints, WorldState ws, Actor player
         var countG = hints.GoalZones.Count;
         foreach (var _1 in tree.Node("Goal zones", countG == 0))
         {
-            for (var i = 0; i < countG; i++)
+            for (var i = 0; i < countG; ++i)
             {
                 foreach (var _2 in tree.Node($"[{i}]"))
                 {

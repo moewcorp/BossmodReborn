@@ -160,7 +160,7 @@ sealed class P3MegaflareTower(BossModule module) : Components.CastTowers(module,
             var raid = Raid.WithSlot(true, true, true);
             var lenR = raid.Length;
 
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < count; ++i)
             {
                 ref var t = ref towers[i];
                 var toTower = t.Position - Arena.Center;

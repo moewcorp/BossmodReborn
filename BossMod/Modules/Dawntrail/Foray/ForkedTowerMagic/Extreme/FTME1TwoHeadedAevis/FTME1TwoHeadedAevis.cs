@@ -170,7 +170,7 @@ sealed class ArcaneRevelation(BossModule module) : Components.GenericAOEs(module
         {
             var actors = CollectionsMarshal.AsSpan(arcanes);
             var count = actors.Length;
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < count; ++i)
             {
                 var arcane = actors[i];
                 _aoes.Add(new(_rect, arcane.Item1, arcane.Item2));
