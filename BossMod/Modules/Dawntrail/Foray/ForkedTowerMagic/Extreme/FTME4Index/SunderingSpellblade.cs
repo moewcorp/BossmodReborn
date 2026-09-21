@@ -29,13 +29,13 @@ sealed class SunderingSpellblade(BossModule module) : Components.GenericAOEs(mod
 
         var aoelist = CollectionsMarshal.AsSpan(_aoes);
         var listcount = aoelist.Length;
-        for (var i = 0; i < listcount; i++)
+        for (var i = 0; i < listcount; ++i)
         {
             ref var sublistref = ref aoelist[i];
             var sublist = CollectionsMarshal.AsSpan(sublistref);
             var sublistcount = sublist.Length;
             var max = sublistcount > _max ? _max : sublistcount;
-            for (var j = 0; j < max; j++)
+            for (var j = 0; j < max; ++j)
             {
                 ref var sub = ref sublist[j];
                 sub.Color = j == 0 ? Colors.Danger : sub.Color;
@@ -66,7 +66,7 @@ sealed class SunderingSpellblade(BossModule module) : Components.GenericAOEs(mod
                 _ => false
             };
 
-            for (var i = 0; i < 9; i++)
+            for (var i = 0; i < 9; ++i)
             {
                 var pos = i == 0 ? initialPosition : aoes[i - 1].Origin;
                 var rot = i == 0 ? initialRotation : aoes[i - 1].Rotation;
@@ -102,7 +102,7 @@ sealed class SunderingSpellblade(BossModule module) : Components.GenericAOEs(mod
 
             var aoelist = CollectionsMarshal.AsSpan(_aoes);
             var listcount = aoelist.Length;
-            for (var i = 0; i < listcount; i++)
+            for (var i = 0; i < listcount; ++i)
             {
                 ref var sublistref = ref aoelist[i];
                 var sublist = CollectionsMarshal.AsSpan(sublistref);
@@ -121,7 +121,7 @@ sealed class SunderingSpellblade(BossModule module) : Components.GenericAOEs(mod
     /*
     public override void DrawArenaForeground(int pcSlot, Actor pc)
     {
-        for (var i = 0; i < _spots.Count; i++)
+        for (var i = 0; i < _spots.Count; ++i)
         {
             Arena.ZoneCircleOutline(_spots[i], 6f, 0xFFFFFFFF);
         }

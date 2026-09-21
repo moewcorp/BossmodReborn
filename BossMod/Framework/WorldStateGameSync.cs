@@ -47,11 +47,11 @@ sealed class WorldStateGameSync : IDisposable
     private readonly ConfigListener<ReplayManagementConfig> _netConfig;
     private readonly EventSubscriptions _subscriptions;
 
-    private unsafe delegate void ProcessPacketActorCastDelegate(uint casterId, Network.ServerIPC.ActorCast* packet);
+    private delegate void ProcessPacketActorCastDelegate(uint casterId, Network.ServerIPC.ActorCast* packet);
 
     private readonly Hook<ProcessPacketActorCastDelegate> _processPacketActorCastHook;
 
-    private unsafe delegate void ProcessPacketEffectResultDelegate(uint targetID, byte* packet, byte replaying);
+    private delegate void ProcessPacketEffectResultDelegate(uint targetID, byte* packet, byte replaying);
     private readonly Hook<ProcessPacketEffectResultDelegate> _processPacketEffectResultHook;
     private readonly Hook<ProcessPacketEffectResultDelegate> _processPacketEffectResultBasicHook;
 
@@ -59,37 +59,37 @@ sealed class WorldStateGameSync : IDisposable
     private delegate void ProcessPacketActorControlDelegate(uint actorID, uint category, uint p1, uint p2, uint p3, uint p4, uint p5, uint p6, uint p7, uint p8, ulong targetID, byte replaying);
     private readonly Hook<ProcessPacketActorControlDelegate> _processPacketActorControlHook;
 
-    private unsafe delegate void ProcessPacketNpcYellDelegate(Network.ServerIPC.NpcYell* packet);
+    private delegate void ProcessPacketNpcYellDelegate(Network.ServerIPC.NpcYell* packet);
     private readonly Hook<ProcessPacketNpcYellDelegate> _processPacketNpcYellHook;
 
-    public unsafe delegate void ProcessMapEffectDelegate(void* self, uint index, ushort s1, ushort s2);
+    public delegate void ProcessMapEffectDelegate(void* self, uint index, ushort s1, ushort s2);
     private readonly Hook<ProcessMapEffectDelegate> _processMapEffectHook;
 
-    private unsafe delegate void ProcessMapEffectNDelegate(ContentDirector* director, byte* packet);
+    private delegate void ProcessMapEffectNDelegate(ContentDirector* director, byte* packet);
     private readonly Hook<ProcessMapEffectNDelegate> _processMapEffect1Hook;
     private readonly Hook<ProcessMapEffectNDelegate> _processMapEffect2Hook;
     private readonly Hook<ProcessMapEffectNDelegate> _processMapEffect3Hook;
 
     private readonly Hook<EventFramework.Delegates.SetDirectorData> _processLegacyMapEffectHook;
 
-    private unsafe delegate void ProcessPacketRSVDataDelegate(byte* packet);
+    private delegate void ProcessPacketRSVDataDelegate(byte* packet);
     private readonly Hook<ProcessPacketRSVDataDelegate> _processPacketRSVDataHook;
 
-    private unsafe delegate void* ProcessSystemLogMessageDelegate(uint entityId, uint logMessageId, int* args, byte argCount);
+    private delegate void* ProcessSystemLogMessageDelegate(uint entityId, uint logMessageId, int* args, byte argCount);
     private readonly Hook<ProcessSystemLogMessageDelegate> _processSystemLogMessageHook;
 
-    private unsafe delegate void* ProcessPacketFateInfoDelegate(ulong fateId, long startTimestamp, ulong durationSecs);
+    private delegate void* ProcessPacketFateInfoDelegate(ulong fateId, long startTimestamp, ulong durationSecs);
     private readonly Hook<ProcessPacketFateInfoDelegate> _processPacketFateInfoHook;
 
-    private unsafe delegate void ProcessPacketFateTradeDelegate(void* a1, ulong a2);
+    private delegate void ProcessPacketFateTradeDelegate(void* a1, ulong a2);
     private readonly Hook<ProcessPacketFateTradeDelegate> _processPacketFateTradeHook;
 
-    private readonly unsafe delegate* unmanaged<ContainerInterface*, float> _calculateMoveSpeedMulti;
+    private readonly delegate* unmanaged<ContainerInterface*, float> _calculateMoveSpeedMulti;
 
-    private unsafe delegate void InventoryAckDelegate(InventoryManager* mgr, uint a1, void* a2);
+    private delegate void InventoryAckDelegate(InventoryManager* mgr, uint a1, void* a2);
     private readonly Hook<InventoryAckDelegate> _inventoryAckHook;
 
-    private unsafe delegate void ProcessPacketPlayActionTimelineSync(Network.ServerIPC.PlayActionTimelineSync* data);
+    private delegate void ProcessPacketPlayActionTimelineSync(Network.ServerIPC.PlayActionTimelineSync* data);
     private readonly Hook<ProcessPacketPlayActionTimelineSync> _processPlayActionTimelineSyncHook;
 
     private readonly Hook<ActionManager.Delegates.GetActionInRangeOrLoS> _getActionInRangeOrLoSHook;
@@ -771,18 +771,19 @@ sealed class WorldStateGameSync : IDisposable
         for (var i = PartyState.PlayerSlot + 1; i < PartyState.MaxPartySize; ++i)
         {
             ref var m = ref members[i];
-            if (m.ContentId != 0ul)
+            var cid = m.ContentId;
+            if (cid != 0ul)
             {
                 // slot was occupied by player => see if it's still in party; either update to current state or clear if it's no longer in party
-                var member = group->GetPartyMemberByContentId(m.ContentId);
+                var member = group->GetPartyMemberByContentId(cid);
                 UpdatePartySlot(i, BuildPartyMember(member));
             }
-            else if (m.InstanceId != 0ul)
+            else if (m.InstanceId is var iid && iid != 0ul)
             {
-                // slot was occupied by trust => see if it's still in party
-                if (!HasBuddy(m.InstanceId))
+                // slot was occupied by trust or player's beastmaster pet => see if it's still in party
+                if (!HasBuddy(iid))
                 {
-                    UpdatePartySlot(i, PartyState.EmptySlot); // buddy is no longer in party => clear slot
+                    UpdatePartySlot(i, PartyState.EmptySlot); // buddy/pet is no longer in party => clear slot
                 }
                 // else: no reason to update...
             }
@@ -815,10 +816,11 @@ sealed class WorldStateGameSync : IDisposable
         }
         // consider buddies as party members too
         var ui = UIState.Instance();
-        var len = ui->Buddy.DutyHelperInfo.ENpcIds.Length;
+        ref var dutyhelpers = ref ui->Buddy.DutyHelperInfo;
+        var len = dutyhelpers.ENpcIds.Length;
         for (var i = 0; i < len; ++i)
         {
-            var instanceID = ui->Buddy.DutyHelperInfo.DutyHelpers[i].EntityId;
+            var instanceID = dutyhelpers.DutyHelpers[i].EntityId;
             if (instanceID != InvalidEntityId && _ws.Party.FindSlot(instanceID) < 0)
             {
                 var obj = GameObjectManager.Instance()->Objects.GetObjectByEntityId(instanceID);
@@ -848,15 +850,19 @@ sealed class WorldStateGameSync : IDisposable
         }
     }
 
-    private unsafe void UpdatePartyNPCs()
+    private void UpdatePartyNPCs()
     {
+        ref var pet = ref _ws.Client.ActivePet;
+        var petid = pet.InstanceID;
+
         for (var i = PartyState.MaxAllianceSize; i < PartyState.MaxAllies; ++i)
         {
             ref var m = ref _ws.Party.Members[i];
-            if (m.InstanceId != 0)
+            var id = m.InstanceId;
+            if (id != 0ul)
             {
-                var actor = _ws.Actors.Find(m.InstanceId);
-                if (actor == null || !actor.IsFriendlyNPC)
+                var actor = _ws.Actors.Find(id);
+                if (actor == null || !actor.IsFriendlyNPC && id != petid)
                 {
                     UpdatePartySlot(i, PartyState.EmptySlot);
                 }
@@ -869,16 +875,27 @@ sealed class WorldStateGameSync : IDisposable
             {
                 continue;
             }
+            var id = actor.InstanceID;
 
-            if (_ws.Party.FindSlot(actor.InstanceID) == -1)
+            if (_ws.Party.FindSlot(id) == -1)
             {
                 var slot = FindFreePartySlot(PartyState.MaxAllianceSize, PartyState.MaxAllies);
                 if (slot > 0)
                 {
-                    UpdatePartySlot(slot, new PartyState.Member(0, actor.InstanceID, false));
+                    UpdatePartySlot(slot, new PartyState.Member(0ul, id, false));
                 }
                 // else
                 //     Service.Log($"[WorldState]  slot for allied NPC {actor.InstanceID:X}");
+            }
+        }
+
+        // add the player's beastmaster pet since it is useful for some crucible mechanics, TODO: consider adding all beastmaster pets?
+        if (_ws.Party[0]?.Class == Class.BST && petid != InvalidEntityId && _ws.Party.FindSlot(petid) == -1)
+        {
+            var slot = FindFreePartySlot(1, PartyState.MaxAllies);
+            if (slot > 0)
+            {
+                UpdatePartySlot(slot, new PartyState.Member(0ul, petid, false));
             }
         }
     }
@@ -1315,7 +1332,7 @@ sealed class WorldStateGameSync : IDisposable
         }
     }
 
-    private unsafe void ClientIPCSent(uint opcode, Span<byte> payload)
+    private void ClientIPCSent(uint opcode, Span<byte> payload)
     {
         if (_netConfig.Data.DumpClientPackets)
         {
