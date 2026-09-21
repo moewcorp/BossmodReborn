@@ -122,18 +122,14 @@ sealed class EndlessSwing(BossModule module) : Components.GenericAOEs(module) {
         }
     }
 
+    // If either boss dies it will stop the swing cast from happening
+    public override void OnActorDeath(Actor actor) {
+        if (actor.OID is (uint)OID.YoungerTablitaurPiece or (uint)OID.ElderTablitaurPiece) {
+            aoes.Clear();
+        }
+    }
+
     public override void Update() {
-        // If the caster of swipes dies, then we have to clear any left over aoes otherwise they will not get removed - it can be either boss
-        if (endlessSwipes != null && endlessSwipes.isCasterDead) {
-            aoes.Clear();
-            return;
-        }
-
-        // If the caster of swing dies, then we have to clear the aoe
-        if (spellSource == null || spellSource.IsDead) {
-            aoes.Clear();
-        }
-
         var count = aoes.Count;
         if (count == 0 || spellSource == null) {
             return;
@@ -153,7 +149,6 @@ sealed class EndlessSwipes(BossModule module) : Components.GenericRotatingAOE(mo
     private Actor? source;
     private Angle increment = default;
     private readonly AOEShapeCone shape = new(40f, 30f.Degrees());
-    public bool isCasterDead = false;
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
         increment = iconID switch {
@@ -196,18 +191,11 @@ sealed class EndlessSwipes(BossModule module) : Components.GenericRotatingAOE(mo
         }
     }
 
-    // If the caster of swipes dies, then we have to clear any left over aoes otherwise they will not get removed - it can be either boss
-    public override void Update() {
-        base.Update();
-
-        if (Sequences.Count == 0) {
-            return;
-        }
-
-        var target = WorldState.Actors.Find(Sequences[0].ActorID);
-        if (target == null || target.IsDead) {
-            Sequences.Clear();
-            isCasterDead = true;
+    public override void OnActorDeath(Actor actor) {
+        if (actor.OID is (uint)OID.YoungerTablitaurPiece or (uint)OID.ElderTablitaurPiece) {
+            if (Sequences.Count > 0 && actor == WorldState.Actors.Find(Sequences[0].ActorID)) {
+                Sequences.Clear();
+            }
         }
     }
 }
