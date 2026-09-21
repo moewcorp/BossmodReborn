@@ -67,116 +67,96 @@ public enum TetherID : uint
 
 }
 
-sealed class Hint(BossModule module) : BossComponent(module)
-{
-    public override void AddGlobalHints(Actor actor, GlobalHints hints)
-    {
-        hints.Add("Kill both at the same time!");
-    }
-}
-
-sealed class TonzeSwipe1000 : Components.SimpleAOEGroups
-{
+sealed class TonzeSwipe1000 : Components.SimpleAOEGroups {
     public TonzeSwipe1000(BossModule module) : base(module, [(uint)AID.TonzeSwipe1000, (uint)AID.TonzeSwipe1000Long], new AOEShapeRect(60.0f, 30.0f),
-        expectedNumCasters: 2)
-    {
+        expectedNumCasters: 2) {
         MaxDangerColor = 1;
         MaxRisky = 1;
     }
 }
 
-sealed class TonzeSwing1111 : Components.SimpleAOEGroups
-{
-    public TonzeSwing1111(BossModule module) : base(module, [(uint)AID.TonzeSwing1111, (uint)AID.TonzeSwing1111Long], 23.0f, expectedNumCasters: 2)
-    {
+sealed class TonzeSwing1111 : Components.SimpleAOEGroups {
+    public TonzeSwing1111(BossModule module) : base(module, [(uint)AID.TonzeSwing1111, (uint)AID.TonzeSwing1111Long], 23.0f, expectedNumCasters: 2) {
         MaxDangerColor = 1;
         MaxRisky = 1;
     }
 }
 
-sealed class Shockwave(BossModule module) : Components.SimpleKnockbackGroups(module, [(uint)AID.Shockwave, (uint)AID.ShockwaveLong], 20.0f)
-{
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
+sealed class Shockwave(BossModule module) : Components.SimpleKnockbackGroups(module, [(uint)AID.Shockwave, (uint)AID.ShockwaveLong], 20.0f) {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         base.OnCastStarted(caster, spell);
         SortHelpers.SortKnockbacksByActivation(Casters);
     }
 }
 
-sealed class TonzeStomp10 : Components.SimpleAOEGroups
-{
-    public TonzeStomp10(BossModule module) : base(module, [(uint)AID.TonzeStomp10, (uint)AID.TonzeStomp10Long], 5.0f, expectedNumCasters: 2)
-    {
+sealed class TonzeStomp10 : Components.SimpleAOEGroups {
+    public TonzeStomp10(BossModule module) : base(module, [(uint)AID.TonzeStomp10, (uint)AID.TonzeStomp10Long], 5.0f, expectedNumCasters: 2) {
         MaxDangerColor = 1;
         MaxRisky = 1;
     }
 }
 
 // TODO change shape to arc cap
-sealed class EndlessSwing(BossModule module) : Components.GenericAOEs(module)
-{
+sealed class EndlessSwing(BossModule module) : Components.GenericAOEs(module) {
     private readonly List<AOEInstance> aoes = [];
     private readonly AOEShapeCircle shape = new(8.0f);
     private Actor? spellSource;
     private readonly EndlessSwipes? endlessSwipes = module.FindComponent<EndlessSwipes>();
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.EndlessSwingBoss)
-        {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.EndlessSwingBoss) {
             aoes.Add(new(shape, spell.LocXZ, spell.Rotation));
             spellSource = caster;
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID is (uint)AID.EndlessSwipes1 or (uint)AID.EndlessSwipes3)
-        {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID is (uint)AID.EndlessSwipes1 or (uint)AID.EndlessSwipes3) {
             NumCasts++;
 
-            if (NumCasts == 13)
-            {
+            if (NumCasts == 13) {
                 aoes.Clear();
+                spellSource = null;
+                NumCasts = 0;
             }
         }
     }
 
-    public override void Update()
-    {
+    public override void Update() {
         // If the caster of swipes dies, then we have to clear any left over aoes otherwise they will not get removed - it can be either boss
-        if (endlessSwipes != null && endlessSwipes.isCasterDead)
-        {
+        if (endlessSwipes != null && endlessSwipes.isCasterDead) {
             aoes.Clear();
             return;
         }
 
+        // If the caster of swing dies, then we have to clear the aoe
+        if (spellSource == null || spellSource.IsDead) {
+            aoes.Clear();
+        }
+
         var count = aoes.Count;
-        if (count == 0 || spellSource == null)
-        {
+        if (count == 0 || spellSource == null) {
             return;
         }
 
         var nextAOEs = CollectionsMarshal.AsSpan(aoes);
         ref var aoe = ref nextAOEs[0];
         aoe.Origin = spellSource.Position;
+        aoe.Rotation = spellSource.Rotation;
     }
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(aoes);
 }
 
-sealed class EndlessSwipes(BossModule module) : Components.GenericRotatingAOE(module)
-{
+sealed class EndlessSwipes(BossModule module) : Components.GenericRotatingAOE(module) {
     private ActorCastInfo? spellInfo;
     private Actor? source;
     private Angle increment = default;
     private readonly AOEShapeCone shape = new(40f, 30f.Degrees());
     public bool isCasterDead = false;
 
-    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID)
-    {
-        increment = iconID switch
-        {
+    public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
+        increment = iconID switch {
             (uint)IconID.TurnLeft => 30.0f.Degrees(),
             (uint)IconID.TurnRight => -30.0f.Degrees(),
             _ => default
@@ -185,27 +165,22 @@ sealed class EndlessSwipes(BossModule module) : Components.GenericRotatingAOE(mo
         InitIfReady();
     }
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         // The spell for the rotation and starting locXZ
-        if (spell.Action.ID == (uint)AID.EndlessSwipes1)
-        {
+        if (spell.Action.ID == (uint)AID.EndlessSwipes1) {
             spellInfo = spell;
             InitIfReady();
         }
 
         // The spell for which boss is actually performing the spell - it can be either one
-        if (spell.Action.ID is (uint)AID.EndlessSwipesYounger or (uint)AID.EndlessSwipesElder)
-        {
+        if (spell.Action.ID is (uint)AID.EndlessSwipesYounger or (uint)AID.EndlessSwipesElder) {
             source = caster;
             InitIfReady();
         }
     }
 
-    private void InitIfReady()
-    {
-        if (spellInfo != null && increment != default && source != null)
-        {
+    private void InitIfReady() {
+        if (spellInfo != null && increment != default && source != null) {
             Sequences.Add(new(shape, spellInfo.LocXZ, spellInfo.Rotation, increment, Module.CastFinishAt(spellInfo), 1.5d, 13, 3, actorID: source.InstanceID));
             spellInfo = null;
             increment = default;
@@ -213,30 +188,24 @@ sealed class EndlessSwipes(BossModule module) : Components.GenericRotatingAOE(mo
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID is (uint)AID.EndlessSwipes1 or (uint)AID.EndlessSwipes3)
-        {
-            if (Sequences.Count > 0)
-            {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID is (uint)AID.EndlessSwipes1 or (uint)AID.EndlessSwipes3) {
+            if (Sequences.Count > 0) {
                 AdvanceSequence(0, WorldState.CurrentTime);
             }
         }
     }
 
     // If the caster of swipes dies, then we have to clear any left over aoes otherwise they will not get removed - it can be either boss
-    public override void Update()
-    {
+    public override void Update() {
         base.Update();
 
-        if (Sequences.Count == 0)
-        {
+        if (Sequences.Count == 0) {
             return;
         }
 
         var target = WorldState.Actors.Find(Sequences[0].ActorID);
-        if (target == null || target.IsDead)
-        {
+        if (target == null || target.IsDead) {
             Sequences.Clear();
             isCasterDead = true;
         }
@@ -246,10 +215,8 @@ sealed class EndlessSwipes(BossModule module) : Components.GenericRotatingAOE(mo
 sealed class TonzeSlash100(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeRect(65.0f, 4.0f), (uint)IconID.TankBuster, (uint)AID.TonzeSlash100,
     9.1d, source: module.Enemies((uint)OID.ElderTablitaurPiece)[0], tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster);
 
-sealed class YoungerTablitaurPieceStates : StateMachineBuilder
-{
-    public YoungerTablitaurPieceStates(BossModule module) : base(module)
-    {
+sealed class YoungerTablitaurPieceStates : StateMachineBuilder {
+    public YoungerTablitaurPieceStates(BossModule module) : base(module) {
         TrivialPhase()
             .ActivateOnEnter<TonzeSwipe1000>()
             .ActivateOnEnter<TonzeSwing1111>()
@@ -263,17 +230,16 @@ sealed class YoungerTablitaurPieceStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.YoungerTablitaurPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1089u, NameID = 14556u, SortOrder = 4)]
-public sealed class YoungerTablitaurPiece : BossModule
-{
+public sealed class YoungerTablitaurPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, 0f), new ArenaBoundsRect(20f, 20f)) {
     public static readonly uint[] Bosses = [(uint)OID.YoungerTablitaurPiece, (uint)OID.ElderTablitaurPiece];
 
-    public YoungerTablitaurPiece(WorldState ws, Actor primary) : base(ws, primary, new(120f, 0f), new ArenaBoundsRect(20f, 20f))
-    {
-        ActivateComponent<Hint>();
-    }
-
-    protected override void DrawEnemies(int pcSlot, Actor pc)
-    {
+    protected override void DrawEnemies(int pcSlot, Actor pc) {
         Arena.Actors(this, Bosses);
     }
+
+    private readonly string[] _prePullHints = [
+        "Kill both at the same time!",
+    ];
+
+    public override string[] PrePullHints => _prePullHints;
 }
