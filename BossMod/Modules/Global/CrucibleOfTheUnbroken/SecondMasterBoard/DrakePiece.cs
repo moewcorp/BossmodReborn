@@ -108,16 +108,8 @@ sealed class BurningCyclone(BossModule module) : Components.GenericAOEs(module) 
         }
     }
 
-    // If the caster dies before doing the cast, we have to clean it up manually
-    public override void Update() {
-        base.Update();
-
-        if (aoes.Count == 0) {
-            return;
-        }
-
-        var target = WorldState.Actors.Find(aoes[0].ActorID);
-        if (target == null || target.IsDead) {
+    public override void OnActorDeath(Actor actor) {
+        if (actor.OID == (uint)OID.DrakePiece) {
             aoes.Clear();
         }
     }
