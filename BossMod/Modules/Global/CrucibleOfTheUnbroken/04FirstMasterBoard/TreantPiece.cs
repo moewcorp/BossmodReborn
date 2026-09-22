@@ -157,12 +157,9 @@ sealed class ArborealStorm(BossModule module) : Components.GenericAOEs(module)
     }
 }
 
-sealed class TreantPieceStates : StateMachineBuilder
-{
-    public TreantPieceStates(BossModule module) : base(module)
-    {
+sealed class TreantPieceStates : StateMachineBuilder {
+    public TreantPieceStates(BossModule module) : base(module) {
         TrivialPhase()
-            .ActivateOnEnter<BossPuddle>()
             .ActivateOnEnter<RustlingBreezeLeftRight>()
             .ActivateOnEnter<RustlingBreezeMiddle>()
             .ActivateOnEnter<AqueousDischarge>()
@@ -172,9 +169,12 @@ sealed class TreantPieceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.TreantPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14618u, SortOrder = 8)]
-public sealed class TreantPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f))
-{
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.TreantPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14618u, SortOrder = 8)]
+public sealed class TreantPiece : BossModule {
+    public TreantPiece(WorldState ws, Actor primary) : base(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f)) {
+        ActivateComponent<BossPuddle>();
+    }
+
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
     {
         var count = hints.PotentialTargets.Count;
