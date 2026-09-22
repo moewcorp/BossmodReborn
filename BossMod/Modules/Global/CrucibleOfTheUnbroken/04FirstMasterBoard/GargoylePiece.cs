@@ -142,7 +142,7 @@ sealed class SweepingEvisceration(BossModule module) : Components.GenericAOEs(mo
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID == (uint)AID.SweepingEvisceration)
+        if (spell.Action.ID is var id && id == (uint)AID.SweepingEvisceration)
         {
             if (aoes.Count > 0)
             {
@@ -157,8 +157,7 @@ sealed class SweepingEvisceration(BossModule module) : Components.GenericAOEs(mo
                 }
             }
         }
-
-        if (spell.Action.ID == (uint)AID.SweepingEviscerationTeleport)
+        else if (id == (uint)AID.SweepingEviscerationTeleport)
         {
             if (tetherTarget == null || tetherSource == null || activation == default)
             {
@@ -203,7 +202,7 @@ sealed class SweepingEvisceration(BossModule module) : Components.GenericAOEs(mo
             for (var i = 0; i < incomingAOEs.Length; ++i)
             {
                 ref var aoe = ref incomingAOEs[i];
-                shape.Draw(Arena, aoe.Origin, aoe.Rotation, i == 0 ? Colors.Danger : Colors.AOE);
+                shape.Draw(Arena, aoe.Origin, aoe.Rotation, i == 0 ? Colors.Danger : default);
             }
             return;
         }
@@ -214,11 +213,12 @@ sealed class SweepingEvisceration(BossModule module) : Components.GenericAOEs(mo
 }
 
 sealed class Malady(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Malady, 6f);
+
 sealed class MaladyOrbs : Components.PersistentInvertibleVoidzone
 {
     private static List<Actor> orbs = [];
 
-    public MaladyOrbs(BossModule module) : base(module, 2f, GetVoidzones)
+    public MaladyOrbs(BossModule module) : base(module, 1f, GetVoidzones)
     {
         InvertResolveAt = WorldState.CurrentTime;
         orbs = []; // To ensure no orbs exist upon loading the module
@@ -270,8 +270,7 @@ sealed class MaladyOrbs : Components.PersistentInvertibleVoidzone
         {
             hints.Add("Soak orbs until you reach 4 stacks!", false);
         }
-
-        if (!Inverted)
+        else
         {
             hints.Add("Don't soak any orbs!");
         }
@@ -279,14 +278,15 @@ sealed class MaladyOrbs : Components.PersistentInvertibleVoidzone
 
     public override void DrawArenaBackground(int pcSlot, Actor pc)
     {
-        var color = Inverted ? Colors.SafeFromAOE : default;
-        using (Arena.WorldProjectionLayer(ArenaProjectionLayer, RestrictToArenaProjectionLayer))
+        var count = orbs.Count;
+        if (count == 0)
         {
-            foreach (var orb in orbs)
-            {
-                if (ArenaProjectionLayerParticipantApplies(orb, ArenaProjectionLayer, RestrictToArenaProjectionLayer))
-                    Shape.Draw(Arena, orb.Position, orb.Rotation, color);
-            }
+            return;
+        }
+        var color = Inverted ? Colors.SafeFromAOE : default;
+        for (var i = 0; i < count; ++i)
+        {
+            Shape.Draw(Arena, orbs[i].Position, default, color);
         }
     }
 
@@ -322,18 +322,18 @@ sealed class FivefoldFallout(BossModule module) : Components.GenericKnockback(mo
     {
         if (spell.Action.ID == (uint)AID.FivefoldFalloutLong)
         {
-            knockbacks.Add(new(spell.LocXZ, 20.0f, WorldState.FutureTime(11.8d), kind: Kind.AwayFromOrigin));
+            knockbacks.Add(new(spell.LocXZ, 20f, WorldState.FutureTime(11.8d), kind: Kind.AwayFromOrigin));
         }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell)
     {
-        if (spell.Action.ID is (uint)AID.FivefoldFalloutLong or (uint)AID.FivefoldFalloutShort)
+        if (spell.Action.ID is var id && id is (uint)AID.FivefoldFalloutLong or (uint)AID.FivefoldFalloutShort)
         {
-            NumCasts++;
+            ++NumCasts;
         }
 
-        if (spell.Action.ID == (uint)AID.FivefoldFalloutKnockback)
+        else if (id == (uint)AID.FivefoldFalloutKnockback)
         {
             if (knockbacks.Count > 0)
             {
