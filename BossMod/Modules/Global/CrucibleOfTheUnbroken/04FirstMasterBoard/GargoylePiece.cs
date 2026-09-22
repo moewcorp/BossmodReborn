@@ -338,7 +338,6 @@ sealed class FivefoldFallout(BossModule module) : Components.GenericKnockback(mo
         hints.Add("4x Raidwide!");
     }
 
-    // During the knockback it will avoid any MaladyOrbs as this is easier than adding logic to determine how many orbs we can pass through during the knockback
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var activeKnockbacks = ActiveKnockbacks(slot, actor);
         if (activeKnockbacks.Length == 0 || maladyOrbs == null) {
@@ -350,12 +349,17 @@ sealed class FivefoldFallout(BossModule module) : Components.GenericKnockback(mo
             return;
         }
 
+        if (maladyOrbs.Inverted) {
+            hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOrigin(Arena.Center, knockback.Origin, knockback.Distance, 20.0f), knockback.Activation);
+            return;
+        }
+
         List<WPos> orbPositions = [];
         foreach (var orb in maladyOrbs.Sources(Module)) {
             orbPositions.Add(orb.Position);
         }
 
-        hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOriginPlusAOECircles(Arena.Center, knockback.Origin, knockbackDistance, 20.0f,
+        hints.AddForbiddenZone(new SDKnockbackInAABBSquareAwayFromOriginPlusIntersectAOECircles(Arena.Center, knockback.Origin, knockback.Distance, 20.0f,
             [..orbPositions], 1.0f, orbPositions.Count), knockback.Activation);
     }
 
