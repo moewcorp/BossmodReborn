@@ -76,7 +76,7 @@ public sealed class AutoDDConfig : ConfigNode
                 Modified.Fire();
             }
 
-            for (var i = 1; i < (int)PomanderID.Count; i++)
+            for (var i = 1; i < (int)PomanderID.Count; ++i)
                 using (ImRaii.PushId($"pom{i}"))
                 {
                     var row = Service.LuminaRow<DeepDungeonItem>((uint)i)!.Value;
