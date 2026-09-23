@@ -51,7 +51,7 @@ sealed class SalivousSnap(BossModule module) : Components.SingleTargetCast(modul
 
 sealed class ToxicBreathBoss(BossModule module) : Components.GenericAOEs(module) {
     private AOEInstance[] _aoe = [];
-    private readonly AOEShapeCone shape = new(60f, 60f.Degrees());
+    private readonly AOEShapeCone shape = new(60f, 62f.Degrees());
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
@@ -259,7 +259,7 @@ sealed class BorgnyTheVenomousStates : StateMachineBuilder {
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.BorgnyTheVenomous, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14628u, SortOrder = 10)]
-public sealed class BorgnyTheVenomous(WorldState ws, Actor primary) : BossModule(ws, primary, new(920f, -420f), new ArenaBoundsCircle(19.7f, 0.35f)) {
+public sealed class BorgnyTheVenomous(WorldState ws, Actor primary) : BossModule(ws, primary, new(920f, -420f), new ArenaBoundsCircle(19.8f, 0.4f)) {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i) {

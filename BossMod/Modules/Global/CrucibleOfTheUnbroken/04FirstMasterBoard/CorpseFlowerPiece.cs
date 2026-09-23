@@ -249,27 +249,86 @@ sealed class AcidRainBait(BossModule module) : Components.BaitAwayIcon(module, 6
 sealed class AcidRain(BossModule module) : Components.StandardChasingAOEs(module, 6.0f, (uint)AID.AcidRainStart, (uint)AID.AcidRainRest, 5f, 1d, 8,
     icon: (uint)IconID.AcidRainLockOn);
 
-sealed class Devour(BossModule module) : Components.GenericBaitProximity(module)
-{
-    private readonly AOEShapeCone shape = new(7f, 15f.Degrees());
+sealed class Devour(BossModule module) : Components.GenericBaitProximity(module) {
+    private readonly AOEShapeCone shape = new(7f, 15f.Degrees()); // TODO check shape size
+    private DateTime waitTime = default; // Used for when Devour is casted and causes the player to wait 1 second before moving in since they can still get hit otherwise
 
-    public override void OnCastStarted(Actor caster, ActorCastInfo spell)
-    {
-        if (spell.Action.ID == (uint)AID.FloralTrap)
-        {
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.FloralTrap) {
             CurrentBaits.Add(new(Module.PrimaryActor, shape));
         }
     }
 
-    public override void OnEventCast(Actor caster, ActorCastEvent spell)
-    {
-        if (spell.Action.ID == (uint)AID.Devour)
-        {
-            if (CurrentBaits.Count > 0)
-            {
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.Devour) {
+            waitTime = WorldState.FutureTime(1.0f);
+        }
+    }
+
+    public override void Update() {
+        base.Update();
+
+        if (waitTime != default && WorldState.CurrentTime > waitTime) {
+            if (CurrentBaits.Count > 0) {
                 CurrentBaits.RemoveAt(0);
             }
+
+            waitTime = default;
         }
+    }
+
+    public new ReadOnlySpan<Actor> GetTargets(Bait bait) {
+        var party = Raid.WithSlot(AllowDeadTargets, true, true);
+        if (bait.ForbiddenPlayers.Any()) {
+            party = [.. party.ExcludedFromMask(bait.ForbiddenPlayers)];
+        }
+
+        var partyLen = party.Length;
+
+        var partyRoles = new Actor[partyLen];
+        var roleLen = 0;
+        for (var i = 0; i < partyLen; ++i) {
+            var actor = party[i].Item2;
+
+            // If slot is a pet then skip over it
+            if (actor.Type == ActorType.Pet) {
+                continue;
+            }
+
+            if ((bait.SpecifiedRole == Role.None || actor.Role == bait.SpecifiedRole)
+                && Module.ActorMatchesArenaProjectionLayer(actor, bait.ArenaProjectionLayer, bait.RestrictToArenaProjectionLayer)) {
+                partyRoles[roleLen++] = actor;
+            }
+        }
+
+        (Actor actor, float distSq)[] distances = new (Actor, float)[roleLen];
+        var result = new Actor[roleLen];
+
+        for (var i = 0; i < roleLen; ++i) {
+            var p = partyRoles[i];
+            var distSq = (p.Position - bait.Position).LengthSq();
+            distances[i] = (p, distSq);
+        }
+
+        var isNearest = bait.FromNearest;
+
+        var targets = Math.Min(bait.NumTargets, roleLen);
+        for (var i = 0; i < targets; ++i) {
+            var selIdx = i;
+            for (var j = i + 1; j < roleLen; ++j) {
+                if (isNearest && distances[j].distSq < distances[selIdx].distSq || !isNearest && distances[j].distSq > distances[selIdx].distSq) {
+                    selIdx = j;
+                }
+            }
+
+            if (selIdx != i) {
+                (distances[selIdx], distances[i]) = (distances[i], distances[selIdx]);
+            }
+
+            result[i] = distances[i].actor;
+        }
+
+        return result.AsSpan()[..targets];
     }
 }
 
