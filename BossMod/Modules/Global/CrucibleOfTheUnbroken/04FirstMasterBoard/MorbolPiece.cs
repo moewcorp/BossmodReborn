@@ -186,7 +186,7 @@ sealed class MorbolPieceStates : StateMachineBuilder
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.MorbolPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14599u, SortOrder = 2)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.MorbolPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14599u, SortOrder = 2)]
 public sealed class MorbolPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f))
 {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
@@ -198,8 +198,8 @@ public sealed class MorbolPiece(WorldState ws, Actor primary) : BossModule(ws, p
             e.Priority = e.Actor.OID switch
             {
                 (uint)OID.CarrionBroth => 4,
-                (uint)OID.OchuPiece => 3,
-                (uint)OID.SeedlingPiece => 2,
+                (uint)OID.SeedlingPiece => 3,
+                (uint)OID.OchuPiece => 2,
                 (uint)OID.MorbolPiece => 1,
                 _ => 0
             };

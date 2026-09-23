@@ -542,7 +542,7 @@ public sealed class MedusaPiece(WorldState ws, Actor primary) : BossModule(ws, p
             e.Priority = e.Actor.OID switch
             {
                 (uint)OID.LamiaPiece => 3,
-                (uint)OID.CyclopsPiece => e.Actor.FindStatus((uint)SID.StoneCurse) != null ? 6 : 1,
+                (uint)OID.CyclopsPiece => e.Actor.FindStatus((uint)SID.StoneCurse) != null ? 6 : 2,
                 (uint)OID.MedusaPiece => 1,
                 _ => 0
             };
