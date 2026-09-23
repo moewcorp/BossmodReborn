@@ -249,6 +249,7 @@ sealed class AcidRainBait(BossModule module) : Components.BaitAwayIcon(module, 6
 sealed class AcidRain(BossModule module) : Components.StandardChasingAOEs(module, 6.0f, (uint)AID.AcidRainStart, (uint)AID.AcidRainRest, 5f, 1d, 8,
     icon: (uint)IconID.AcidRainLockOn);
 
+// TODO clean up next time - just checking this works then need to sort it out since we shouldn't copy everything from a component
 sealed class Devour(BossModule module) : Components.GenericBaitProximity(module) {
     private readonly AOEShapeCone shape = new(7f, 15f.Degrees()); // TODO check shape size
     private DateTime waitTime = default; // Used for when Devour is casted and causes the player to wait 1 second before moving in since they can still get hit otherwise
@@ -277,7 +278,198 @@ sealed class Devour(BossModule module) : Components.GenericBaitProximity(module)
         }
     }
 
-    public new ReadOnlySpan<Actor> GetTargets(Bait bait) {
+    public override void AddHints(int slot, Actor actor, TextHints hints) {
+        var baits = CollectionsMarshal.AsSpan(ActiveBaits);
+        var len = baits.Length;
+
+        if (len == 0)
+        {
+            return;
+        }
+
+        for (var i = 0; i < len; ++i)
+        {
+            ref var b = ref baits[i];
+            if (!BaitParticipantAppliesToArenaProjectionLayer(actor, b))
+            {
+                continue;
+            }
+            var baiter = IsBaitTarget(ref b, actor) ? actor : default;
+            if (baiter == default)
+            {
+                continue;
+            }
+
+            var clippedPlayers = PlayersClippedBy(ref b, baiter);
+            var clippedCount = clippedPlayers.Count;
+            //hints.Add($"Clipped ({clippedCount})", false);
+
+            if (b.IsStack)
+            {
+                // increment to include player in stack count
+                clippedCount++;
+                if (clippedCount < b.MinStack)
+                {
+                    hints.Add("Not enough in stack!");
+                    break;
+                }
+                else if (clippedCount > b.MaxStack)
+                {
+                    hints.Add("Too many in stack!");
+                    break;
+                }
+            }
+            else
+            {
+                if (clippedPlayers.Count != 0)
+                {
+                    hints.Add(BaitAwayHint);
+                    break;
+                }
+            }
+        }
+        if (!IgnoreOtherBaits)
+        {
+            for (var i = 0; i < len; ++i)
+            {
+                ref var b = ref baits[i];
+                if (!BaitParticipantAppliesToArenaProjectionLayer(actor, b))
+                {
+                    continue;
+                }
+                var targets = GetTargets(b);
+                var tarLen = targets.Length;
+
+                // show all baits, or all baits aside from yourself
+                var subTargets = new Actor[tarLen - (IsBaitTarget(ref b, actor) ? 1 : 0)];
+                var subCount = 0;
+                for (var j = 0; j < tarLen; ++j)
+                {
+                    if (targets[j] != actor)
+                    {
+                        subTargets[subCount++] = targets[j];
+                    }
+                }
+
+                for (var j = 0; j < subCount; ++j)
+                {
+                    var target = subTargets[j];
+                    if (IsClippedBy(actor, ref b, target))
+                    {
+                        if (b.IsStack)
+                        {
+                            var clippedPlayers = PlayersClippedBy(ref b, target);
+                            if (clippedPlayers.Count + 1 > b.MaxStack)
+                            {
+                                hints.Add(BaitAOEHint);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            hints.Add(BaitAOEHint);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public override void DrawArenaBackground(int pcSlot, Actor pc)
+    {
+        if (OnlyShowOutlines || IgnoreOtherBaits)
+        {
+            return;
+        }
+
+        BitMask targetted = default;
+        var baits = CollectionsMarshal.AsSpan(ActiveBaits);
+        var len = baits.Length;
+
+        for (var i = 0; i < len; ++i)
+        {
+            ref var b = ref baits[i];
+            var targets = GetTargets(b);
+            var tarLen = targets.Length;
+
+            for (var j = 0; j < tarLen; ++j)
+            {
+                var target = targets[j];
+                var slot = Raid.FindSlot(target.InstanceID);
+                targetted.Set(slot);
+
+                // always draw stacks even if player isn't clipped by it
+                if (target != pc && (AlwaysDrawOtherBaits || b.IsStack || IsClippedBy(pc, ref b, target)))
+                {
+                    using (Arena.WorldProjectionLayer(b.ResolveArenaProjectionLayer(Module, target), b.RestrictToArenaProjectionLayer))
+                        b.Shape.Draw(Arena, BaitOrigin(ref b, target), BaitRotation(ref b, target),
+                            b.IsStack && ArenaProjectionLayerParticipantApplies(pc, b.ResolveArenaProjectionLayer(Module, target), b.RestrictToArenaProjectionLayer) ? Colors.Safe : Colors.AOE);
+                }
+            }
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc)
+    {
+        var baits = CollectionsMarshal.AsSpan(ActiveBaits);
+        var len = baits.Length;
+
+        for (var i = 0; i < len; ++i)
+        {
+            ref var b = ref baits[i];
+            var targets = GetTargets(b);
+            var tarLen = targets.Length;
+
+            for (var j = 0; j < tarLen; ++j)
+            {
+                var target = targets[j];
+                if (OnlyShowOutlines || !OnlyShowOutlines && target == pc)
+                {
+                    using (Arena.WorldProjectionLayer(b.ResolveArenaProjectionLayer(Module, target), b.RestrictToArenaProjectionLayer))
+                        b.Shape.Outline(Arena, BaitOrigin(ref b, target), BaitRotation(ref b, target));
+                }
+            }
+        }
+    }
+
+    private bool IsActive => CurrentBaits.Count > 0;
+
+    public override PlayerPriority CalcPriority(int pcSlot, Actor pc, int playerSlot, Actor player, ref uint customColor)
+    {
+        // one bait can have multiple targets
+        // just show everyone if there are active baits
+        // maybe write so it only shows players that are baiting or getting clipped by bait?
+        if (!IsActive)
+        {
+            return PlayerPriority.Irrelevant;
+        }
+
+        var baits = CollectionsMarshal.AsSpan(ActiveBaits);
+        var len = baits.Length;
+
+        var haveApplicableBait = false;
+        for (var i = 0; i < len; ++i)
+        {
+            ref var bait = ref baits[i];
+            foreach (var target in GetTargets(bait))
+            {
+                if (!ArenaProjectionLayerApplies(pc, bait.ResolveArenaProjectionLayer(Module, target), bait.RestrictToArenaProjectionLayer))
+                {
+                    continue;
+                }
+                haveApplicableBait = true;
+                if (target == player)
+                {
+                    return PlayerPriority.Danger;
+                }
+            }
+        }
+
+        return haveApplicableBait ? PlayerPriority.Normal : PlayerPriority.Irrelevant;
+    }
+
+    private new ReadOnlySpan<Actor> GetTargets(Bait bait) {
         var party = Raid.WithSlot(AllowDeadTargets, true, true);
         if (bait.ForbiddenPlayers.Any()) {
             party = [.. party.ExcludedFromMask(bait.ForbiddenPlayers)];
