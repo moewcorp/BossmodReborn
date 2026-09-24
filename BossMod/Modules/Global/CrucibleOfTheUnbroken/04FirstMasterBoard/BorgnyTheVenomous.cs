@@ -204,8 +204,14 @@ sealed class TouchdownKnockback(BossModule module) : Components.SimpleKnockbacks
     private ActorCastInfo? spellInfo = null;
 
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
+        base.OnCastFinished(caster, spell);
+
         if (spell.Action.ID == (uint)AID.Cauterize) {
             spellInfo = spell;
+        }
+
+        if (spell.Action.ID == (uint)AID.TouchdownKnockback) {
+            spellInfo = null;
         }
     }
 
