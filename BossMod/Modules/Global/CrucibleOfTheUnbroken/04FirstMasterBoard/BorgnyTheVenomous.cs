@@ -51,7 +51,6 @@ sealed class SalivousSnap(BossModule module) : Components.SingleTargetCast(modul
 
 sealed class ToxicBreathBoss(BossModule module) : Components.GenericAOEs(module) {
     private AOEInstance[] _aoe = [];
-    private readonly AOEShapeCone shape = new(60f, 62f.Degrees());
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => _aoe;
 
@@ -59,7 +58,9 @@ sealed class ToxicBreathBoss(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.ToxicBreathBoss) {
             var origin = (Arena.Center - Arena.Bounds.Radius * spell.Rotation.ToDirection()).Quantized();
             var rot = spell.Rotation;
-            _aoe = [new(shape, origin, rot, Module.CastFinishAt(spell), shapeDistance: shape.Distance(origin, rot))];
+            var shapeDonut = new DonutSegmentHA(origin, 6.00f, 60.00f, rot, 59.0f.Degrees());
+            var shapeCustom = new AOEShapeCustom(Arena.Center, [shapeDonut]);
+            _aoe = [new(shapeCustom, Arena.Center, rot, DateTime.MaxValue, shapeDistance: shapeCustom.Distance(Arena.Center, rot))];
         }
     }
 
@@ -70,16 +71,6 @@ sealed class ToxicBreathBoss(BossModule module) : Components.GenericAOEs(module)
                 NumCasts = 0;
             }
         }
-    }
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
-        var count = _aoe.Length;
-        if (count == 0) {
-            return;
-        }
-
-        var aoe = _aoe[0];
-        hints.GoalZones.Add(p => aoe.Check(p) ? 0.0f : 5.0f);
     }
 }
 
@@ -152,7 +143,7 @@ sealed class PoisonClouds(BossModule module) : Components.GenericAOEs(module) {
 
         var forbiddenNearFuture = WorldState.FutureTime(1.1d);
         var forbiddenSoon = WorldState.FutureTime(3.0d);
-        var forbideenFarFuture = DateTime.MaxValue;
+        var forbideenFarFuture = WorldState.FutureTime(5.0d);
 
         for (var i = 0; i < count; i++) {
             var puddle = puddles[i];
@@ -210,8 +201,20 @@ sealed class WrigglingPhlegmBait(BossModule module) : Components.BaitAwayIcon(mo
 sealed class TouchdownKnockback(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.TouchdownKnockback, 30.0f, stopAfterWall: true) {
     private readonly PoisonClouds? poisonClouds = module.FindComponent<PoisonClouds>();
     private readonly MagitekArmorPuddles? magitekArmorPuddles = module.FindComponent<MagitekArmorPuddles>();
+    private ActorCastInfo? spellInfo = null;
+
+    public override void OnCastFinished(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.Cauterize) {
+            spellInfo = spell;
+        }
+    }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        // Case: if there are no active knockbacks we should aim to stay parallel to the rect aoe, so when knockback starts it's easier to dodge
+        if (spellInfo != null) {
+            hints.GoalZones.Add(AIHints.GoalRectangle(Arena.Center, spellInfo.Rotation.ToDirection(), 7.0f, 20.0f, 5.0f));
+        }
+
         if (Casters.Count == 0 || poisonClouds == null || magitekArmorPuddles == null) {
             return;
         }
@@ -232,12 +235,17 @@ sealed class TouchdownKnockback(BossModule module) : Components.SimpleKnockbacks
             circles.Add((puddle.Position, 6.0f));
         }
 
+        List<(WPos origin, float radius)> circlesFuture = [];
+        foreach (var (origin, radius) in circles) {
+            circlesFuture.Add((origin, radius * 3.0f));
+        }
+
         // Avoid any moving aoes / puddles on the ground
         hints.AddForbiddenZone(new SDInCircleAwayFromOriginPlusIntersectAOECircles(knockback.Origin, knockback.Distance, [.. circles], circles.Count),
             knockback.Activation);
 
-        // Aim to stay by the knockback circle
-        hints.GoalZones.Add(AIHints.GoalDonut(Arena.Center, 6.0f, 12.0f));
+        hints.AddForbiddenZone(new SDInCircleAwayFromOriginPlusIntersectAOECircles(knockback.Origin, knockback.Distance, [.. circlesFuture], circlesFuture.Count),
+            knockback.Activation);
     }
 }
 
@@ -259,7 +267,18 @@ sealed class BorgnyTheVenomousStates : StateMachineBuilder {
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.BorgnyTheVenomous, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14628u, SortOrder = 10)]
-public sealed class BorgnyTheVenomous(WorldState ws, Actor primary) : BossModule(ws, primary, new(920f, -420f), new ArenaBoundsCircle(19.8f, 0.4f)) {
+public sealed class BorgnyTheVenomous(WorldState ws, Actor primary) : BossModule(ws, primary, new(920f, -420f), arena) {
+    private static readonly WPos[] vertices = [new(922.280f, -439.819f), new(926.103f, -438.993f), new(929.691f, -437.438f), new(932.907f, -435.212f), new(935.626f, -432.402f),
+        new(937.746f, -429.115f), new(939.231f, -425.492f), new(939.933f, -421.634f), new(939.869f, -417.714f), new(939.344f, -415.522f),
+        new(939.069f, -415.069f), new(938.960f, -413.820f), new(937.438f, -410.309f), new(935.212f, -407.093f), new(932.402f, -404.374f),
+        new(929.115f, -402.254f), new(925.478f, -400.817f), new(921.630f, -400.117f), new(917.720f, -400.181f), new(913.897f, -401.007f),
+        new(910.309f, -402.562f), new(907.093f, -404.788f), new(904.374f, -407.598f), new(902.254f, -410.885f), new(900.817f, -414.522f),
+        new(900.571f, -415.877f), new(900.562f, -416.204f), new(900.513f, -416.193f), new(900.117f, -418.370f), new(900.131f, -422.286f),
+        new(900.959f, -426.118f), new(902.518f, -429.715f), new(904.750f, -432.939f), new(907.567f, -435.666f), new(910.885f, -437.746f),
+        new(914.522f, -439.183f), new(918.370f, -439.883f)];
+
+    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
+
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i) {
