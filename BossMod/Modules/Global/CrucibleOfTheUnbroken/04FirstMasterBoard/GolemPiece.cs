@@ -54,6 +54,14 @@ sealed class Shockwave(BossModule module) : Components.SimpleAOEs(module, (uint)
     // will still play out
     private bool active = false;
 
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        base.OnCastStarted(caster, spell);
+
+        if (spell.Action.ID == (uint)AID.Shockwave) {
+            active = true;
+        }
+    }
+
     public override void OnCastFinished(Actor caster, ActorCastInfo spell) { }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
@@ -86,6 +94,12 @@ sealed class Rockslide(BossModule module) : Components.GenericAOEs(module) {
     // Used to track if the mechanic started - needed as the boss can die while casting it, if the cast goes through and the boss dies, the mechanic
     // will still play out
     private bool active;
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        if (spell.Action.ID == (uint)AID.Shockwave) {
+            active = true;
+        }
+    }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.GolemDeath && !active) {
