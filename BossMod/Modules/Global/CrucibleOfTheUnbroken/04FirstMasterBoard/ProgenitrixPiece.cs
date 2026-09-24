@@ -177,6 +177,53 @@ sealed class FieryFuryAOE : Components.SimpleAOEs {
     }
 }
 
+sealed class SnollPieceTarget(BossModule module) : Components.Adds(module, (uint)OID.SnollPiece, AIHints.Enemy.PriorityForbidden) {
+    private readonly FirePuddles? firePuddles = module.FindComponent<FirePuddles>();
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        base.AddAIHints(slot, actor, assignment, hints);
+
+        // Are any enemy of this type alive
+        var enemies = CollectionsMarshal.AsSpan(ActiveActors);
+        var count = enemies.Length;
+        if (count == 0 || firePuddles == null) {
+            return;
+        }
+
+        // Do we have any fire puddles available? If not just let the player kill them
+        if (!firePuddles.Sources(Module).Any()) {
+            foreach (var enemy in enemies) {
+                hints.SetPriority(enemy, 2);
+            }
+            return;
+        }
+
+        // Find the closest puddle
+        Actor? closestPuddle = null;
+        var closestDistance = float.MaxValue;
+        foreach (var puddle in firePuddles.Sources(Module)) {
+            var distance = (puddle.Position - actor.Position).Length();
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestPuddle = puddle;
+            }
+        }
+
+        // Case: Checks if we are close enough to a puddle & the enemy is close enough. We check these together as we need to ensure both are valid for it to work
+        var nearPuddle = closestPuddle != null && closestDistance <= 8.0f;
+        for (var i = 0; i < count; i++) {
+            ref var enemy = ref enemies[i];
+            var mainAggro = enemy.TargetID == actor.InstanceID;
+            var enemyCloseEnough = mainAggro && (enemy.Position - actor.Position).Length() <= 5.0f; // Melee range of the enemy to player
+            var ready = enemyCloseEnough && nearPuddle;
+            hints.SetPriority(enemy, ready ? 2 : AIHints.Enemy.PriorityForbidden);
+            if (mainAggro && !ready && closestPuddle != null) {
+                hints.GoalZones.Add(AIHints.GoalDonut(closestPuddle.Position, 6.0f, 8.0f, 5.0f));
+            }
+        }
+    }
+}
+
 sealed class ProgenitrixPieceStates : StateMachineBuilder {
     public ProgenitrixPieceStates(BossModule module) : base(module) {
         TrivialPhase()
@@ -188,21 +235,26 @@ sealed class ProgenitrixPieceStates : StateMachineBuilder {
             .ActivateOnEnter<Meltdown>()
             .ActivateOnEnter<MeltdownKnockback>()
             .ActivateOnEnter<FieryFuryAOE>()
-            .ActivateOnEnter<FieryFuryKnockback>();
+            .ActivateOnEnter<FieryFuryKnockback>()
+            .ActivateOnEnter<SnollPieceTarget>();
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.ProgenitrixPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14623u, SortOrder = 9)]
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.ProgenitrixPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14623u, SortOrder = 9)]
 public sealed class ProgenitrixPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f)) {
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var count = hints.PotentialTargets.Count;
         for (var i = 0; i < count; ++i) {
             var e = hints.PotentialTargets[i];
+
+            if (e.Actor.OID == (uint)OID.SnollPiece) {
+                continue;
+            }
+
             e.Priority = e.Actor.OID switch {
                 (uint)OID.GrenadePiece => 5,
                 (uint)OID.PyrobolusPiece => 4,
                 (uint)OID.BombPiece => 3,
-                (uint)OID.SnollPiece => 2,
                 (uint)OID.ProgenitrixPiece => e.Actor.FindStatus((uint)SID.Invincibility) != null ? AIHints.Enemy.PriorityForbidden : 1,
                 _ => 0
             };
@@ -214,7 +266,6 @@ public sealed class ProgenitrixPiece(WorldState ws, Actor primary) : BossModule(
         Arena.Actors(Enemies((uint)OID.GrenadePiece), Colors.Vulnerable);
         Arena.Actors(Enemies((uint)OID.PyrobolusPiece));
         Arena.Actors(Enemies((uint)OID.BombPiece));
-        Arena.Actors(Enemies((uint)OID.SnollPiece));
     }
 
     private readonly string[] _prePullHints = [

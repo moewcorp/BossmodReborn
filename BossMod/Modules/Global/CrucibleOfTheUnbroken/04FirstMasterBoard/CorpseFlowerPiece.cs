@@ -222,9 +222,10 @@ sealed class AcidRain(BossModule module) : Components.StandardChasingAOEs(module
     }
 }
 
+// TODO add AI to bait the bee? Need a rotation logic to taunt it tho as the pet might have aggro
 sealed class Devour(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(7.0f, 20.0f.Degrees()), (uint)IconID.FloralTrapLockOn) {
     private DateTime waitTime = default; // Used for devour eventcast as its an animation that plays out
-    private readonly AOEShapeCone coneAI = new(9.0f, 90.0f.Degrees()); // Used by AIHints to ensure the player just move backwards out of it
+    private readonly AOEShapeCircle circleAI = new(9.0f); // Used by AIHints to ensure the player just move backwards out of it
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.Devour) {
@@ -242,7 +243,7 @@ sealed class Devour(BossModule module) : Components.BaitAwayIcon(module, new AOE
 
         for (var i = 0; i < count; i++) {
             ref var bait = ref baits[i];
-            hints.AddForbiddenZone(coneAI, bait.Source.Position, bait.Rotation, bait.Activation);
+            hints.AddForbiddenZone(circleAI, bait.Source.Position, bait.Rotation, bait.Activation);
         }
     }
 
