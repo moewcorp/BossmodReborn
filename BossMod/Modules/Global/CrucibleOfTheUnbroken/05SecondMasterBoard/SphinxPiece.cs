@@ -79,7 +79,6 @@ sealed class BanishCone(BossModule module) : Components.SimpleAOEGroups(module, 
     new AOEShapeCone(60f, 90f.Degrees()));
 sealed class BanishCircle(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BanishCircle, 18f);
 sealed class NumericRiddle(BossModule module) : Components.RaidwideCast(module, (uint)AID.NumericRiddle);
-
 sealed class LostHope(BossModule module) : Components.TemporaryMisdirection(module, (uint)AID.LostHope);
 
 sealed class Assignment : Components.GenericAOEs
