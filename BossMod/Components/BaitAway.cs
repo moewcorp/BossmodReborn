@@ -39,6 +39,7 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
     public List<Bait> CurrentBaits = [];
     public AIHints.PredictedDamageType DamageType = damageType;
     public const string BaitAwayHint = "Bait away from raid!";
+    public bool AllowPetTargets = false;
 
     public List<Bait> ActiveBaits
     {
@@ -271,6 +272,12 @@ public class GenericBaitAway(BossModule module, uint aid = default, bool alwaysD
             {
                 continue;
             }
+
+            // A lot of mechanics don't care if the pet is hit or not, e.g. even if the pet is inside the bait it doesn't do anything to them
+            if (!AllowPetTargets && a.Type == ActorType.Pet) {
+                continue;
+            }
+
             switch (bait.Shape)
             {
                 case AOEShapeDonut:
