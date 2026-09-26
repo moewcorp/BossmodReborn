@@ -58,9 +58,8 @@ sealed class ToxicBreathBoss(BossModule module) : Components.GenericAOEs(module)
         if (spell.Action.ID == (uint)AID.ToxicBreathBoss) {
             var origin = (Arena.Center - Arena.Bounds.Radius * spell.Rotation.ToDirection()).Quantized();
             var rot = spell.Rotation;
-            var shapeDonut = new DonutSegmentHA(origin, 6.00f, 60.00f, rot, 59.0f.Degrees());
-            var shapeCustom = new AOEShapeCustom(Arena.Center, [shapeDonut]);
-            _aoe = [new(shapeCustom, Arena.Center, rot, DateTime.MaxValue, shapeDistance: shapeCustom.Distance(Arena.Center, rot))];
+            AOEShapeDonutSector donutSector = new(6.0f, 60.0f, 59.0f.Degrees());
+            _aoe = [new(donutSector, origin, rot, DateTime.MaxValue, shapeDistance: donutSector.Distance(origin, rot))];
         }
     }
 
