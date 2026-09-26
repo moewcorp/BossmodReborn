@@ -1,14 +1,12 @@
 ﻿namespace BossMod.Global.CrucibleOfTheUnbroken.SecondMasterBoard.FlaurosPiece;
 
-public enum OID : uint
-{
+public enum OID : uint {
     FlaurosPiece = 0x4CDB,
     Helper = 0x233C,
     LightningSprite = 0x4CDC, // R0.800-1.488, x0 (spawn during fight)
 }
 
-public enum AID : uint
-{
+public enum AID : uint {
     AutoAttack = 49680, // FlaurosPiece->player, no cast, single-target
     HeatLightningBoss = 49185, // FlaurosPiece->self, 4.0s cast, single-target
     HeatLightning = 49186, // Helper->location, 4.0s cast, range 6 circle
@@ -25,19 +23,16 @@ public enum AID : uint
     LineVoltageBig = 49195, // 4CDC->self, 3.0s cast, range 100 width 6 rect
 }
 
-public enum SID : uint
-{
+public enum SID : uint {
     Paralysis = 5382, // Helper->player, extra=0x0
     SustainedDamage = 3795, // none->4CDC, extra=0x1
 }
 
-public enum IconID : uint
-{
+public enum IconID : uint {
     ErraticBlasterTankBuster = 475, // player->self
 }
 
-public enum TetherID : uint
-{
+public enum TetherID : uint {
     LightningSpriteTether = 6, // 4CDC->FlaurosPiece
 }
 
@@ -48,28 +43,40 @@ sealed class ChargedLightning(BossModule module) : Components.SimpleAOEs(module,
 sealed class ElectricShock(BossModule module) : Components.SimpleAOEs(module, (uint)AID.ElectricShock, 16f);
 sealed class ErraticBlaster(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ErraticBlaster, "TankBuster + applies Paralysis");
 
-sealed class AddMovement(BossModule module) : Components.Adds(module, (uint)OID.LightningSprite)
-{
-    private readonly List<Actor> sprites = module.Enemies((uint)OID.LightningSprite);
-
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
+sealed class AddMovement(BossModule module) : Components.Adds(module, (uint)OID.LightningSprite, 2) {
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        base.AddAIHints(slot, actor, assignment, hints);
+        var sprites = ActiveActors;
         var count = sprites.Count;
-        for (var i = 0; i < count; ++i)
-        {
-            var s = sprites[i];
-            if (!s.IsDead)
-            {
-                hints.GoalZones.Add(AIHints.GoalSingleTarget(sprites[i].Position, 6f, 2f));
+
+        if (count == 0) {
+            return;
+        }
+
+        Actor? closest = null;
+        float closestDistance = float.MaxValue;
+
+        for (var i = 0; i < count; i++) {
+            var sprite = sprites[i];
+            var distance = (actor.Position - sprite.Position).LengthSq();
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closest = sprite;
             }
         }
+
+        if (closest == null) {
+            return;
+        }
+
+        hints.GoalZones.Add(AIHints.GoalSingleTarget(closest.Position, 6.0f, 5.0f));
     }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) => Arena.Actors(Actors, Colors.Vulnerable);
 }
 
-sealed class FlaurosPieceStates : StateMachineBuilder
-{
-    public FlaurosPieceStates(BossModule module) : base(module)
-    {
+sealed class FlaurosPieceStates : StateMachineBuilder {
+    public FlaurosPieceStates(BossModule module) : base(module) {
         TrivialPhase()
             .ActivateOnEnter<HeatLightning>()
             .ActivateOnEnter<LineVoltage>()
@@ -82,26 +89,4 @@ sealed class FlaurosPieceStates : StateMachineBuilder
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.FlaurosPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1092u, NameID = 14631u, SortOrder = 1)]
-public sealed class FlaurosPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f))
-{
-    protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        var count = hints.PotentialTargets.Count;
-        for (var i = 0; i < count; ++i)
-        {
-            var e = hints.PotentialTargets[i];
-            e.Priority = e.Actor.OID switch
-            {
-                (uint)OID.LightningSprite => 2,
-                (uint)OID.FlaurosPiece => 1,
-                _ => 0
-            };
-        }
-    }
-
-    protected override void DrawEnemies(int pcSlot, Actor pc)
-    {
-        Arena.Actor(PrimaryActor);
-        Arena.Actors(Enemies((uint)OID.LightningSprite), Colors.Vulnerable);
-    }
-}
+public sealed class FlaurosPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(120f, -420f), new ArenaBoundsCircle(20f));
