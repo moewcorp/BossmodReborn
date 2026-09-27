@@ -111,12 +111,23 @@ sealed class MagitekArmorPuddles(BossModule module) : Components.Voidzone(module
             return;
         }
 
-        // This can be increased if needed to make the player go move inwards towards the center. But we need to be careful to not bait all the puddles center
-        // so we have enough room to place the add far away and kill it. Also, puddles should be kept close together so it's less annoying for
-        // the moving aoes
-        // TODO if this doesn't work or has problem consider changing it to a cone instead so we place the puddles in like a square order from the boss
-        //  But this becomes a bit more of issue on the 2nd time it happens since the boss will stand middle
-        hints.AddForbiddenZone(new SDDonut(Arena.Center, 16.0f, 20.0f));
+        var puddles = GetVoidzones(Module);
+        var count = puddles.Length;
+        if (count < 2) {
+            return;
+        }
+
+        for (var i = 0; i < count; i++) {
+            var puddle = puddles[i].Position;
+            for (var k = i + 1; k < count; k++) {
+                var otherPuddle = puddles[k].Position;
+                var distance = (puddle - otherPuddle).Length();
+                if (distance > 0.0f && distance <= 2.0f * 6.0f + 6.0f) {
+                    var midpoint = WPos.Lerp(puddle, otherPuddle, 0.5f);
+                    hints.AddForbiddenZone(new SDCircle(midpoint, 6.0f));
+                }
+            }
+        }
     }
 
     private static Actor[] GetVoidzones(BossModule module) {

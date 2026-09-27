@@ -210,6 +210,10 @@ sealed class AcidRain(BossModule module) : Components.StandardChasingAOEs(module
                 var radiusAdj = isTarget ? MoveDistance + radius : radius + 1f;
                 hints.AddForbiddenZone(new SDCircle(predicted, radiusAdj), c.NextActivation);
 
+                if (isTarget) {
+                    hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Sprint), actor, ActionQueue.Priority.High);
+                }
+
                 if (c.NumRemaining > 1) {
                     hints.AddForbiddenZone(new SDCircle(predicted, radiusAdj + MoveDistance), c.NextActivation.AddSeconds(c.SecondsBetweenActivations));
                 }
