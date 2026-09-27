@@ -393,6 +393,6 @@ public sealed class CatoblepasPiece(WorldState ws, Actor primary) : BossModule(w
 [ConfigDisplay(Order = 0x10, Parent = typeof(GlobalConfig))]
 public sealed class CatoblepasPieceConfig : ConfigNode
 {
-    [PropertyDisplay("Try to pop donut AOEs early by running into it")]
+    [PropertyDisplay("尝试提前跑进月环AOE将其引爆")]
     public bool PopDonut = false;
 }
