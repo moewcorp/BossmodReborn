@@ -74,8 +74,18 @@ sealed class ToxicBreathBoss(BossModule module) : Components.GenericAOEs(module)
 }
 
 sealed class ToxicVomit : Components.BaitAwayIcon {
+    public bool active = false; // Used to know when the mechanic is currently on going
+    public DateTime pathFinderTimer = default; // Used to make the fake aoe hold until after a set duration
+
     public ToxicVomit(BossModule module) : base(module, 6f, (uint)IconID.ToxicVomitIcon) {
         AllowPetTargets = true; // The pet doesn't take any damage from these, but it fixes the problem of the player blocking themselves in under the boss
+    }
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        base.OnCastStarted(caster, spell);
+        if (spell.Action.ID == (uint)AID.ToxicVomitBoss) {
+            active = true;
+        }
     }
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
@@ -85,12 +95,30 @@ sealed class ToxicVomit : Components.BaitAwayIcon {
             if (NumCasts == 4) {
                 CurrentBaits.Clear();
                 NumCasts = 0;
+                active = false;
+                pathFinderTimer = WorldState.FutureTime(3.0d);
             }
         }
     }
 }
 
 sealed class MagitekArmorPuddles(BossModule module) : Components.Voidzone(module, 6f, GetVoidzones) {
+    private readonly ToxicVomit? toxicVomit = module.FindComponent<ToxicVomit>();
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        base.AddAIHints(slot, actor, assignment, hints);
+        if (toxicVomit == null || !(toxicVomit.active || WorldState.CurrentTime < toxicVomit.pathFinderTimer)) {
+            return;
+        }
+
+        // This can be increased if needed to make the player go move inwards towards the center. But we need to be careful to not bait all the puddles center
+        // so we have enough room to place the add far away and kill it. Also, puddles should be kept close together so it's less annoying for
+        // the moving aoes
+        // TODO if this doesn't work or has problem consider changing it to a cone instead so we place the puddles in like a square order from the boss
+        //  But this becomes a bit more of issue on the 2nd time it happens since the boss will stand middle
+        hints.AddForbiddenZone(new SDDonut(Arena.Center, 16.0f, 20.0f));
+    }
+
     private static Actor[] GetVoidzones(BossModule module) {
         var enemies = module.Enemies((uint)OID.MagitekArmorPuddle);
         var count = enemies.Count;
@@ -259,7 +287,8 @@ sealed class TouchdownKnockback(BossModule module) : Components.SimpleKnockbacks
 }
 
 sealed class BorgnyTheVenomousStates : StateMachineBuilder {
-    public BorgnyTheVenomousStates(BossModule module) : base(module) {
+    public BorgnyTheVenomousStates(BossModule module) : base(module)
+    {
         TrivialPhase()
             .ActivateOnEnter<ToxicBreathBoss>()
             .ActivateOnEnter<ToxicVomit>()
@@ -276,17 +305,7 @@ sealed class BorgnyTheVenomousStates : StateMachineBuilder {
 }
 
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.BorgnyTheVenomous, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1091u, NameID = 14628u, SortOrder = 10)]
-public sealed class BorgnyTheVenomous(WorldState ws, Actor primary) : BossModule(ws, primary, new(920f, -420f), arena) {
-    private static readonly WPos[] vertices = [new(922.280f, -439.819f), new(926.103f, -438.993f), new(929.691f, -437.438f), new(932.907f, -435.212f), new(935.626f, -432.402f),
-        new(937.746f, -429.115f), new(939.231f, -425.492f), new(939.933f, -421.634f), new(939.869f, -417.714f), new(939.344f, -415.522f),
-        new(939.069f, -415.069f), new(938.960f, -413.820f), new(937.438f, -410.309f), new(935.212f, -407.093f), new(932.402f, -404.374f),
-        new(929.115f, -402.254f), new(925.478f, -400.817f), new(921.630f, -400.117f), new(917.720f, -400.181f), new(913.897f, -401.007f),
-        new(910.309f, -402.562f), new(907.093f, -404.788f), new(904.374f, -407.598f), new(902.254f, -410.885f), new(900.817f, -414.522f),
-        new(900.571f, -415.877f), new(900.562f, -416.204f), new(900.513f, -416.193f), new(900.117f, -418.370f), new(900.131f, -422.286f),
-        new(900.959f, -426.118f), new(902.518f, -429.715f), new(904.750f, -432.939f), new(907.567f, -435.666f), new(910.885f, -437.746f),
-        new(914.522f, -439.183f), new(918.370f, -439.883f)];
-
-    private static readonly ArenaBoundsCustom arena = new([new PolygonCustom(vertices)]);
+public sealed class BorgnyTheVenomous(WorldState ws, Actor primary) : BossModule(ws, primary, new(920f, -420f), new ArenaBoundsCircle(20.0f)) {
 
     protected override void CalculateModuleAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         var count = hints.PotentialTargets.Count;
