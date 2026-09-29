@@ -1,7 +1,6 @@
 ﻿namespace BossMod.Global.CrucibleOfTheUnbroken.SecondBoard.WyvernPiece;
 
-public enum OID : uint
-{
+public enum OID : uint {
     WyvernPiece = 0x4C58,
     WindSprite = 0x4C5B, // R1.600, x0 (spawn during fight)
     WhirlwindSmall = 0x4C59, // R2.000, x0 (spawn during fight), mixed types
@@ -10,8 +9,7 @@ public enum OID : uint
     Helper = 0x233C
 }
 
-public enum AID : uint
-{
+public enum AID : uint {
     AutoAttack = 49680, // WyvernPiece->player, no cast, single-target
     Teleport = 48173, // WyvernPiece->location, no cast, single-target
     TheStormsGrip = 48166, // WyvernPiece->self, 4.0s cast, range 60 circle
@@ -26,73 +24,140 @@ public enum AID : uint
     StormTrail = 48178, // Helper->self, 6.0s cast, range 25 60.000-degree cone
 }
 
-public enum SID : uint
-{
+public enum SID : uint {
     Burns = 3065, // none->player, extra=0x0
     Burns1 = 3066, // none->player, extra=0x0
 }
 
-//sealed class TheStormsGrip(BossModule module) : Components.RaidwideCast(module, (uint)AID.TheStormsGrip); // TODO confirm this is not a raidwide
 sealed class Buffet(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Buffet, new AOEShapeRect(40.0f, 5.0f));
-sealed class Typhoon(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Typhoon, 10.0f); // TODO add AI
 sealed class LiquidHell(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LiquidHell, 6.0f);
 sealed class BlazingTrail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlazingTrail, new AOEShapeCone(60.0f, 90.0f.Degrees()));
 sealed class StormTrail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StormTrail, new AOEShapeCone(25.0f, 30.0f.Degrees()));
-sealed class LiquidHellPuddle(BossModule module) : Components.Voidzone(module, 5.0f,
-    module => module.Enemies((uint)OID.LiquidHellPuddle).Where(z => z.EventState != 7));
 
-sealed class Whirlwind(BossModule module) : Components.GenericAOEs(module)
-{
-    private AOEInstance[] aoes = [];
-    private readonly List<Actor> puddles = [];
-
-    public override void OnActorCreated(Actor actor)
-    {
-        if (actor.OID is (uint)OID.WhirlwindSmall or (uint)OID.WhirlwindBig)
-        {
-            puddles.Add(actor);
+sealed class LiquidHellPuddle(BossModule module) : Components.Voidzone(module, 5.0f, GetVoidzones) {
+    private static Actor[] GetVoidzones(BossModule module) {
+        var enemies = module.Enemies((uint)OID.LiquidHellPuddle);
+        var count = enemies.Count;
+        if (count == 0) {
+            return [];
         }
-    }
 
-    public override void OnActorDestroyed(Actor actor)
-    {
-        if (actor.OID is (uint)OID.WhirlwindSmall or (uint)OID.WhirlwindBig)
-        {
-            puddles.Remove(actor);
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i) {
+            var z = enemies[i];
+            if (z.EventState != 7)
+                voidzones[index++] = z;
         }
+        return voidzones[..index];
     }
+}
 
-    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
-    {
-        return aoes;
-    }
+sealed class Typhoon(BossModule module) : Components.SimpleKnockbacks(module, (uint)AID.Typhoon, 10.0f) {
+    private readonly LiquidHellPuddle? liquidHellPuddle = module.FindComponent<LiquidHellPuddle>();
+    private readonly Buffet? buffet = module.FindComponent<Buffet>();
 
-    public override void Update()
-    {
-        var count = puddles.Count;
-        aoes = new AOEInstance[count];
-        for (var i = 0; i < count; ++i)
-        {
-            var puddle = puddles[i];
-            AOEShapeCapsule shape = puddle.OID == (uint)OID.WhirlwindSmall ? new AOEShapeCapsule(2.0f, 2.5f) : new AOEShapeCapsule(3.0f, 3.5f);
-            aoes[i] = new(shape, puddle.Position, puddle.Rotation, color: Colors.Danger);
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        var count = Casters.Count;
+        if (count == 0) {
+            return;
+        }
+
+        var knockback = Casters[0];
+        if (IsImmune(slot, knockback.Activation)) {
+            return;
+        }
+
+        List<WPos> circles = [];
+        if (liquidHellPuddle != null) {
+            foreach (var puddle in liquidHellPuddle.ActiveAOEs(slot, actor)) {
+                circles.Add(puddle.Origin);
+            }
+        }
+
+        if (circles.Count != 0) {
+            hints.AddForbiddenZone(new SDKnockbackInAABBRectAwayFromOriginPlusIntersectAOECircles(Arena.Center, knockback.Origin, Distance, 19.0f, 13.8f,
+                [.. circles], 5.0f, circles.Count), knockback.Activation);
+        }
+
+        List<(WPos origin, WDir direction)> rects = [];
+        if (buffet != null) {
+            foreach (var aoe in buffet.ActiveAOEs(slot, actor)) {
+                rects.Add((aoe.Origin, aoe.Rotation.ToDirection()));
+            }
+        }
+
+        if (rects.Count != 0) {
+            hints.AddForbiddenZone(new SDKnockbackInAABBRectAwayFromOriginPlusAOERects(Arena.Center, knockback.Origin, Distance, 19.0f, 13.8f, [.. rects],
+                40.0f, 5.0f, rects.Count), knockback.Activation);
         }
     }
 }
 
-sealed class WyvernPieceStates : StateMachineBuilder
-{
-    public WyvernPieceStates(BossModule module) : base(module)
-    {
+sealed class Whirlwind(BossModule module) : Components.GenericAOEs(module) {
+    private AOEInstance[] aoes = [];
+    private readonly List<Actor> puddles = [];
+    private readonly AOEShapeCapsule smallWhirlwind = new(2.0f, 2.5f);
+    private readonly AOEShapeCapsule bigWhirlwind = new(3.0f, 3.5f);
+
+    public override void OnActorCreated(Actor actor) {
+        if (actor.OID is (uint)OID.WhirlwindSmall or (uint)OID.WhirlwindBig) {
+            puddles.Add(actor);
+        }
+    }
+
+    public override void OnActorDestroyed(Actor actor) {
+        if (actor.OID is (uint)OID.WhirlwindSmall or (uint)OID.WhirlwindBig) {
+            puddles.Remove(actor);
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return aoes;
+    }
+
+    public override void Update() {
+        var count = puddles.Count;
+        aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i) {
+            var puddle = puddles[i];
+            AOEShapeCapsule shape = puddle.OID == (uint)OID.WhirlwindSmall ? smallWhirlwind : bigWhirlwind;
+            aoes[i] = new(shape, puddle.Position, puddle.Rotation, color: Colors.Danger);
+        }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        var count = puddles.Count;
+        if (count == 0) {
+            return;
+        }
+
+        var forbiddenNearFuture = WorldState.FutureTime(1.1d);
+        var forbiddenFarFuture = WorldState.FutureTime(5.0d);
+
+        for (var i = 0; i < count; i++) {
+            var puddle = puddles[i];
+            var position = puddle.Position;
+            var rotation = puddle.Rotation;
+            var shape = puddle.OID == (uint)OID.WhirlwindSmall ? smallWhirlwind : bigWhirlwind;
+
+            hints.AddForbiddenZone(new SDCapsule(position, rotation, shape.Length, shape.Radius), forbiddenNearFuture);
+            hints.AddForbiddenZone(new SDCapsule(position, rotation, shape.Length * 1.5f, shape.Radius), forbiddenFarFuture);
+            hints.TemporaryObstacles.Add(new SDCircle(position.Quantized(), shape.Radius));
+        }
+    }
+}
+
+sealed class WyvernPieceStates : StateMachineBuilder {
+    public WyvernPieceStates(BossModule module) : base(module) {
         TrivialPhase()
-            //.ActivateOnEnter<TheStormsGrip>()
             .ActivateOnEnter<Buffet>()
-            .ActivateOnEnter<Typhoon>()
             .ActivateOnEnter<LiquidHell>()
             .ActivateOnEnter<Whirlwind>()
             .ActivateOnEnter<LiquidHellPuddle>()
             .ActivateOnEnter<BlazingTrail>()
-            .ActivateOnEnter<StormTrail>();
+            .ActivateOnEnter<StormTrail>()
+            .ActivateOnEnter<Typhoon>();
     }
 }
 
