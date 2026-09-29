@@ -66,14 +66,15 @@ sealed class ParalyzingSpikes(BossModule module) : Components.Adds(module, (uint
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
-        base.AddAIHints(slot, actor, assignment, hints);
-        var count = avoidBosses.Count;
+        var enemies = ActiveActors;
+        var count = enemies.Count;
         if (count == 0) {
             return;
         }
 
         for (var i = 0; i < count; i++) {
-            hints.SetPriority(avoidBosses[i], AIHints.Enemy.PriorityForbidden);
+            var enemy = enemies[i];
+            hints.SetPriority(enemy, avoidBosses.Contains(enemy) ? AIHints.Enemy.PriorityForbidden : 3);
         }
     }
 }
@@ -107,14 +108,15 @@ sealed class VulnDown(BossModule module) : Components.Adds(module, (uint)OID.Ymi
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
-        base.AddAIHints(slot, actor, assignment, hints);
-        var count = avoidBosses.Count;
+        var enemies = ActiveActors;
+        var count = enemies.Count;
         if (count == 0) {
             return;
         }
 
         for (var i = 0; i < count; i++) {
-            hints.SetPriority(avoidBosses[i], AIHints.Enemy.PriorityForbidden);
+            var enemy = enemies[i];
+            hints.SetPriority(enemy, avoidBosses.Contains(enemy) ? AIHints.Enemy.PriorityForbidden : 1);
         }
     }
 }

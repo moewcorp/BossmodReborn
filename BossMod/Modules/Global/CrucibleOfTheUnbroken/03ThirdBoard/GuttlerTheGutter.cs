@@ -159,7 +159,7 @@ sealed class DeadlyDemesne(BossModule module) : Components.GenericAOEs(module)
 }
 
 sealed class MoltenMetalBait(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCircle(6.0f), (uint)IconID.MoltenMetal, centerAtTarget: true) {
-    private readonly WPos[] safeSpots = [new WPos(520.0f, -440.0f), new WPos(520.0f, -400.0f)];
+    private readonly WPos[] waypoints = [new WPos(520.0f, -440.0f), new WPos(520.0f, -400.0f)];
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
         if (spell.Action.ID == (uint)AID.MoltenMetalBaitCircle) {
@@ -180,18 +180,16 @@ sealed class MoltenMetalBait(BossModule module) : Components.BaitAwayIcon(module
             return;
         }
 
-        var closestSpot = safeSpots[0];
-        var bestDistance = float.MaxValue;
-
-        foreach (var spot in safeSpots) {
-            var distance = (spot - actor.Position).LengthSq();
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                closestSpot = spot;
-            }
+        List<ShapeDistance> safeSpots = [];
+        foreach (var spot in waypoints) {
+            safeSpots.Add(new SDCircle(spot, 2.0f));
         }
 
-        hints.AddForbiddenZone(new SDInvertedCircle(closestSpot, 2.0f));
+        if (safeSpots.Count == 0) {
+            return;
+        }
+
+        hints.AddForbiddenZone(new SDInvertedUnion([..safeSpots]));
     }
 }
 
