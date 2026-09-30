@@ -51,10 +51,13 @@ sealed class SunderingSpellblade(BossModule module) : Components.GenericAOEs(mod
         if (spell.Action.ID == (uint)AID.SunderingSpellblade)
         {
             List<AOEInstance> aoes = [];
-            var initialPosition = caster.Position;
-            var initialRotation = caster.Rotation;
+            //var initialPosition = caster.Position;
+            //var initialRotation = caster.Rotation;
+            var initialPosition = spell.LocXZ;
+            var initialRotation = spell.Rotation;
             var initialTime = Module.CastFinishAt(spell);
 
+            /*
             var isLeft = initialPosition.X switch
             {
                 -25.008f => false,
@@ -65,6 +68,10 @@ sealed class SunderingSpellblade(BossModule module) : Components.GenericAOEs(mod
                 25.008f => true,
                 _ => false
             };
+            */
+
+            var x = initialPosition.X;
+            var isLeft = x is >= -22.25f and <= -21.25f or >= -3.75f and <= -2.75f or >= 24.5f and <= 25.5f;
 
             for (var i = 0; i < 9; ++i)
             {

@@ -6,7 +6,8 @@ sealed class FTME1TwoHeadedAevisStates : StateMachineBuilder
     public FTME1TwoHeadedAevisStates(FTME1TwoHeadedAevis module) : base(module)
     {
         _module = module;
-        DeathPhase(0u, SinglePhase);
+        DeathPhase(0u, SinglePhase)
+            .Raw.Update = () => AllDeadOrDestroyed(FTME1TwoHeadedAevis.Bosses);
     }
 
     private void SinglePhase(uint id)
@@ -71,7 +72,7 @@ sealed class FTME1TwoHeadedAevisStates : StateMachineBuilder
 
     private void CrossBlazeLoop(uint id, float delay)
     {
-        Condition(id, delay, () => _module.Green1()?.CastInfo?.Action.ID == (uint)AID.BlazeFirstCast || _module.Blue1()?.CastInfo?.Action.ID == (uint)AID.BlazeFirstCast)
+        Condition(id, delay, () => _module.Green1()?.CastInfo?.Action.ID == (uint)AID.BlazeFirstCast || _module.Blue1()?.CastInfo?.Action.ID == (uint)AID.BlazeFirstCast, "Cross Blaze Loop start")
             .ActivateOnEnter<CrossBlazeLoop>();
         ComponentCondition<CrossBlazeLoop>(id + 0x1000u, 25.1f, static comp => comp.AOEs.Count == 0, "Cross Blaze Loop ends")
             .DeactivateOnExit<CrossBlazeLoop>();
