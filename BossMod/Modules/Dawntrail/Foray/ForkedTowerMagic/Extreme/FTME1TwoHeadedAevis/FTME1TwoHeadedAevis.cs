@@ -2,12 +2,12 @@
 
 sealed class FreezingFugue(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FreezingFugue1, (uint)AID.FreezingFugue2, (uint)AID.FreezingFugue3], 20f);
 sealed class PoisonBreath(BossModule module) : Components.SimpleAOEs(module, (uint)AID.PoisonBreath, 18f);
-sealed class FulgurousFugue(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FulgurousFugue1, (uint)AID.FulgurousFugue2, (uint)AID.FulgurousFugue3], new AOEShapeDonut(20f, 60f));
+sealed class FulgurousFugue(BossModule module) : Components.SimpleAOEGroups(module, [(uint)AID.FulgurousFugue1, (uint)AID.FulgurousFugue2, (uint)AID.FulgurousFugue3], new AOEShapeDonut(18f, 60f));
 sealed class FreezingFulgurousFugue(BossModule module) : Components.GenericAOEs(module)
 {
     public readonly List<AOEInstance> AOEs = [];
     private readonly AOEShapeCircle _circle = new(20f);
-    private readonly AOEShapeDonut _donut = new(20f, 60f);
+    private readonly AOEShapeDonut _donut = new(18f, 60f);
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor)
     {
@@ -190,6 +190,7 @@ sealed class ArcaneRevelation(BossModule module) : Components.GenericAOEs(module
 [ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.GreenHead, Contributors = "gynorhino", GroupType = BossModuleInfo.GroupType.TheForkedTowerMagicExtreme, GroupID = 1114u, NameID = 14490u, SortOrder = 1, PlanLevel = 100)]
 public sealed class FTME1TwoHeadedAevis(WorldState ws, Actor primary) : BossModule(ws, primary, new(-900f, 700f), new ArenaBoundsSquare(20f))
 {
+    public static uint[] Bosses = [(uint)OID.GreenHead, (uint)OID.BlueHead];
     private Actor? _blueHead;
     private Actor? _green1;
     private Actor? _blue1;
@@ -220,8 +221,5 @@ public sealed class FTME1TwoHeadedAevis(WorldState ws, Actor primary) : BossModu
         Arena.Actor(_blueHead);
     }
 
-    protected override bool CheckPull()
-    {
-        return PrimaryActor.InCombat && Raid.Player()!.Position.InSquare(Arena.Center, 20f);
-    }
+    protected override bool CheckPull() => (PrimaryActor.InCombat || (_blueHead?.InCombat ?? false)) && Raid.Player()!.Position.InSquare(Arena.Center, 20f);
 }
