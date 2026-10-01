@@ -29,7 +29,6 @@ public enum SID : uint {
     Burns1 = 3066, // none->player, extra=0x0
 }
 
-sealed class Buffet(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Buffet, new AOEShapeRect(40.0f, 5.0f));
 sealed class LiquidHell(BossModule module) : Components.SimpleAOEs(module, (uint)AID.LiquidHell, 6.0f);
 sealed class BlazingTrail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlazingTrail, new AOEShapeCone(60.0f, 90.0f.Degrees()));
 sealed class StormTrail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.StormTrail, new AOEShapeCone(25.0f, 30.0f.Degrees()));
@@ -94,20 +93,19 @@ sealed class Typhoon(BossModule module) : Components.SimpleKnockbacks(module, (u
     }
 }
 
-sealed class Whirlwind(BossModule module) : Components.GenericAOEs(module) {
+sealed class WhirlwindSmall(BossModule module) : Components.GenericAOEs(module) {
     private AOEInstance[] aoes = [];
     private readonly List<Actor> puddles = [];
-    private readonly AOEShapeCapsule smallWhirlwind = new(2.0f, 2.5f);
-    private readonly AOEShapeCapsule bigWhirlwind = new(3.0f, 3.5f);
+    private readonly AOEShapeCapsule shape = new(2.0f, 2.5f);
 
     public override void OnActorCreated(Actor actor) {
-        if (actor.OID is (uint)OID.WhirlwindSmall or (uint)OID.WhirlwindBig) {
+        if (actor.OID is (uint)OID.WhirlwindSmall) {
             puddles.Add(actor);
         }
     }
 
     public override void OnActorDestroyed(Actor actor) {
-        if (actor.OID is (uint)OID.WhirlwindSmall or (uint)OID.WhirlwindBig) {
+        if (actor.OID is (uint)OID.WhirlwindSmall) {
             puddles.Remove(actor);
         }
     }
@@ -121,7 +119,6 @@ sealed class Whirlwind(BossModule module) : Components.GenericAOEs(module) {
         aoes = new AOEInstance[count];
         for (var i = 0; i < count; ++i) {
             var puddle = puddles[i];
-            AOEShapeCapsule shape = puddle.OID == (uint)OID.WhirlwindSmall ? smallWhirlwind : bigWhirlwind;
             aoes[i] = new(shape, puddle.Position, puddle.Rotation, color: Colors.Danger);
         }
     }
@@ -132,34 +129,109 @@ sealed class Whirlwind(BossModule module) : Components.GenericAOEs(module) {
             return;
         }
 
-        var forbiddenNearFuture = WorldState.FutureTime(1.1d);
+        var forbiddenSoon = WorldState.FutureTime(1.1d);
+
+        for (var i = 0; i < count; i++) {
+            var puddle = puddles[i];
+            var position = puddle.Position;
+            var rotation = puddle.Rotation;
+            hints.TemporaryObstacles.Add(new SDCapsule(position, rotation, shape.Length, shape.Radius));
+            hints.AddForbiddenZone(new SDCapsule(position, rotation, shape.Length * 1.5f, shape.Radius), forbiddenSoon);
+            hints.TemporaryObstacles.Add(new SDCircle(position.Quantized(), shape.Radius));
+        }
+    }
+}
+
+// Split from the other Whirlwind component so we can change how the Buffet aoe works for the pathfinder
+sealed class WhirlwindBig(BossModule module) : Components.GenericAOEs(module) {
+    private AOEInstance[] aoes = [];
+    private readonly List<Actor> puddles = [];
+    private readonly AOEShapeCapsule shape = new(3.0f, 3.5f);
+
+    public override void OnActorCreated(Actor actor) {
+        if (actor.OID is (uint)OID.WhirlwindBig) {
+            puddles.Add(actor);
+        }
+    }
+
+    public override void OnActorDestroyed(Actor actor) {
+        if (actor.OID is (uint)OID.WhirlwindBig) {
+            puddles.Remove(actor);
+        }
+    }
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        return aoes;
+    }
+
+    public override void Update() {
+        var count = puddles.Count;
+        aoes = new AOEInstance[count];
+        for (var i = 0; i < count; ++i) {
+            var puddle = puddles[i];
+            aoes[i] = new(shape, puddle.Position, puddle.Rotation, color: Colors.Danger);
+        }
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        var count = puddles.Count;
+        if (count == 0) {
+            return;
+        }
+
+        var forbiddenSoon = WorldState.FutureTime(1.1d);
         var forbiddenFarFuture = WorldState.FutureTime(5.0d);
 
         for (var i = 0; i < count; i++) {
             var puddle = puddles[i];
             var position = puddle.Position;
             var rotation = puddle.Rotation;
-            var shape = puddle.OID == (uint)OID.WhirlwindSmall ? smallWhirlwind : bigWhirlwind;
-
-            hints.AddForbiddenZone(new SDCapsule(position, rotation, shape.Length, shape.Radius), forbiddenNearFuture);
+            hints.AddForbiddenZone(new SDCapsule(position, rotation, shape.Length, shape.Radius), forbiddenSoon);
             hints.AddForbiddenZone(new SDCapsule(position, rotation, shape.Length * 1.5f, shape.Radius), forbiddenFarFuture);
             hints.TemporaryObstacles.Add(new SDCircle(position.Quantized(), shape.Radius));
         }
     }
 }
 
-sealed class WyvernPieceStates : StateMachineBuilder {
-    public WyvernPieceStates(BossModule module) : base(module) {
-        TrivialPhase()
-            .ActivateOnEnter<Buffet>()
-            .ActivateOnEnter<LiquidHell>()
-            .ActivateOnEnter<Whirlwind>()
-            .ActivateOnEnter<LiquidHellPuddle>()
-            .ActivateOnEnter<BlazingTrail>()
-            .ActivateOnEnter<StormTrail>()
-            .ActivateOnEnter<Typhoon>();
+sealed class Buffet(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Buffet, new AOEShapeRect(40.0f, 5.0f)) {
+    private readonly WhirlwindBig? whirlwindBig = module.FindComponent<WhirlwindBig>();
+
+    public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) {
+        var count = Casters.Count;
+        if (count == 0) {
+            return [];
+        }
+
+        var aoes = CollectionsMarshal.AsSpan(Casters);
+
+        // if there are no big whirlwind then we do return the aoe with its standard activation aoe
+        if (whirlwindBig== null || whirlwindBig.ActiveAOEs(slot, actor).Length == 0) {
+            return aoes;
+        }
+
+        // if we have big whirlwinds then we set the timer for the buffet aoe to max so the pathfinder doesn't get confused dodging all the different aoes
+        for (var i = 0; i < count; i++) {
+            ref var aoe = ref aoes[i];
+            aoe.Activation = DateTime.MaxValue;
+        }
+
+        return aoes;
     }
 }
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.WyvernPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1089u, NameID = 14549u, SortOrder = 2)]
+sealed class WyvernPieceStates : StateMachineBuilder {
+    public WyvernPieceStates(BossModule module) : base(module) {
+        TrivialPhase()
+            .ActivateOnEnter<LiquidHell>()
+            .ActivateOnEnter<WhirlwindSmall>()
+            .ActivateOnEnter<WhirlwindBig>()
+            .ActivateOnEnter<LiquidHellPuddle>()
+            .ActivateOnEnter<StormTrail>()
+            .ActivateOnEnter<Buffet>()
+            .ActivateOnEnter<Typhoon>()
+            .ActivateOnEnter<BlazingTrail>();
+    }
+}
+
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.WyvernPiece, Contributors = "Equilius", GroupType = BossModuleInfo.GroupType.CrucibleOfTheUnbroken, GroupID = 1089u, NameID = 14549u, SortOrder = 2)]
 public sealed class WyvernPiece(WorldState ws, Actor primary) : BossModule(ws, primary, new(520f, 0f), new ArenaBoundsRect(20f, 14.8f));
