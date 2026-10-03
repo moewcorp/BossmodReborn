@@ -192,7 +192,7 @@ public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<A
     {
         // combo continuations
         if (ComboLastMove is AID.Scorch)
-            PushGCD(AID.Resolution, BestLineTarget, GCDPriority.Combo);
+            PushGCD(AID.Resolution, BestLineTarget, GCDPriority.Combo, setRotation: NumLineTargets > 1);
 
         if (ComboLastMove is AID.Verflare or AID.Verholy)
             PushGCD(AID.Scorch, BestAOETarget, GCDPriority.Combo);
