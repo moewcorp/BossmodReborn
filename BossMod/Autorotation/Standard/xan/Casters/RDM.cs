@@ -195,7 +195,7 @@ public sealed class RDM(RotationModuleManager manager, Actor player) : Castxan<A
             PushGCD(AID.Resolution, BestLineTarget, GCDPriority.Combo);
 
         if (ComboLastMove is AID.Verflare or AID.Verholy)
-            PushGCD(AID.Resolution, BestLineTarget, GCDPriority.Combo, setRotation: NumLineTargets > 1);
+            PushGCD(AID.Scorch, BestAOETarget, GCDPriority.Combo);
 
         if (Stacks == 3)
             PushGCD(BlackMana > WhiteMana ? AID.Verholy : AID.Verflare, BestAOETarget, GCDPriority.Combo);
