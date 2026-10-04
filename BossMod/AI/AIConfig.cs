@@ -56,10 +56,10 @@ sealed class AIConfig : ConfigNode
     public float GetMaxDistanceToTarget(Role role) => role is Role.Melee or Role.Tank ? MaxDistanceToTargetMelee : MaxDistanceToTargetRanged;
 
     [PropertyDisplay("到目标圈的最小距离")]
-    public float MinDistance = default;
+    public float MinDistance = 0f;
 
-    [PropertyDisplay("距禁区的优选距离")]
-    public float PreferredDistance = default;
+    [PropertyDisplay("距禁区的优选距离", tooltip: "Internally reduced to maximum 3y to preserve useful pathfinding.")]
+    public float PreferredDistance = 0f;
 
     [PropertyDisplay("启用自动挂机", tooltip: "脱离战斗时启用自动挂机。挂机期间，AI不会使用自动循环或瞄准任何目标")]
     public bool AutoAFK = false;
