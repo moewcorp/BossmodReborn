@@ -58,7 +58,7 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("到目标圈的最小距离")]
     public float MinDistance = 0f;
 
-    [PropertyDisplay("距禁区的优选距离", tooltip: "Internally reduced to maximum 3y to preserve useful pathfinding.")]
+    [PropertyDisplay("距禁区的优选距离", tooltip: "内部会限制为最大 3 码，以保留可用的寻路功能。")]
     public float PreferredDistance = 0f;
 
     [PropertyDisplay("启用自动挂机", tooltip: "脱离战斗时启用自动挂机。挂机期间，AI不会使用自动循环或瞄准任何目标")]
