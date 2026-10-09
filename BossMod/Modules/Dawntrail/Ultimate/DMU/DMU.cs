@@ -1,42 +1,14 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
-// Whenever the boss auto-attacks a player, this will be deactivated as combat has started
-// TODO improve this, auto-attack is actually like 2.0 seconds after combat starts, is there a flag to know when in-combat?
-sealed class Hints(BossModule module) : BossComponent(module) {
-    public bool active = true;
-    private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
-    private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
-
-    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
-        if (spell.Action.ID == (uint)AID.P1AutoAttack) {
-            active = false;
-        }
-    }
-
-    public override void AddHints(int slot, Actor actor, TextHints hints) {
-        if (dmuConfig.partyRolesWarning) {
-            var slots = partyConfig.SlotsPerAssignment(Raid);
-            if (slots.Length == 0) {
-                hints.Add("Party roles assignment are not configured!");
-            }
-        }
-    }
-}
-
 [ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.Kefka, Contributors = "Equilius", Expansion = BossModuleInfo.Expansion.Dawntrail,
     Category = BossModuleInfo.Category.Ultimate, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1094u, NameID = 7131u, SortOrder = 1, PlanLevel = 100)]
-public sealed class DMU : BossModule
-{
+public sealed class DMU : BossModule {
     public DMU(WorldState ws, Actor primary) : this(ws, primary, BuildArena()) { }
 
-    private DMU(WorldState ws, Actor primary, (WPos center, ArenaBoundsCustom arena) a) : base(ws, primary, a.center, a.arena) {
-        ActivateComponent<Hints>();
-    }
+    private DMU(WorldState ws, Actor primary, (WPos center, ArenaBoundsCustom arena) a) : base(ws, primary, a.center, a.arena) { }
 
-    public static (WPos center, ArenaBoundsCustom arena) BuildArena()
-    {
-        var arena = new ArenaBoundsCustom([new Polygon(new(100f, 100f), 20f, 64)])
-        {
+    public static (WPos center, ArenaBoundsCustom arena) BuildArena() {
+        var arena = new ArenaBoundsCustom([new Polygon(new(100f, 100f), 20f, 64)]) {
             WorldProjectionHeight = 0f, Y = 0.1f, BorderY = 0f
         }; // looks ugly if we use any projection height due to weird floor geometry
         return (arena.Center, arena);
@@ -64,10 +36,8 @@ public sealed class DMU : BossModule
     private Actor? kefkaP5;
     public Actor? KefkaP5() => kefkaP5;
 
-    protected override void DrawEnemies(int pcSlot, Actor pc)
-    {
-        switch (StateMachine.ActivePhaseIndex)
-        {
+    protected override void DrawEnemies(int pcSlot, Actor pc) {
+        switch (StateMachine.ActivePhaseIndex) {
             case -1:
             case 0:
                 Arena.Actor(PrimaryActor);
@@ -89,10 +59,8 @@ public sealed class DMU : BossModule
         }
     }
 
-    protected override void UpdateModule()
-    {
-        switch (StateMachine.ActivePhaseIndex)
-        {
+    protected override void UpdateModule() {
+        switch (StateMachine.ActivePhaseIndex) {
             case 1:
                 bossP2 ??= GetActor((uint)OID.BossP2);
                 break;
@@ -111,4 +79,11 @@ public sealed class DMU : BossModule
                 break;
         }
     }
+
+    private readonly string[] _prePullHints = [
+        "This fight requires party role assignments to be configured",
+        "This fight has multiple strategies, please config it under Encounter-specific settings",
+    ];
+
+    public override string[] PrePullHints => _prePullHints;
 }

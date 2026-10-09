@@ -10,11 +10,9 @@ Keep gravenImage 3 static and non-static spot option
  */
 
 // TODO
-//  1. Setup specific strat - check it works for modified xolo
 //  2. Setup config so you can pick no strat - make the default freaky arrow
 //  2.1 Setup so it just returns if no strategy is selected for drawning and stuff
 
-// TODO push work
 // TODO setup knockback part
 // TODO setup gravenImage 3 static and non-static spot
 // TODO final mechanic - pre-position and solve it

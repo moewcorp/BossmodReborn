@@ -1,12 +1,10 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
 [ConfigDisplay(Order = 0x400, Parent = typeof(DawntrailConfig))]
-public sealed class DMUConfig : ConfigNode
-{
-
-    // Strategy settings
-    [PropertyDisplay("Module warning if party roles assignment are not configured!", tooltip: "The warning will only be displayed before combat starts")]
-    public bool partyRolesWarning = false;
+public sealed class DMUConfig : ConfigNode {
+    [SectionStart("Strategy Settings")]
+    [PropertyDisplay("P1 Graven Image 1 strategy")]
+    public P1GravenImage1Strategy P1GravenImage1 = P1GravenImage1Strategy.GravenImage1None;
 
     public enum P1GravenImage1Strategy {
         [PropertyDisplay("None")]
@@ -15,9 +13,6 @@ public sealed class DMUConfig : ConfigNode
         [PropertyDisplay("LPDU Graven Image 1")]
         GravenImage1LPDU,
     }
-
-    [PropertyDisplay("P1 Graven Image 1 strategy")]
-    public P1GravenImage1Strategy P1GravenImage1 = P1GravenImage1Strategy.GravenImage1None;
 
     [PropertyDisplay("P1 Wave Cannon conga priority", tooltip: "Conga order is West to East")]
     [GroupDetails(["1", "2", "3", "4", "5", "6", "7", "8"])]
@@ -80,7 +75,7 @@ public sealed class DMUConfig : ConfigNode
     [PropertyDisplay("P2 Forsaken strategy")]
     public P2ForsakenStrategy P2Forsaken = P2ForsakenStrategy.Meow_Markerless;
 
-    // AI Settings
+    [SectionStart("AI Settings")]
     [PropertyDisplay("P1 RevoltingRuinIII always around true north?", tooltip: "Only used by AI")]
     public bool P1RevoltingRuinIIIAlwaysAroundTrueNorth = true;
 
@@ -98,7 +93,7 @@ public sealed class DMUConfig : ConfigNode
     [PropertyCombo("MT", "OT")]
     public bool P1HyperDriveBait1OT = false;
 
-    // Debug Settings
+    [SectionStart("Debug Settings")]
     [PropertyDisplay("P1 Graven Image 1 knockback additional hints", tooltip: "Only used for debugging - H1 & R1 roles will still have to move a fair amount " +
                                                                               " if north is safe, other roles will only have to do slight adjustments")]
     public bool P1GravenImage1KnockbackAdditionalHints = false;
