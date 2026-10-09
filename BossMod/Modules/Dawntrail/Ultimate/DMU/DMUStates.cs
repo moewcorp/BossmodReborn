@@ -144,7 +144,7 @@ sealed class DMUStates : StateMachineBuilder
             .ActivateOnEnter<GrandCrossOrder>()
             .ActivateOnEnter<TsunamiInfernoOrder>();
 
-        ActorCastStart(id + 0x10, _module.KefkaP4, (uint)AID.MysteryMagic, 4.6f, true, "Mystery Magic")
+        ActorCastStart(id + 0x10, _module.KefkaP4, AID.MysteryMagic, 4.6f, true, "Mystery Magic")
             .ActivateOnEnter<BlizzardIIIBlowout>()
             .ActivateOnEnter<LightningSafeSpots>()
             .ExecOnEnter<BlizzardIIIBlowout>(static o => o.Risky = true)
@@ -163,7 +163,7 @@ sealed class DMUStates : StateMachineBuilder
             .DeactivateOnExit<TsunamiRaidwide>()
             .DeactivateOnExit<InfernoRaidwide>();
 
-        ActorCastStart(id + 0x50, _module.KefkaP4, (uint)AID.MysteryMagic, 0.5f, true, "Mystery Magic")
+        ActorCastStart(id + 0x50, _module.KefkaP4, AID.MysteryMagic, 0.5f, true, "Mystery Magic")
             .ActivateOnEnter<BlizzardIIIBlowout>()
             .ActivateOnEnter<LightningSafeSpots>()
             .ExecOnEnter<BlizzardIIIBlowout>(static o => o.Risky = true)
@@ -182,7 +182,7 @@ sealed class DMUStates : StateMachineBuilder
             .DeactivateOnExit<TsunamiRaidwide>()
             .DeactivateOnExit<InfernoRaidwide>();
 
-        ActorCastStart(id + 0x90, _module.KefkaP4, (uint)AID.MysteryMagic, 0.7f, true, "Mystery Magic")
+        ActorCastStart(id + 0x90, _module.KefkaP4, AID.MysteryMagic, 0.7f, true, "Mystery Magic")
             .ActivateOnEnter<BlizzardIIIBlowout>()
             .ActivateOnEnter<LightningSafeSpots>()
             .ExecOnEnter<BlizzardIIIBlowout>(static o => o.Risky = true)
@@ -629,7 +629,7 @@ sealed class DMUStates : StateMachineBuilder
             .DeactivateOnExit<Hints>()
             .ActivateOnEnter<RevoltingRuinIIIFirst>()
             .ActivateOnEnter<RevoltingRuinIIISecond>();
-        CastStart(id, (uint)AID.RevoltingRuinIIIFirstHit, delay)
+        CastStart(id, AID.RevoltingRuinIIIFirstHit, delay)
             .ExecOnEnter<RevoltingRuinIIIFirst>(static o => o.EnableHints = true);
         ComponentCondition<RevoltingRuinIIIFirst>(id + 0x10, 5.1f, static o => o.NumCasts > 0, "1st Tankbuster Resolve")
             .DeactivateOnExit<RevoltingRuinIIIFirst>()
@@ -639,11 +639,11 @@ sealed class DMUStates : StateMachineBuilder
     }
 
     void Phase1GravenImage(uint id, float delay) {
-        Cast(id + 0x10, (uint)AID.GravenImage, delay, 3.0f, "Graven Image")
+        Cast(id + 0x10, AID.GravenImage, delay, 3.0f, "Graven Image")
             .ActivateOnEnter<PulseWave>()
             .ActivateOnEnter<BlizzardIIIBlowoutGraven1>()
             .ActivateOnEnter<FlagrantFire>();
-        CastStart(id + 0x20, (uint)AID.MysteryMagic, 3.2f);
+        CastStart(id + 0x20, AID.MysteryMagic, 3.2f);
         ComponentCondition<PulseWave>(id + 0x30, 2.6f, static o => o.NumCasts == 4, "Knockbacks")
             .DeactivateOnExit<PulseWave>()
             .ExecOnExit<BlizzardIIIBlowoutGraven1>(o => o.Risky = true);
@@ -691,7 +691,7 @@ sealed class DMUStates : StateMachineBuilder
         ComponentCondition<HyperDrive>(id + 0x120, 2.1f, static o => o.NumCasts > 2, "3rd Tankbuster")
             .DeactivateOnExit<HyperDrive>();
 
-        CastStart(id + 0x130, (uint)AID.GravenImage, 7.3f, "Graven Image")
+        CastStart(id + 0x130, AID.GravenImage, 7.3f, "Graven Image")
             .ActivateOnEnter<BlizzardIIIBlowout>()
             .ExecOnEnter<BlizzardIIIBlowout>(static o => o.Risky = true)
             .ActivateOnEnter<Gravitas>()
@@ -705,7 +705,7 @@ sealed class DMUStates : StateMachineBuilder
             .ActivateOnExit<RevoltingRuinIIISecond>()
             .ActivateOnExit<GravitationalWave>()
             .ExecOnExit<GravitationalWave>(static o => o.Risky = true);
-        CastStart(id + 0x160, (uint)AID.RevoltingRuinIIIFirstHit, 0.7f)
+        CastStart(id + 0x160, AID.RevoltingRuinIIIFirstHit, 0.7f)
             .ExecOnEnter<RevoltingRuinIIIFirst>(static o => o.EnableHints = true);
         ComponentCondition<RevoltingRuinIIIFirst>(id + 0x162, 5.0f, static o => o.NumCasts > 0, "1st Tankbuster Resolve")
             .DeactivateOnExit<RevoltingRuinIIIFirst>()
@@ -735,7 +735,7 @@ sealed class DMUStates : StateMachineBuilder
             .DeactivateOnExit<GravitasPuddles>()
             .ActivateOnExit<HyperDrive>(); // Activated early for pre-position movement
 
-        Cast(id + 0x220, (uint)AID.LightOfJudgment, 6.5f, 5.0f, "Raidwide")
+        Cast(id + 0x220, AID.LightOfJudgment, 6.5f, 5.0f, "Raidwide")
             .ActivateOnEnter<LightOfJudgment>()
             .DeactivateOnExit<LightOfJudgment>();
         ComponentCondition<HyperDrive>(id + 0x215, 3.2f, static o => o.NumCasts > 0, "1st Tankbuster");

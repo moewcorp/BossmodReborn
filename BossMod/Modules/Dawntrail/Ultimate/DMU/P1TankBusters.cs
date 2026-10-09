@@ -115,9 +115,9 @@ sealed class RevoltingRuinIIISecond : Components.GenericBaitAway {
         }
     }
 
-    public override void AddGlobalHints(GlobalHints hints) {
+    public override void AddGlobalHints(Actor actor, GlobalHints hints) {
         if (EnableHints) {
-            base.AddGlobalHints(hints);
+            base.AddGlobalHints(actor, hints);
         }
     }
 

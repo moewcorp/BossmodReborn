@@ -29,19 +29,17 @@ public sealed class DMU : BossModule
 {
     public DMU(WorldState ws, Actor primary) : this(ws, primary, BuildArena()) { }
 
-    private DMU(WorldState ws, Actor primary, (WPos center, ArenaBoundsCustom arena) a) : base(ws, primary, a.center, a.arena) { }
+    private DMU(WorldState ws, Actor primary, (WPos center, ArenaBoundsCustom arena) a) : base(ws, primary, a.center, a.arena) {
+        ActivateComponent<Hints>();
+    }
 
     public static (WPos center, ArenaBoundsCustom arena) BuildArena()
     {
-        var arena = new ArenaBoundsCustom([new Polygon(new(100f, 100f), 20f, 64)]) { WorldProjectionHeight = 0f, Y = 0.1f, BorderY = 0f }; // looks ugly if we use any projection height due to weird floor geometry
+        var arena = new ArenaBoundsCustom([new Polygon(new(100f, 100f), 20f, 64)])
+        {
+            WorldProjectionHeight = 0f, Y = 0.1f, BorderY = 0f
+        }; // looks ugly if we use any projection height due to weird floor geometry
         return (arena.Center, arena);
-    }
-
-    public override bool ShouldPrioritizeAllEnemies => true;
-
-public sealed class DMU : BossModule {
-    public DMU(WorldState ws, Actor primary) : base(ws, primary, new(100.000f, 100.000f), new ArenaBoundsCircle(20.0f)) {
-        ActivateComponent<Hints>();
     }
 
     public override bool ShouldPrioritizeAllEnemies => true;
@@ -66,27 +64,6 @@ public sealed class DMU : BossModule {
     private Actor? kefkaP5;
     public Actor? KefkaP5() => kefkaP5;
 
-    protected override void UpdateModule() {
-        switch (StateMachine.ActivePhaseIndex) {
-            case 1:
-                bossP2 ??= GetActor((uint)OID.BossP2);
-                break;
-            case 2:
-                bossP3 ??= GetActor((uint)OID.Kefka);
-                chaosP3 ??= GetActor((uint)OID.Chaos);
-                exdeathP3 ??= GetActor((uint)OID.Exdeath);
-                break;
-            case 3:
-                kefkaP4 ??= GetActor((uint)OID.KefkaP4);
-                chaosP4 ??= GetActor((uint)OID.ChaosP4);
-                neoExdeath ??= GetActor((uint)OID.NeoExdeath);
-                break;
-            case 4:
-                kefkaP5 ??= GetActor((uint)OID.KefkaP5);
-                break;
-        }
-    }
-
     protected override void DrawEnemies(int pcSlot, Actor pc)
     {
         switch (StateMachine.ActivePhaseIndex)
@@ -108,6 +85,29 @@ public sealed class DMU : BossModule {
                 break;
             case 4:
                 Arena.Actor(kefkaP5);
+                break;
+        }
+    }
+
+    protected override void UpdateModule()
+    {
+        switch (StateMachine.ActivePhaseIndex)
+        {
+            case 1:
+                bossP2 ??= GetActor((uint)OID.BossP2);
+                break;
+            case 2:
+                bossP3 ??= GetActor((uint)OID.Kefka);
+                chaosP3 ??= GetActor((uint)OID.Chaos);
+                exdeathP3 ??= GetActor((uint)OID.Exdeath);
+                break;
+            case 3:
+                kefkaP4 ??= GetActor((uint)OID.KefkaP4);
+                chaosP4 ??= GetActor((uint)OID.ChaosP4);
+                neoExdeath ??= GetActor((uint)OID.NeoExdeath);
+                break;
+            case 4:
+                kefkaP5 ??= GetActor((uint)OID.KefkaP5);
                 break;
         }
     }
