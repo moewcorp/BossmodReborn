@@ -9,6 +9,8 @@ sealed class DMUStates : StateMachineBuilder
         _module = module;
 
         SimplePhase(0u, Phase1, "P1")
+            .ActivateOnEnter<RevoltingRuinIIIFirst>()
+            .ActivateOnEnter<RevoltingRuinIIISecond>()
             .Raw.Update = () => !Module.PrimaryActor.IsTargetable;
         SimplePhase(1u, Phase2, "P2")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
@@ -625,9 +627,6 @@ sealed class DMUStates : StateMachineBuilder
     }
 
     void Phase1RevoltingRuinIII(uint id, float delay) {
-        SimpleState(id + 0x01, 0.5f, "")
-            .ActivateOnEnter<RevoltingRuinIIIFirst>()
-            .ActivateOnEnter<RevoltingRuinIIISecond>();
         CastStart(id, AID.RevoltingRuinIIIFirstHit, delay)
             .ExecOnEnter<RevoltingRuinIIIFirst>(static o => o.EnableHints = true);
         ComponentCondition<RevoltingRuinIIIFirst>(id + 0x10, 5.1f, static o => o.NumCasts > 0, "1st Tankbuster Resolve")

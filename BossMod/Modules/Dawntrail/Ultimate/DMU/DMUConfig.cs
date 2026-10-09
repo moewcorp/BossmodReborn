@@ -4,7 +4,7 @@
 public sealed class DMUConfig : ConfigNode {
     [SectionStart("Strategy Settings")]
     [PropertyDisplay("P1 Graven Image 1 strategy")]
-    public P1GravenImage1Strategy P1GravenImage1 = P1GravenImage1Strategy.GravenImage1None;
+    public P1GravenImage1Strategy P1GravenImage1 = P1GravenImage1Strategy.GravenImage1LPDU;
 
     public enum P1GravenImage1Strategy {
         [PropertyDisplay("None")]
@@ -31,7 +31,7 @@ public sealed class DMUConfig : ConfigNode {
     }
 
     [PropertyDisplay("P1 DoubleTrouble strategy")]
-    public P1DoubleTroubleStrategy P1DoubleTrouble = P1DoubleTroubleStrategy.DoubleTroubleNone;
+    public P1DoubleTroubleStrategy P1DoubleTrouble = P1DoubleTroubleStrategy.DoubleTroubleLPDU;
 
     [PropertyDisplay("P1 DoubleTrouble Knockback safe spot hints", tooltip: "Will display roughly where to stand for the stack, but you may still need to adjust")]
     public bool P1DoubleTroubleKnockbackHints = false;
@@ -45,9 +45,12 @@ public sealed class DMUConfig : ConfigNode {
     }
 
     [PropertyDisplay("P1 Graven Image 2 strategy")]
-    public P1GravenImage2Strategy P1GravenImage2 = P1GravenImage2Strategy.GravenImage2None;
+    public P1GravenImage2Strategy P1GravenImage2 = P1GravenImage2Strategy.GravenImage2LPDUUptime;
 
     public enum P1TeleTrouncingStrategy {
+        [PropertyDisplay("None")]
+        TeleTrouncingNone,
+
         [PropertyDisplay("Modified Xolo")]
         Modified_Xolo,
 
@@ -56,7 +59,7 @@ public sealed class DMUConfig : ConfigNode {
     }
 
     [PropertyDisplay("P1 TeleTrouncing strategy")]
-    public P1TeleTrouncingStrategy P1TeleTrouncing = P1TeleTrouncingStrategy.Modified_Xolo;
+    public P1TeleTrouncingStrategy P1TeleTrouncing = P1TeleTrouncingStrategy.Freaky_Arrow;
 
     [PropertyDisplay("P1 Graven Image 3 Static Spots")]
     public bool P1GravenImage3Static = true;
