@@ -96,6 +96,7 @@ public sealed class AIHintsBuilder : IDisposable
                 CalculateAutoHints(hints, player);
                 _zmm.ActiveModule?.CalculateAIHints(playerSlot, player, hints);
             }
+            FakeAoeTest.Apply(_ws, player, hints);
         }
         hints.Normalize();
         // 期望身位：优先 RSR（若已安装且提供身位），否则用 AEAssist 框架自动推算的身位
