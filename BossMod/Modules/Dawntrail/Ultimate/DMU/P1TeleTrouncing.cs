@@ -3,8 +3,6 @@
 using Direction = P1TeleTrouncingData.Direction;
 
 // TODO
-//  2. (IMPROVEMENT) Knockback 2 where taking puddles, make a bitmask for which puddle zone they should take and get the midpoint of the puddles while keeping
-//      in melee range if possible to ensure we take all puddles
 //  4. (FEAT) Final mechanic - pre-position and solve it
 //  5. Go over all of P1 and check any left TODOs + enums + look at notes
 //  6. Sort out timeline

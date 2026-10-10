@@ -197,14 +197,26 @@ sealed class Gravitas(BossModule module) : Components.UniformStackSpread(module,
     }
 }
 
-// Puddles are voidzones, but custom component is needed to make them disappear when they're actually soaked instead of using eventState != 7 or isDead
-
 sealed class GravitasPuddles : Components.PersistentInvertibleVoidzone {
     private static List<Actor> puddles = [];
     public IReadOnlyList<Actor> Puddles => puddles;
+    private BitMask doubleTroublePlayers = default;
+    private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
 
     public GravitasPuddles(BossModule module) : base(module, 5.0f, GetVoidzones) {
         puddles = []; // To ensure no puddles exist upon loading the module
+    }
+
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
+        // Case: if we have already set two players as the debuff players we shouldn't set anymore. This prevents the issue of after the knockback goes off
+        // new players getting the debuff and the pathfinder trying to update which puddles they should soak since there conditions has changed
+        if (doubleTroublePlayers.NumSetBits() >= 2) {
+            return;
+        }
+
+        if (status.ID == (uint)SID.DoubleTroubleTrap && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0) {
+            doubleTroublePlayers.Set(slot);
+        }
     }
 
     public override void OnActorCreated(Actor actor) {
@@ -226,6 +238,11 @@ sealed class GravitasPuddles : Components.PersistentInvertibleVoidzone {
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        if (dmuConfig.P1DoubleTrouble == DMUConfig.P1DoubleTroubleStrategy.DoubleTroubleNone) {
+            base.AddAIHints(slot, actor, assignment, hints);
+            return;
+        }
+
         // Once inverted, don't show hints until Knockback casts have gone off
         var knockbacks = Module.FindComponent<DoubleTroubleTrapStacksGravitas>();
         if (knockbacks != null && knockbacks.resolving && Inverted) {
@@ -237,9 +254,34 @@ sealed class GravitasPuddles : Components.PersistentInvertibleVoidzone {
             foreach (var puddle in Sources(Module)) {
                 hints.TemporaryObstacles.Add(new SDCircle(puddle.Position, Shape.Radius));
             }
+
+            base.AddAIHints(slot, actor, assignment, hints);
+            return;
         }
 
-        base.AddAIHints(slot, actor, assignment, hints);
+        // Cases for which puddles the player should soak - setup like this so it can be changed later on for other strats if needed
+        // true = soak north puddles
+        var soakNorthPuddles = (actor.Class.IsSupport(), doubleTroublePlayers[slot]) switch {
+            (false, false) => true, // DPS with no debuff -> takes north puddles
+            (false, true) => false, // DPS with debuff -> takes south puddles
+            (true, false) => false, // SUPPORT with no debuff -> takes south puddles
+            (true, true) => true, // SUPPORT with debuff -> takes north puddles
+        };
+
+        var puddleGroups = new List<ShapeDistance>();
+        foreach (var puddle in Sources(Module)) {
+            var north = puddle.Position.Z < Module.Center.Z;
+            if ((north && soakNorthPuddles) || (!north && !soakNorthPuddles)) {
+                puddleGroups.Add(new SDInvertedCircle(puddle.Position, Shape.Radius));
+            }
+        }
+
+        if (puddleGroups.Count == 0) {
+            base.AddAIHints(slot, actor, assignment, hints);
+            return;
+        }
+
+        hints.AddForbiddenZone(new SDUnion([..puddleGroups]), InvertResolveAt);
     }
 
     private static List<Actor> GetVoidzones(BossModule module) => puddles;
