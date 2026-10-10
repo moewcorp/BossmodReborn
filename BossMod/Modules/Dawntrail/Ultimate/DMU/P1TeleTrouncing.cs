@@ -2,16 +2,17 @@
 
 using Direction = P1TeleTrouncingData.Direction;
 
-// TODO add stack arena for puddles - currently you can actually take either, it just assumes you will take the one always closer to you
-// Might need to setup something up for this
+// TODO
+//  3. Setup knockback + combine with the tether mechanic so it works correctly with the AIHints
+//  4. Fixes of what is possible so far should be nearly everything listed
+//  5. Final mechanic
 
-/*
-Keep gravenImage 3 static and non-static spot option
- */
-
-// TODO setup knockback part - before standing in front / behind arrows
-// TODO setup gravenImage 3 static and non-static spot
+// TODO setup knockback part - before standing in front / behind arrows - make it so the TeleTrouncingTethers do the knockback first then go to position
+//  Will need the timer again for person performing the knockback
 // TODO final mechanic - pre-position and solve it
+// TODO fixes + improvements - refer to notes
+// TODO go over all of P1 and check any left TODOs
+// TODO sort out timeline
 
 // TODO fixes:
 //  1. Tank busters - send players south, some tanks are strange and will angle the tank buster at around East and West which can kill the player
@@ -20,9 +21,12 @@ Keep gravenImage 3 static and non-static spot option
 //  2. Gravitas puddles - move puddle baits slightly up so its more precise - just change the position of the forbidden zone to be more precise, I think
 //      its currently 2 squares long when it should just be one
 //  3. Gravitas stacks are the wrong colour - sometimes green, sometimes yellow
-//  4. REFER to comment at top of page - knockback 2 where taking puddles, make a bitmask for which puddle zone they should take and get the midpoint
+//  4. REFER to comment at below the list - knockback 2 where taking puddles, make a bitmask for which puddle zone they should take and get the midpoint
 //      of the puddles while keeping in melee range if possible to ensure we take all the puddles
 //  5. For double trouble 2 change the timer from 1.2 seconds to 0.9 seconds and see if it improves it
+
+// TODO add stack arena for puddles - currently you can actually take either, it just assumes you will take the one always closer to you
+// Might need to setup something up for this
 
 sealed class TeleTrouncing : Components.GenericAOEs {
     private readonly record struct arrowDebuff(Direction direction, DateTime activation);
@@ -170,4 +174,96 @@ sealed class TeleTrouncing : Components.GenericAOEs {
     }
 
     public override ReadOnlySpan<AOEInstance> ActiveAOEs(int slot, Actor actor) => CollectionsMarshal.AsSpan(arrows);
+}
+
+sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSpread(module, 5.0f, 5.0f) {
+    private readonly WPos tetherSleepSource = new WPos(107.000f, 43.000f);
+    private readonly WPos tetherConfusionSource = new WPos(95.000f, 25.000f);
+    private BitMask sleepPlayers = default;
+    private BitMask confusionPlayers = default;
+    private bool? supportHasSleep = null;
+    private static readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
+    private static readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
+
+    public override void OnTethered(Actor source, in ActorTetherInfo tether) {
+        if (tether.ID != (uint)TetherID.GravenImageTether || Raid.FindSlot(tether.Target) is var slot && slot < 0) {
+            return;
+        }
+
+        var target = WorldState.Actors.Find(tether.Target);
+        if (target == null) {
+            return;
+        }
+
+        if (source.Position.AlmostEqual(tetherSleepSource, 5.0f)) {
+            sleepPlayers.Set(slot);
+            supportHasSleep = target.Class.IsSupport();
+            AddSpread(target, WorldState.FutureTime(5.6f));
+            return;
+        }
+
+        if (source.Position.AlmostEqual(tetherConfusionSource, 5.0f)) {
+            confusionPlayers.Set(slot);
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID == (uint)AID.IdyllicWill) {
+            Spreads.RemoveAll(actor => actor.Target.InstanceID == spell.MainTargetID);
+        }
+    }
+
+    public override void DrawArenaForeground(int pcSlot, Actor pc) {
+        base.DrawArenaForeground(pcSlot, pc);
+
+        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.TeleTrouncingNone) {
+            return;
+        }
+
+        if (!dmuConfig.P1GravenImage3Static && supportHasSleep == null) {
+            return;
+        }
+
+        var slots = partyConfig.SlotsPerAssignment(Raid);
+        if (slots.Length == 0) {
+            return;
+        }
+        var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
+
+        WPos safeSpot = default;
+        P1TeleTrouncingTethersData.TryGetSafeSpots(dmuConfig.P1TeleTrouncing, assignment, dmuConfig.P1GravenImage3Static, supportHasSleep.GetValueOrDefault(), out safeSpot);
+        if (safeSpot == default) {
+            return;
+        }
+
+        Arena.ZoneCircleOutline(safeSpot, PositionDrawSize.NORMAL, Colors.Safe, 2.0f);
+    }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
+    {
+        // TODO consider spread? active it at like 0.7 seconds for small adjustment - generally should already be in place by the time
+
+
+        if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.TeleTrouncingNone) {
+            return;
+        }
+
+        if (!dmuConfig.P1GravenImage3Static && supportHasSleep == null) {
+            return;
+        }
+
+        WPos safeSpot = default;
+        P1TeleTrouncingTethersData.TryGetSafeSpots(dmuConfig.P1TeleTrouncing, assignment, dmuConfig.P1GravenImage3Static, supportHasSleep.GetValueOrDefault(), out safeSpot);
+        if (safeSpot == default) {
+            return;
+        }
+
+        // TODO if knockback active return
+
+        if (Spreads.Count == 0) {
+            return;
+        }
+
+        hints.AddForbiddenZone(new SDInvertedCircle(safeSpot, PositionAIRadius.PRECISE), Spreads[0].Activation);
+    }
 }

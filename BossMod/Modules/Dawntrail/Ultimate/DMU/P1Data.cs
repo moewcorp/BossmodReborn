@@ -145,3 +145,65 @@ public class P1TeleTrouncingData {
         [Normalize(Direction.DOWN, Direction.LEFT)] = new(new(Direction.DOWN, new WPos(88.103f, 106.377f)), new(Direction.LEFT, new WPos(93.685f, 106.316f))),
     };
 }
+
+public class P1TeleTrouncingTethersData {
+    public static bool TryGetSafeSpots(DMUConfig.P1TeleTrouncingStrategy strategy, PartyRolesConfig.Assignment assignment, bool isStatic, bool supportHasSleep, out WPos safeSpot) {
+        var strategyPicked = strategy switch {
+            DMUConfig.P1TeleTrouncingStrategy.Freaky_Arrow => freakyArrowSafeSpots,
+            DMUConfig.P1TeleTrouncingStrategy.Modified_Xolo => modifiedXoloSafeSpots,
+            _ => null
+        };
+
+        if (strategyPicked == null || !strategyPicked.TryGetValue(assignment, out var spots)) {
+            safeSpot = default;
+            return false;
+        }
+
+        var role = getRole(assignment);
+
+        // If using static spot strategy - MT/OT/M1/M2 always take sleep position (inwards)
+        if (isStatic) {
+            safeSpot = role is Role.Tank or Role.Melee ? spots.sleepPosition : spots.confusionPosition;
+            return true;
+        }
+
+        // If using non-static spot strategy then spot is dependent on who has sleep / confusion by group
+        safeSpot = (role is Role.Tank or Role.Healer) == supportHasSleep ? spots.sleepPosition : spots.confusionPosition;
+        return true;
+    }
+
+    // TODO if this is used for other stuff considering moving so it can be used in multiple places
+    private static Role getRole(PartyRolesConfig.Assignment assignment) {
+        var role = assignment switch {
+            PartyRolesConfig.Assignment.MT or PartyRolesConfig.Assignment.OT => Role.Tank,
+            PartyRolesConfig.Assignment.H1 or PartyRolesConfig.Assignment.H2 => Role.Healer,
+            PartyRolesConfig.Assignment.M1 or PartyRolesConfig.Assignment.M2 => Role.Melee,
+            PartyRolesConfig.Assignment.R1 or PartyRolesConfig.Assignment.R2 => Role.Ranged,
+            _ => Role.None
+        };
+
+        return role;
+    }
+
+    private static readonly Dictionary<PartyRolesConfig.Assignment, (WPos sleepPosition, WPos confusionPosition)> freakyArrowSafeSpots = new() {
+        [PartyRolesConfig.Assignment.MT] = (new WPos(100.000f, 92.000f), new WPos(100.000f, 84.000f)),
+        [PartyRolesConfig.Assignment.R1] = (new WPos(100.000f, 92.000f), new WPos(100.000f, 84.000f)),
+        [PartyRolesConfig.Assignment.OT] = (new WPos(92.000f, 100.000f), new WPos(84.000f, 100.000f)),
+        [PartyRolesConfig.Assignment.R2] = (new WPos(92.000f, 100.000f), new WPos(84.000f, 100.000f)),
+        [PartyRolesConfig.Assignment.H1] = (new WPos(100.000f, 108.000f), new WPos(100.000f, 116.000f)),
+        [PartyRolesConfig.Assignment.M1] = (new WPos(100.000f, 108.000f), new WPos(100.000f, 116.000f)),
+        [PartyRolesConfig.Assignment.H2] = (new WPos(108.000f, 100.000f), new WPos(116.000f, 100.000f)),
+        [PartyRolesConfig.Assignment.M2] = (new WPos(108.000f, 100.000f), new WPos(116.000f, 100.000f)),
+    };
+
+    private static readonly Dictionary<PartyRolesConfig.Assignment, (WPos sleepPosition, WPos confusionPosition)> modifiedXoloSafeSpots = new() {
+        [PartyRolesConfig.Assignment.MT] = (new WPos(93.636f, 96.500f), new WPos(93.636f, 91.000f)),
+        [PartyRolesConfig.Assignment.R1] = (new WPos(93.636f, 96.500f), new WPos(93.636f, 91.000f)),
+        [PartyRolesConfig.Assignment.OT] = (new WPos(104.000f, 93.636f), new WPos(109.500f, 93.636f)),
+        [PartyRolesConfig.Assignment.R2] = (new WPos(104.000f, 93.636f), new WPos(109.500f, 93.636f)),
+        [PartyRolesConfig.Assignment.H1] = (new WPos(96.500f, 106.364f), new WPos(90.500f, 106.364f)),
+        [PartyRolesConfig.Assignment.M1] = (new WPos(96.500f, 106.364f), new WPos(90.500f, 106.364f)),
+        [PartyRolesConfig.Assignment.H2] = (new WPos(106.364f, 104.000f), new WPos(106.364f, 109.500f)),
+        [PartyRolesConfig.Assignment.M2] = (new WPos(106.364f, 104.000f), new WPos(106.364f, 109.500f)),
+    };
+}

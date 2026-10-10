@@ -753,9 +753,9 @@ sealed class DMUStates : StateMachineBuilder
         ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x260u, 5.4f, static comp => comp.NumCasts > 0, "Stacks + Knockbacks")
             .DeactivateOnExit<DoubleTroubleTrapStacks>()
             .DeactivateOnExit<DoubleTroubleTrapKnockback>()
-            .ActivateOnExit<GravenImage3>();
-        ComponentCondition<GravenImage3>(id + 0x270u, 5.6f, static comp => !comp.Active, "Sleeps + Confusion Spreads")
-            .DeactivateOnExit<GravenImage3>()
+            .ActivateOnExit<TeleTrouncingTethers>();
+        ComponentCondition<TeleTrouncingTethers>(id + 0x270u, 5.6f, static comp => !comp.Active, "Sleeps + Confusion Spreads")
+            .DeactivateOnExit<TeleTrouncingTethers>()
             .ActivateOnExit<Gaze>()
             .DeactivateOnExit<TeleTrouncing>();
 

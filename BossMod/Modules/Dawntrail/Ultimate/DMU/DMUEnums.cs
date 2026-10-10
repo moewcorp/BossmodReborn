@@ -88,13 +88,13 @@ public enum AID : uint {
     GravitationalWave = 47793, // 4C31->self, no cast, range 100 ?-degree cone - Purple left side
     IntemperateWill = 47794, // _Gen_GravenImage->self, no cast, range 100 ?-degree cone - Yellow right side
 
-    // TODO
-
     TeleTrouncing = 47801, // Kefka->self, 5.0s cast, single-target
     TeleTrouncing1 = 47802, // Helper->players, no cast, range 2 circle
     IdyllicWill = 47798, // _Gen_GravenImage->players, no cast, range 5 circle
     IndulgentWill = 47797, // _Gen_GravenImage->player, no cast, single-target
-    Weaponskill = 50516, // Kefka->self, 3.0s cast, single-target
+    Unknown = 50516, // Kefka->self, 3.0s cast, single-target - most likely if you solve the mechanic correctly or not to get into P3
+
+    // TODO
 
     AveMaria = 47795, // _Gen_GravenImage->self, no cast, range 100 circle
     IndolentWill = 47796, // _Gen_GravenImage->self, no cast, range 100 circle
