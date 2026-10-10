@@ -726,7 +726,7 @@ sealed class DMUStates : StateMachineBuilder
         ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x210, 3.8f, static o => o.NumCasts == 2, "Stacks + Knockbacks")
             .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false);
 
-        ComponentCondition<GravitasPuddles>(id + 0x215, 3.0f, static o => o.puddles.Count == 0, "Puddle explosions")
+        ComponentCondition<GravitasPuddles>(id + 0x215, 3.0f, static o => o.Puddles.Count == 0, "Puddle explosions")
             .DeactivateOnExit<DoubleTroubleTrapStacks>()
             .DeactivateOnExit<DoubleTroubleTrapKnockback>()
             .DeactivateOnExit<GravitationalWave>()

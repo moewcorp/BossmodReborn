@@ -136,7 +136,7 @@ sealed class Gravitas(BossModule module) : Components.UniformStackSpread(module,
                 return;
             }
 
-            var puddles = Module.Enemies((uint)OID.PurplePuddles).ToList();
+            var puddles = Module.Enemies((uint)OID.PurplePuddles);
             foreach (var puddle in puddles) {
                 hints.AddForbiddenZone(new AOEShapeCircle(5.0f + SpreadRadius + ExtraAISpreadThreshold), puddle.Position);
             }
@@ -198,10 +198,14 @@ sealed class Gravitas(BossModule module) : Components.UniformStackSpread(module,
 }
 
 // Puddles are voidzones, but custom component is needed to make them disappear when they're actually soaked instead of using eventState != 7 or isDead
-sealed class GravitasPuddles(BossModule module) : BossComponent(module) {
-    private readonly AOEShapeCircle shape = new(5.0f);
-    public readonly List<Actor> puddles = [];
-    private bool inverted = false;
+
+sealed class GravitasPuddles : Components.PersistentInvertibleVoidzone {
+    private static List<Actor> puddles = [];
+    public IReadOnlyList<Actor> Puddles => puddles;
+
+    public GravitasPuddles(BossModule module) : base(module, 5.0f, GetVoidzones) {
+        puddles = []; // To ensure no puddles exist upon loading the module
+    }
 
     public override void OnActorCreated(Actor actor) {
         if (actor.OID == (uint)OID.PurplePuddles) {
@@ -211,7 +215,7 @@ sealed class GravitasPuddles(BossModule module) : BossComponent(module) {
 
     public override void OnActorEAnim(Actor actor, uint state) {
         if (actor.OID == (uint)OID.PurplePuddles && state == (uint)Animations.PuddleSoakReady) {
-            inverted = true;
+            InvertResolveAt = WorldState.CurrentTime;
         }
 
         if (actor.OID == (uint)OID.PurplePuddles && state == (uint)Animations.PuddleExplosion) {
@@ -221,62 +225,24 @@ sealed class GravitasPuddles(BossModule module) : BossComponent(module) {
         }
     }
 
-    public override void DrawArenaForeground(int pcSlot, Actor pc) {
-        if (puddles.Count == 0) {
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        // Once inverted, don't show hints until Knockback casts have gone off
+        var knockbacks = Module.FindComponent<DoubleTroubleTrapStacksGravitas>();
+        if (knockbacks != null && knockbacks.resolving && Inverted) {
             return;
         }
 
-        var colour = inverted ? Colors.SafeFromAOE : Colors.AOE;
-        foreach (var puddle in puddles) {
-            shape.Draw(Arena, puddle.Position, puddle.Rotation, colour);
-        }
-    }
-
-    public override void AddHints(int slot, Actor actor, TextHints hints) {
-        if (puddles.Count == 0) {
-            return;
-        }
-
-        var inVoidzone = false;
-
-        foreach (var puddle in puddles) {
-            if (shape.Check(actor.Position, puddle.Position)) {
-                inVoidzone = true;
-                break;
+        // If not inverted make the puddles act as temporary obstacles
+        if (!Inverted) {
+            foreach (var puddle in Sources(Module)) {
+                hints.TemporaryObstacles.Add(new SDCircle(puddle.Position, Shape.Radius));
             }
         }
 
-        if (inverted) {
-            hints.Add(inVoidzone ? "Stay in voidzone" : "Go to voidzone!", !inVoidzone);
-        } else if (inVoidzone) {
-            hints.Add("GTFO from voidzone!");
-        }
+        base.AddAIHints(slot, actor, assignment, hints);
     }
 
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
-        if (puddles.Count == 0) {
-            return;
-        }
-
-        var shapes = new List<ShapeDistance>();
-
-        foreach (var puddle in puddles) {
-            var shapeInstance = shape.Distance(puddle.Position.Quantized(), puddle.Rotation);
-            shapes.Add(shapeInstance);
-        }
-
-        if (shapes.Count == 0) {
-            return;
-        }
-
-        // Once inverted, don't show hints until Knockback casts have gone off
-        var knockbacks = Module.FindComponent<DoubleTroubleTrapStacksGravitas>();
-        if (knockbacks != null && knockbacks.resolving && inverted) {
-            return;
-        }
-
-        hints.AddForbiddenZone(inverted ? new SDInvertedUnion([.. shapes]) : new SDUnion([.. shapes]));
-    }
+    private static List<Actor> GetVoidzones(BossModule module) => puddles;
 }
 
 sealed class GravitationalWave(BossModule module) : Components.GenericAOEs(module) {
