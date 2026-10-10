@@ -100,6 +100,7 @@ class DoubleTroubleTrapStacks(BossModule module) : Components.UniformStackSpread
         return base.CalcPriority(pcSlot, pc, playerSlot, player, ref customColor);
     }
 
+    // Used as we still want to use the base drawArenaForeground, but similar versions of this component will have to show different spots
     protected virtual void drawForegroundHints(int pcSlot, Actor pc) {
         WPos safeSpot = default;
 
@@ -122,7 +123,7 @@ class DoubleTroubleTrapStacks(BossModule module) : Components.UniformStackSpread
 // Knockback with distance 6 is different to other knockbacks, so we have to clear the pending knockbacks after a set amount of time so the player
 // can move out of the active aoes after being knocked back across the map - currently they have around ~2.7 seconds to get out of the aoes
 // Does the following:
-//  1. Any player getting knocked back will have their pending knockbacks cleared after ~1.2 seconds
+//  1. Any player getting knocked back will have their pending knockbacks cleared after ~1.2 seconds (unless changed via the component)
 //  2. Any player with the stack debuff will be forced to stand still until all pending knockbacks have been cleared
 sealed class DoubleTroubleTrapKnockback(BossModule module) : Components.GenericKnockback(module) {
     private readonly List<Knockback> knockbacks = [];

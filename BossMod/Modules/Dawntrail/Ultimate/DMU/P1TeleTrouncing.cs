@@ -4,6 +4,7 @@ using Direction = P1TeleTrouncingData.Direction;
 
 // TODO
 //  3. Setup knockback + combine with the tether mechanic so it works correctly with the AIHints
+//  3.1 Puddles can be voidzones since we understand them better now + should be obstacles anyway since we should never hit them
 //  4. Fixes of what is possible so far should be nearly everything listed
 //  5. Final mechanic
 
@@ -198,7 +199,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
         if (source.Position.AlmostEqual(tetherSleepSource, 5.0f)) {
             sleepPlayers.Set(slot);
             supportHasSleep = target.Class.IsSupport();
-            AddSpread(target, WorldState.FutureTime(5.6f));
+            AddSpread(target, WorldState.FutureTime(9.1f));
             return;
         }
 
@@ -265,5 +266,55 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
         }
 
         hints.AddForbiddenZone(new SDInvertedCircle(safeSpot, PositionAIRadius.PRECISE), Spreads[0].Activation);
+    }
+}
+
+sealed class DoubleTroubleTrapStacksTeleTrouncing : DoubleTroubleTrapStacks {
+
+    public DoubleTroubleTrapStacksTeleTrouncing(BossModule module) : base(module) { }
+
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        if (!resolving || !Active) {
+            return;
+        }
+
+        if (dmuConfig.P1DoubleTrouble == DMUConfig.P1DoubleTroubleStrategy.DoubleTroubleNone) {
+            return;
+        }
+
+        WPos safeSpot = default;
+        DateTime activation = Stacks[0].Activation;
+
+        if (IsStackTarget(actor)) {
+            safeSpot = P1DoubleTroubleKnockBackData.TeleTrouncingDoubleTroubleSpots.GetValueOrDefault(actor.Role).stackDebuff;
+        }
+
+        if (!IsStackTarget(actor)) {
+            safeSpot = P1DoubleTroubleKnockBackData.TeleTrouncingDoubleTroubleSpots.GetValueOrDefault(actor.Role).stackHelper;
+        }
+
+        if (safeSpot == default) {
+            return;
+        }
+
+        hints.AddForbiddenZone(new SDInvertedCircle(safeSpot, PositionAIRadius.PRECISE), activation);
+    }
+
+    protected override void drawForegroundHints(int pcSlot, Actor pc) {
+        WPos safeSpot = default;
+
+        if (IsStackTarget(pc)) {
+            safeSpot = P1DoubleTroubleKnockBackData.TeleTrouncingDoubleTroubleSpots.GetValueOrDefault(pc.Role).stackDebuff;
+        }
+
+        if (!IsStackTarget(pc)) {
+            safeSpot = P1DoubleTroubleKnockBackData.TeleTrouncingDoubleTroubleSpots.GetValueOrDefault(pc.Role).stackHelper;
+        }
+
+        if (safeSpot == default) {
+            return;
+        }
+
+        Arena.ZoneCircleOutline(safeSpot, PositionDrawSize.NORMAL, Colors.Safe, 2.0f);
     }
 }

@@ -745,16 +745,18 @@ sealed class DMUStates : StateMachineBuilder
     void Phase1TeleTrouncing(uint id, float delay)
     {
         Cast(id + 0x240u, AID.TeleTrouncing, delay, 5.0f, "TeleTrouncing")
-            .ActivateOnEnter<TeleTrouncing>();
+            .ActivateOnEnter<TeleTrouncing>()
+            .ActivateOnExit<TeleTrouncingTethers>();
         ComponentCondition<TeleTrouncing>(id + 0x240, 7.8f, static o => o.NumCasts > 0, "First Arrows");
         ComponentCondition<TeleTrouncing>(id + 0x250, 3.0f, static o => o.NumCasts > 9, "Second Arrows")
+            .ActivateOnExit<DoubleTroubleTrapStacksTeleTrouncing>()
             .ActivateOnExit<DoubleTroubleTrapKnockback>()
-            .ActivateOnExit<DoubleTroubleTrapStacks>();
-        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x260u, 5.4f, static comp => comp.NumCasts > 0, "Stacks + Knockbacks")
-            .DeactivateOnExit<DoubleTroubleTrapStacks>()
-            .DeactivateOnExit<DoubleTroubleTrapKnockback>()
-            .ActivateOnExit<TeleTrouncingTethers>();
+            .ExecOnExit<DoubleTroubleTrapStacksTeleTrouncing>(static o => o.resolving = true);
+        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x260u, 5.4f, static o => o.NumCasts == 2, "Stacks + Knockbacks")
+            .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false);
         ComponentCondition<TeleTrouncingTethers>(id + 0x270u, 5.6f, static comp => !comp.Active, "Sleeps + Confusion Spreads")
+            .DeactivateOnExit<DoubleTroubleTrapStacksTeleTrouncing>()
+            .DeactivateOnExit<DoubleTroubleTrapKnockback>()
             .DeactivateOnExit<TeleTrouncingTethers>()
             .ActivateOnExit<Gaze>()
             .DeactivateOnExit<TeleTrouncing>();

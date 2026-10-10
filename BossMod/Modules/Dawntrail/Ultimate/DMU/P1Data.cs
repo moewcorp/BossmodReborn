@@ -68,14 +68,23 @@ public class P1WaveCannonData {
     ];
 }
 
+// Gravitas double trouble knockback spots are calculated within the component since the puddles can be placed anywhere
 public class P1DoubleTroubleKnockBackData {
     public static IReadOnlyDictionary<Role, (WPos stackDebuff, WPos stackHelper)> StackSafeSpots => stackSafeSpots;
+    public static IReadOnlyDictionary<Role, (WPos stackDebuff, WPos stackHelper)> TeleTrouncingDoubleTroubleSpots => teleTrouncingDoubleTroubleSpots;
 
     private static readonly Dictionary<Role, (WPos stackDebuff, WPos stackHelper)> stackSafeSpots = new() {
         [Role.Melee] = (new WPos(108.000f, 100.000f), new  WPos(105.000f, 100.000f)),
         [Role.Ranged] = (new WPos(108.000f, 100.000f), new  WPos(105.000f, 100.000f)),
         [Role.Healer] = (new WPos(92.000f, 100.000f), new  WPos(95.000f, 100.000f)),
         [Role.Tank] = (new WPos(92.000f, 100.000f), new  WPos(95.000f, 100.000f)),
+    };
+
+    private static readonly Dictionary<Role, (WPos stackDebuff, WPos stackHelper)> teleTrouncingDoubleTroubleSpots = new() {
+        [Role.Melee] = (new WPos(106.000f, 106.000f), new  WPos(104.000f, 104.000f)),
+        [Role.Ranged] = (new WPos(106.000f, 106.000f), new  WPos(104.000f, 104.000f)),
+        [Role.Healer] = (new WPos(94.000f, 94.000f), new  WPos(96.000f, 96.000f)),
+        [Role.Tank] = (new WPos(94.000f, 94.000f), new  WPos(96.000f, 96.000f)),
     };
 }
 
