@@ -3,13 +3,10 @@
 using Direction = P1TeleTrouncingData.Direction;
 
 // TODO
-//  3. Setup knockback + combine with the tether mechanic so it works correctly with the AIHints
 //  3.1 Puddles can be voidzones since we understand them better now + should be obstacles anyway since we should never hit them
 //  4. Fixes of what is possible so far should be nearly everything listed
 //  5. Final mechanic
 
-// TODO setup knockback part - before standing in front / behind arrows - make it so the TeleTrouncingTethers do the knockback first then go to position
-//  Will need the timer again for person performing the knockback
 // TODO final mechanic - pre-position and solve it
 // TODO fixes + improvements - refer to notes
 // TODO go over all of P1 and check any left TODOs
@@ -185,6 +182,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
     private bool? supportHasSleep = null;
     private static readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
     private static readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
+    private readonly DoubleTroubleTrapStacksTeleTrouncing? doubleTroubleTrapStacksTeleTrouncing = module.FindComponent<DoubleTroubleTrapStacksTeleTrouncing>();
 
     public override void OnTethered(Actor source, in ActorTetherInfo tether) {
         if (tether.ID != (uint)TetherID.GravenImageTether || Raid.FindSlot(tether.Target) is var slot && slot < 0) {
@@ -199,7 +197,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
         if (source.Position.AlmostEqual(tetherSleepSource, 5.0f)) {
             sleepPlayers.Set(slot);
             supportHasSleep = target.Class.IsSupport();
-            AddSpread(target, WorldState.FutureTime(9.1f));
+            AddSpread(target, WorldState.FutureTime(5.6f));
             return;
         }
 
@@ -240,11 +238,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
         Arena.ZoneCircleOutline(safeSpot, PositionDrawSize.NORMAL, Colors.Safe, 2.0f);
     }
 
-    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints)
-    {
-        // TODO consider spread? active it at like 0.7 seconds for small adjustment - generally should already be in place by the time
-
-
+    public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.TeleTrouncingNone) {
             return;
         }
@@ -253,13 +247,18 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
             return;
         }
 
+        // Case: if knockbacks are active, we resolve them first then move to our position
+        if (doubleTroubleTrapStacksTeleTrouncing == null || doubleTroubleTrapStacksTeleTrouncing.Active) {
+            return;
+        }
+
+        // TODO consider spread? active it at like 0.7 seconds for small adjustment - generally should already be in place by the time
+
         WPos safeSpot = default;
         P1TeleTrouncingTethersData.TryGetSafeSpots(dmuConfig.P1TeleTrouncing, assignment, dmuConfig.P1GravenImage3Static, supportHasSleep.GetValueOrDefault(), out safeSpot);
         if (safeSpot == default) {
             return;
         }
-
-        // TODO if knockback active return
 
         if (Spreads.Count == 0) {
             return;

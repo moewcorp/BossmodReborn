@@ -129,7 +129,7 @@ sealed class DoubleTroubleTrapKnockback(BossModule module) : Components.GenericK
     private readonly List<Knockback> knockbacks = [];
     private readonly DoubleTroubleTrapStacks? doubleTroubleTrapStacks = module.FindComponent<DoubleTroubleTrapStacks>();
     private DateTime activation;
-    private const double knockbackResolveTimer = 1.2f; // Used to clear up the pending knockback list
+    private const double knockbackResolveTimer = 1.0f; // Used to clear up the pending knockback list
     private BitMask debuffPlayers = default; // Tracks the players who have the stack debuffs as they shouldn't move as soon as it resolves
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
