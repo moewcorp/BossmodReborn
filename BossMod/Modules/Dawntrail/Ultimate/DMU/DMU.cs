@@ -5,13 +5,20 @@
 public sealed class DMU : BossModule {
     public DMU(WorldState ws, Actor primary) : this(ws, primary, BuildArena()) { }
 
-    private DMU(WorldState ws, Actor primary, (WPos center, ArenaBoundsCustom arena) a) : base(ws, primary, a.center, a.arena) { }
+    private DMU(WorldState ws, Actor primary, (WPos center, ArenaBounds arena) a) : base(ws, primary, a.center, a.arena) { }
 
-    public static (WPos center, ArenaBoundsCustom arena) BuildArena() {
+    /*public static (WPos center, ArenaBoundsCustom arena) BuildArena() {
         var arena = new ArenaBoundsCustom([new Polygon(new(100f, 100f), 20f, 64)]) {
             WorldProjectionHeight = 0f, Y = 0.1f, BorderY = 0f
         }; // looks ugly if we use any projection height due to weird floor geometry
         return (arena.Center, arena);
+    }*/
+
+    public static (WPos center, ArenaBounds arena) BuildArena() {
+        var arena = new ArenaBoundsCircle(20.0f) {
+            WorldProjectionHeight = 0f, Y = 0.1f, BorderY = 0f
+        }; // looks ugly if we use any projection height due to weird floor geometry
+        return (new WPos(100f, 100f), arena);
     }
 
     public override bool ShouldPrioritizeAllEnemies => true;
