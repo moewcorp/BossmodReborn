@@ -95,8 +95,8 @@ public class P1GravitasData {
     public static IReadOnlyDictionary<PartyRolesConfig.Assignment, (WPos north, WPos south)> SpreadSafeSpots => spreadSafeSpots;
 
     private static readonly Dictionary<Side, WPos> puddleSpots = new() {
-        [Side.NORTH] = new WPos(100.000f, 91.5f),
-        [Side.SOUTH] = new WPos(100.000f, 108.5f),
+        [Side.NORTH] = new WPos(100.000f, 91.0f),
+        [Side.SOUTH] = new WPos(100.000f, 109.0f),
     };
 
     private static readonly Dictionary<PartyRolesConfig.Assignment, (WPos north, WPos south)> spreadSafeSpots = new() {

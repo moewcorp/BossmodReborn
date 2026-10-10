@@ -390,7 +390,7 @@ sealed class DoubleTroubleTrapStacksGravitas : DoubleTroubleTrapStacks {
             return;
         }
 
-        hints.AddForbiddenZone(new SDInvertedCircle(safeSpot, PositionAIRadius.SUPER_PRECISE), activation);
+        hints.AddForbiddenZone(new SDInvertedCircle(safeSpot, PositionAIRadius.PRECISE), activation);
     }
 
     // Creates the safe spot hints of where people should stand to resolve the knockbacks. Caches the safe spots since it's a lot of working out that
