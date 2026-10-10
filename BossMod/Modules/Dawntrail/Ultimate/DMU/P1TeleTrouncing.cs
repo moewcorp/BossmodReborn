@@ -3,24 +3,12 @@
 using Direction = P1TeleTrouncingData.Direction;
 
 // TODO
-//  3.1 Puddles can be voidzones since we understand them better now + should be obstacles anyway since we should never hit them
-//  4. Fixes of what is possible so far should be nearly everything listed
-//  5. Final mechanic
-
-// TODO final mechanic - pre-position and solve it
-// TODO fixes + improvements - refer to notes
-// TODO go over all of P1 and check any left TODOs + enums
-// TODO sort out timeline
-
-// TODO fixes:
-//  1. Tank busters - send players south, some tanks are strange and will angle the tank buster at around East and West which can kill the player
-//      shouldn't happen, but can, so maintain the player keeping them south of a donut shape around the boss to potentially
-//      still do positional on the back if needed
-//  4. REFER to comment at below the list - knockback 2 where taking puddles, make a bitmask for which puddle zone they should take and get the midpoint
-//      of the puddles while keeping in melee range if possible to ensure we take all the puddles
-
-// TODO add stack arena for puddles - currently you can actually take either, it just assumes you will take the one always closer to you
-// Might need to setup something up for this
+//  2. (IMPROVEMENT) Knockback 2 where taking puddles, make a bitmask for which puddle zone they should take and get the midpoint of the puddles while keeping
+//      in melee range if possible to ensure we take all puddles
+//  3. (IMPROVEMENT) Gravitas can be voidzones since we understand them better now + should be obstalces anyway since we should never walk into them
+//  4. (FEAT) Final mechanic - pre-position and solve it
+//  5. Go over all of P1 and check any left TODOs + enums + look at notes
+//  6. Sort out timeline
 
 sealed class TeleTrouncing : Components.GenericAOEs {
     private readonly record struct arrowDebuff(Direction direction, DateTime activation);

@@ -1,8 +1,12 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
+// TODO remake the logic for these AIHints at some point, waiting to see if this version works well, if so will then clean up
+//  the amount of times I have had to make changes to this due to how tanks move is something
+//  if the forceAroundSouth works well there is really no need for the other forbidden zones part like the half cleave donuts
 static class NorthAIHints {
     private const float maxMelee = 2.5f;
 
+    // Tank
     public static void AddForbiddenZone(BossModule module, AIHints hints, float radius, DateTime activation) {
         var hitBox = module.PrimaryActor.HitboxRadius;
         var outerHitBox = hitBox + maxMelee;
@@ -11,6 +15,7 @@ static class NorthAIHints {
             new Angle(MathF.Atan2(radius, outerHitBox))), activation);
     }
 
+    // Tank
     public static void AddGoalZone(BossModule module, AIHints hints, float radius) {
         var hitBox = module.PrimaryActor.HitboxRadius;
         var outerHitBox = hitBox + maxMelee;
@@ -18,11 +23,26 @@ static class NorthAIHints {
         hints.GoalZones.Add(p => p.InDonutCone(module.PrimaryActor.Position, hitBox, outerHitBox, Angle.AnglesCardinals[2],
             new Angle(MathF.Atan2(radius, outerHitBox))) ? PositionWeights.PRE_POSITION : 0.0f);
     }
+
+    // All other roles
+    public static void AddForbiddenZoneSouth(BossModule module, AIHints hints, Angle halfAngle, DateTime activation) {
+        var hitBox = module.PrimaryActor.HitboxRadius;
+        hints.AddForbiddenZone(new SDInvertedDonutSector(module.PrimaryActor.Position, hitBox, 20.0f, Angle.AnglesCardinals[1], halfAngle), activation);
+    }
+
+    // All other roles
+    public static void AddGoalZoneSouth(BossModule module, AIHints hints, Angle halfAngle) {
+        var hitBox = module.PrimaryActor.HitboxRadius;
+        hints.GoalZones.Add(p => p.InDonutCone(module.PrimaryActor.Position, hitBox, 20.0f, Angle.AnglesCardinals[1], halfAngle) ?
+            PositionWeights.PRE_POSITION : 0.0f);
+    }
 }
 
 sealed class RevoltingRuinIIIFirst : Components.BaitAwayIcon {
     private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
+    // left this to true for now just to see how it performs
+    private bool forceAroundSouth = true; // Used if there is a chance the tank may move with the TB, may just become the norm for AI tho
 
     public RevoltingRuinIIIFirst(BossModule module) : base(module, new AOEShapeCone(100.0f, 60.0f.Degrees()), (uint)IconID.TankBuster,
         (uint)AID.RevoltingRuinIIIFirstHit, centerAtTarget: true, tankbuster: true, damageType: AIHints.PredictedDamageType.Tankbuster) {
@@ -60,12 +80,21 @@ sealed class RevoltingRuinIIIFirst : Components.BaitAwayIcon {
         if (CurrentBaits.Count > 0) {
             hints.AddForbiddenZone(new SDDonutSector(Module.PrimaryActor.Position, 0.0f, 20.0f, Angle.AnglesCardinals[2], 90.0f.Degrees()),
                 CurrentBaits[0].Activation);
+
+            if (forceAroundSouth) {
+                NorthAIHints.AddForbiddenZoneSouth(Module, hints, 45.0f.Degrees(), CurrentBaits[0].Activation);
+            }
+
             return;
         }
 
         // This forbidden zone is always 2.0f so the pathfinder can see other current aoes that are active to avoid walking into them such as puddles
         hints.AddForbiddenZone(new SDDonutSector(Module.PrimaryActor.Position, 0.0f, 20.0f, Angle.AnglesCardinals[2], 90.0f.Degrees()),
             WorldState.FutureTime(2.0f));
+
+        if (forceAroundSouth) {
+            NorthAIHints.AddGoalZoneSouth(Module, hints, 45.0f.Degrees());
+        }
     }
 }
 
@@ -76,6 +105,7 @@ sealed class RevoltingRuinIIISecond : Components.GenericBaitAway {
     private AOEShape shape = new AOEShapeCone(100.0f, 60.0f.Degrees());
     private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
+    private bool forceAroundSouth = true;
 
     public RevoltingRuinIIISecond(BossModule module) : base(module, (uint)AID.RevoltingRuinIIISecondHit, true, true, true, false,
         AIHints.PredictedDamageType.Tankbuster) {
@@ -152,6 +182,10 @@ sealed class RevoltingRuinIIISecond : Components.GenericBaitAway {
 
         // Movement for everyone else (including the tank who is not taking the tank buster)
         hints.AddForbiddenZone(new SDDonutSector(Module.PrimaryActor.Position, 0.0f, 20.0f, Angle.AnglesCardinals[2], 90.0f.Degrees()));
+
+        if (forceAroundSouth) {
+            NorthAIHints.AddForbiddenZoneSouth(Module, hints, 45.0f.Degrees(), default);
+        }
     }
 }
 
