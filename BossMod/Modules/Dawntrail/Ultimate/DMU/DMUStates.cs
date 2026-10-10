@@ -651,7 +651,7 @@ sealed class DMUStates : StateMachineBuilder
         ComponentCondition<FlagrantFire>(id + 0x40, 0.8f, static o => !o.Active, "Stack / Spread")
             .DeactivateOnExit<FlagrantFire>();
 
-        ComponentCondition<WaveCannon>(id + 0x50, 4.2f, static o => o.NumCasts > 0, "Wave Cannon Spreads")
+        ComponentCondition<WaveCannon>(id + 0x50, 4.2f, static o => o.ActiveBaits.Count == 0, "Wave Cannon Spreads")
             .ActivateOnEnter<WaveCannon>()
             .DeactivateOnExit<WaveCannon>()
             .ActivateOnEnter<WaveCannonTowers>();

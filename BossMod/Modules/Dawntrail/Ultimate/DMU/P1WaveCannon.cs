@@ -12,7 +12,6 @@ sealed class WaveCannon : Components.BaitAwayEveryone {
 
     public override void OnEventCast(Actor caster, ActorCastEvent spell) {
         if (spell.Action.ID == (uint)AID.WaveCannon) {
-            NumCasts++;
             CurrentBaits.Clear();
         }
     }
