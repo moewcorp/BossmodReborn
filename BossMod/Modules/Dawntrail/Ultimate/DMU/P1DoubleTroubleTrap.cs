@@ -5,7 +5,7 @@ class DoubleTroubleTrapStacks(BossModule module) : Components.UniformStackSpread
     // handling the state machine and keeping the DoubleTroubleTrap components together so it is clear what is happening
     public bool resolving = false;
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
-    public readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
+    protected readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
     public int NumCasts = 0;
 
     public override void OnStatusGain(Actor actor, ref ActorStatus status) {
