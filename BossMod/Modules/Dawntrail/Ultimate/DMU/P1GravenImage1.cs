@@ -96,24 +96,27 @@ sealed class BlizzardIIIBlowoutGraven1(BossModule module) : BlizzardIIIBlowout(m
     }
 }
 
-sealed class FlagrantFire(BossModule module) : Components.UniformStackSpread(module, 6.0f, 5.0f, 4, 4) {
-    private enum SpreadStack { None, Spread, Stack }
+class FlagrantFire(BossModule module) : Components.UniformStackSpread(module, 6.0f, 5.0f, 4, 4) {
+    protected enum SpreadStack { None, Spread, Stack }
     private enum TellingTheTruth { Unknown, Yes, No}
-    private SpreadStack mechanic = SpreadStack.None;
+    protected SpreadStack mechanic = SpreadStack.None;
     private TellingTheTruth tellingTheTruth = TellingTheTruth.Unknown;
     private readonly PulseWave? PulseWave = module.FindComponent<PulseWave>();
     private readonly BlizzardIIIBlowoutGraven1? blizzardSafeSpots = module.FindComponent<BlizzardIIIBlowoutGraven1>();
-    private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
-    private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
+    protected readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
+    protected readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
+    protected DateTime activation;
 
     public override void OnEventIcon(Actor actor, uint iconID, ulong targetID) {
         switch ((IconID)iconID) {
             case IconID.P1SpreadIcon:
                 mechanic = SpreadStack.Spread;
+                activation = WorldState.FutureTime(5.8f);
                 SolveMechanic();
                 break;
             case IconID.P1StackIcon:
                 mechanic = SpreadStack.Stack;
+                activation = WorldState.FutureTime(5.8f);
                 SolveMechanic();
                 break;
             case IconID.FireRingBlueOrb:
@@ -138,7 +141,11 @@ sealed class FlagrantFire(BossModule module) : Components.UniformStackSpread(mod
 
     public override void DrawArenaForeground(int pcSlot, Actor pc) {
         base.DrawArenaForeground(pcSlot, pc);
+        drawSafeSpots(pcSlot, pc);
+    }
 
+    // Handles drawing the safe spots for each player - can be overridden dependent on the specific versions (e.g. FlagrantFire 2 at the end of P1)
+    protected virtual void drawSafeSpots(int pcSlot, Actor pc) {
         if (PulseWave == null || PulseWave.tetherSource == null) {
             return;
         }
@@ -163,6 +170,16 @@ sealed class FlagrantFire(BossModule module) : Components.UniformStackSpread(mod
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        addAIHintSafeSpots(slot, actor, assignment, hints);
+    }
+
+    // Handles adding the basic component AI hints (used for specific versions that need the basic AI hints, but don't wanna go through FlagrantFire class)
+    protected void addBasicAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
+        base.AddAIHints(slot, actor, assignment, hints);
+    }
+
+    // Handles the pathfinder AI safe spots for each player - can be overridden dependent on the specific versions (e.g. FlagrantFire 2 at the end of P1)
+    protected virtual void addAIHintSafeSpots(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         if (PulseWave == null || PulseWave.tetherSource == null) {
             return;
         }
@@ -234,7 +251,7 @@ sealed class FlagrantFire(BossModule module) : Components.UniformStackSpread(mod
     // Sets up the spread or stack baits
     private void SetupSpreadStacks() {
        if (mechanic == SpreadStack.Spread) {
-           AddSpreads(Raid.WithoutSlot(true, true, true), WorldState.FutureTime(5.8f));
+           AddSpreads(Raid.WithoutSlot(true, true, true), activation);
            return;
        }
 
@@ -268,14 +285,14 @@ sealed class FlagrantFire(BossModule module) : Components.UniformStackSpread(mod
 
                if (p.Role is Role.Tank or Role.Healer) {
                    if (!addedSupport) {
-                       AddStack(p, WorldState.FutureTime(5.8f), ~allowedSupports);
+                       AddStack(p, activation, ~allowedSupports);
                        addedSupport = true;
                    }
                }
 
                if (p.Role is Role.Melee or Role.Ranged) {
                    if (!addedDD) {
-                       AddStack(p, WorldState.FutureTime(5.8f), ~allowedDDs);
+                       AddStack(p, activation, ~allowedDDs);
                        addedDD = true;
                    }
                }

@@ -10,7 +10,7 @@ public sealed class DMUConfig : ConfigNode {
         [PropertyDisplay("None")]
         GravenImage1None,
 
-        [PropertyDisplay("LPDU Graven Image 1")]
+        [PropertyDisplay("LPDU")]
         GravenImage1LPDU,
     }
 
@@ -61,8 +61,19 @@ public sealed class DMUConfig : ConfigNode {
     [PropertyDisplay("P1 TeleTrouncing strategy")]
     public P1TeleTrouncingStrategy P1TeleTrouncing = P1TeleTrouncingStrategy.Freaky_Arrow;
 
-    [PropertyDisplay("P1 Graven Image 3 Static Spots")]
-    public bool P1GravenImage3Static = true;
+    [PropertyDisplay("P1 TeleTrouncing Static Spots")]
+    public bool P1TeleTrouncingStaticSpots = true;
+
+    [PropertyDisplay("P1 Graven Image 3 strategy")]
+    public P1GravenImage3Strategy P1GravenImage3 = P1GravenImage3Strategy.GravenImage3LPDU;
+
+    public enum P1GravenImage3Strategy {
+        [PropertyDisplay("None")]
+        GravenImage3None,
+
+        [PropertyDisplay("LPDU")]
+        GravenImage3LPDU,
+    }
 
     public enum P2ForsakenStrategy {
         [PropertyDisplay("EU meow braindead strategy using markerless")]

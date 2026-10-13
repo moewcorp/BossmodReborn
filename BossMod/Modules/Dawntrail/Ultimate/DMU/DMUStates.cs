@@ -755,6 +755,8 @@ sealed class DMUStates : StateMachineBuilder
             .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false);
         ComponentCondition<TeleTrouncingTethers>(id + 0x270u, 5.6f, static comp => !comp.Active, "Sleeps + Confusion Spreads")
             .ActivateOnEnter<TeleTrouncingTethers>()
+            .ActivateOnExit<LightningSafeSpots>()
+            .ActivateOnExit<GravenImage3FlagrantFire>()
             .DeactivateOnExit<DoubleTroubleTrapStacksTeleTrouncing>()
             .DeactivateOnExit<DoubleTroubleTrapKnockback>()
             .DeactivateOnExit<TeleTrouncingTethers>()
@@ -762,12 +764,10 @@ sealed class DMUStates : StateMachineBuilder
             .DeactivateOnExit<TeleTrouncing>();
 
         CastStart(id + 0x280u, AID.MysteryMagic, 7.9f)
-            .ActivateOnEnter<LightningSafeSpots>()
-            .ActivateOnEnter<FlagrantFire>();
+            .ExecOnExit<LightningSafeSpots>(static o => o.Risky = true);
 
         Condition(id + 0x290u, 5.0f, () => Module.FindComponent<LightningSafeSpots>()!.NumCasts > 0 && Module.FindComponent<Gaze>()!.NumCasts > 0, "Lightning + Gaze")
             .DeactivateOnExit<LightningSafeSpots>()
-            .DeactivateOnExit<FlagrantFire>()
             .DeactivateOnExit<Gaze>();
 
         Targetable(id + 0x1000u, false, 11.0f, "Boss disappears");

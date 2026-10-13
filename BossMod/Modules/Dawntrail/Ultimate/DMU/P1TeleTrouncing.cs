@@ -2,11 +2,6 @@
 
 using Direction = P1TeleTrouncingData.Direction;
 
-// TODO
-//  4. (FEAT) Final mechanic - pre-position and solve it
-//  5. Go over all of P1 and check any left TODOs + enums + look at notes
-//  6. Sort out timeline
-
 sealed class TeleTrouncing : Components.GenericAOEs {
     private readonly record struct arrowDebuff(Direction direction, DateTime activation);
     private readonly List<List<arrowDebuff>> debuffs = [];
@@ -160,7 +155,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
     private readonly WPos tetherConfusionSource = new WPos(95.000f, 25.000f);
     private BitMask sleepPlayers = default;
     private BitMask confusionPlayers = default;
-    private bool? supportHasSleep = null;
+    public bool? supportHasSleep = null;
     private static readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
     private static readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
     private readonly DoubleTroubleTrapStacksTeleTrouncing? doubleTroubleTrapStacksTeleTrouncing = module.FindComponent<DoubleTroubleTrapStacksTeleTrouncing>();
@@ -200,7 +195,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
             return;
         }
 
-        if (!dmuConfig.P1GravenImage3Static && supportHasSleep == null) {
+        if (!dmuConfig.P1TeleTrouncingStaticSpots && supportHasSleep == null) {
             return;
         }
 
@@ -211,7 +206,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
         var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
 
         WPos safeSpot = default;
-        P1TeleTrouncingTethersData.TryGetSafeSpots(dmuConfig.P1TeleTrouncing, assignment, dmuConfig.P1GravenImage3Static, supportHasSleep.GetValueOrDefault(), out safeSpot);
+        P1TeleTrouncingTethersData.TryGetSafeSpots(dmuConfig.P1TeleTrouncing, assignment, dmuConfig.P1TeleTrouncingStaticSpots, supportHasSleep.GetValueOrDefault(), out safeSpot);
         if (safeSpot == default) {
             return;
         }
@@ -224,7 +219,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
             return;
         }
 
-        if (!dmuConfig.P1GravenImage3Static && supportHasSleep == null) {
+        if (!dmuConfig.P1TeleTrouncingStaticSpots && supportHasSleep == null) {
             return;
         }
 
@@ -236,7 +231,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
         // TODO consider spread? active it at like 0.7 seconds for small adjustment - generally should already be in place by the time
 
         WPos safeSpot = default;
-        P1TeleTrouncingTethersData.TryGetSafeSpots(dmuConfig.P1TeleTrouncing, assignment, dmuConfig.P1GravenImage3Static, supportHasSleep.GetValueOrDefault(), out safeSpot);
+        P1TeleTrouncingTethersData.TryGetSafeSpots(dmuConfig.P1TeleTrouncing, assignment, dmuConfig.P1TeleTrouncingStaticSpots, supportHasSleep.GetValueOrDefault(), out safeSpot);
         if (safeSpot == default) {
             return;
         }

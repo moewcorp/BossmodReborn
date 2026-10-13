@@ -216,3 +216,33 @@ public class P1TeleTrouncingTethersData {
         [PartyRolesConfig.Assignment.M2] = (new WPos(106.364f, 104.000f), new WPos(106.364f, 109.500f)),
     };
 }
+
+public class P1GravenImage3Data {
+    public static IReadOnlyDictionary<PartyRolesConfig.Assignment, WPos> MeleePrePositions => meleePrePositions;
+    public static IReadOnlyDictionary<bool, Dictionary<PartyRolesConfig.Assignment, WPos>> RangePrePositions => rangePrePositions;
+
+    private static readonly Dictionary<PartyRolesConfig.Assignment, WPos> meleePrePositions = new() {
+        [PartyRolesConfig.Assignment.M1] = new WPos(95.000f, 94.500f),
+        [PartyRolesConfig.Assignment.M2] = new WPos(94.000f, 106.000f),
+        [PartyRolesConfig.Assignment.MT] = new WPos(104.500f, 95.500f),
+        [PartyRolesConfig.Assignment.OT] = new WPos(106.500f, 106.500f),
+    };
+
+    // TODO update with actual versions once plugins are backup
+    // TODO also consider just setting there movement to no movement in the AIHints until the spreads come out? it might be easier and better since arrows could be off slightly
+    private static readonly Dictionary<bool, Dictionary<PartyRolesConfig.Assignment, WPos>> rangePrePositions = new() {
+        [true] = new() {
+            [PartyRolesConfig.Assignment.R1] = new WPos(95.000f, 94.500f),
+            [PartyRolesConfig.Assignment.R2] = new WPos(94.000f, 106.000f),
+            [PartyRolesConfig.Assignment.H1] = new WPos(104.500f, 95.500f),
+            [PartyRolesConfig.Assignment.H2] = new WPos(106.500f, 106.500f),
+        },
+
+        [false] = new() {
+            [PartyRolesConfig.Assignment.R1] = new WPos(95.000f, 94.500f),
+            [PartyRolesConfig.Assignment.R2] = new WPos(94.000f, 106.000f),
+            [PartyRolesConfig.Assignment.H1] = new WPos(104.500f, 95.500f),
+            [PartyRolesConfig.Assignment.H2] = new WPos(106.500f, 106.500f),
+        }
+    };
+}
