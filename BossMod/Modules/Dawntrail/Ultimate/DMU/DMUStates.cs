@@ -681,7 +681,7 @@ sealed class DMUStates : StateMachineBuilder
 
     void Phase1Gravitas(uint id, float delay)
     {
-        Cast(id + 0x90u, AID.LightOfJudgment, delay, 5.0f, "Raidwide")
+        Cast(id + 0x90u, AID.P1LightOfJudgment, delay, 5.0f, "Raidwide")
             .ActivateOnEnter<LightOfJudgment>()
             .DeactivateOnExit<LightOfJudgment>();
         ComponentCondition<HyperDrive>(id + 0x100, 3.2f, static o => o.NumCasts > 0, "1st Tankbuster");
@@ -733,7 +733,7 @@ sealed class DMUStates : StateMachineBuilder
             .DeactivateOnExit<GravitasPuddles>()
             .ActivateOnExit<HyperDrive>(); // Activated early for pre-position movement
 
-        Cast(id + 0x220, AID.LightOfJudgment, 6.5f, 5.0f, "Raidwide")
+        Cast(id + 0x220, AID.P1LightOfJudgment, 6.5f, 5.0f, "Raidwide")
             .ActivateOnEnter<LightOfJudgment>()
             .DeactivateOnExit<LightOfJudgment>();
         ComponentCondition<HyperDrive>(id + 0x215, 3.2f, static o => o.NumCasts > 0, "1st Tankbuster");

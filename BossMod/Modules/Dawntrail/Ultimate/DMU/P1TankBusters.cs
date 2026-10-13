@@ -197,7 +197,7 @@ sealed class HyperDrive(BossModule module) : Components.GenericBaitAway(module, 
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
 
     public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
-        if (spell.Action.ID == (uint)AID.LightOfJudgment) {
+        if (spell.Action.ID == (uint)AID.P1LightOfJudgment) {
             activation = Module.CastFinishAt(spell, 3.1f);
         }
     }

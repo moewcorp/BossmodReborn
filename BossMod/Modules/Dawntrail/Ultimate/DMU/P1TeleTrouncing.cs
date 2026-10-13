@@ -228,8 +228,6 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
             return;
         }
 
-        // TODO consider spread? active it at like 0.7 seconds for small adjustment - generally should already be in place by the time
-
         WPos safeSpot = default;
         P1TeleTrouncingTethersData.TryGetSafeSpots(dmuConfig.P1TeleTrouncing, assignment, dmuConfig.P1TeleTrouncingStaticSpots, supportHasSleep.GetValueOrDefault(), out safeSpot);
         if (safeSpot == default) {

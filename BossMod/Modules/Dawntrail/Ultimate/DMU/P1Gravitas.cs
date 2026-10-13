@@ -136,7 +136,7 @@ sealed class Gravitas(BossModule module) : Components.UniformStackSpread(module,
                 return;
             }
 
-            var puddles = Module.Enemies((uint)OID.PurplePuddles);
+            var puddles = Module.Enemies((uint)OID.GravitasPuddles);
             foreach (var puddle in puddles) {
                 hints.AddForbiddenZone(new AOEShapeCircle(5.0f + SpreadRadius + ExtraAISpreadThreshold), puddle.Position);
             }
@@ -220,17 +220,17 @@ sealed class GravitasPuddles : Components.PersistentInvertibleVoidzone {
     }
 
     public override void OnActorCreated(Actor actor) {
-        if (actor.OID == (uint)OID.PurplePuddles) {
+        if (actor.OID == (uint)OID.GravitasPuddles) {
             puddles.Add(actor);
         }
     }
 
     public override void OnActorEAnim(Actor actor, uint state) {
-        if (actor.OID == (uint)OID.PurplePuddles && state == (uint)Animations.PuddleSoakReady) {
+        if (actor.OID == (uint)OID.GravitasPuddles && state == (uint)Animations.PuddleSoakReady) {
             InvertResolveAt = WorldState.CurrentTime;
         }
 
-        if (actor.OID == (uint)OID.PurplePuddles && state == (uint)Animations.PuddleExplosion) {
+        if (actor.OID == (uint)OID.GravitasPuddles && state == (uint)Animations.PuddleExplosion) {
             if (puddles.Count > 0) {
                 puddles.Remove(actor);
             }
@@ -409,7 +409,7 @@ sealed class DoubleTroubleTrapStacksGravitas : DoubleTroubleTrapStacks {
         }
         var side = gravitationalWave.side;
 
-        var puddleActors = Module.Enemies((uint)OID.PurplePuddles);
+        var puddleActors = Module.Enemies((uint)OID.GravitasPuddles);
         if (puddleActors.Count == 0) {
             return;
         }

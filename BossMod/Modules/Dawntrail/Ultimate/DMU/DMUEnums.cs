@@ -6,17 +6,16 @@ public enum OID : uint {
     Helper = 0x233C, // R0.500, x37, Helper type
     GravenImage = 0x4C31, // R0.500, x9
     StatueWaveCannon = 0x1EBFBB, // R0.500, x2, EventObj type
-
-    // TODO OLD
-    PurplePuddles = 0x1EC022, // R0.500, x0 (spawn during fight), EventObj type
+    GravitasPuddles = 0x1EC022, // R0.500, x0 (spawn during fight), EventObj type
+    YellowOrb = 0x1EBFBD, // R0.500, x2, EventObj type // Yellow orb - GravitationalWave
+    PurpleOrb = 0x1EBFBC, // R0.500, x2, EventObj type // Purple orb - GravitationalWave
+    TeleTrouncingArrow = 0x1EC023, // R0.500, x0 (spawn during fight), EventObj type
     StatuePurpleEye = 0x1EBFBE, // R0.500, x2, EventObj type // Purple eye for sleep
     StatueYellowEye = 0x1EBFBF, // R0.500, x2, EventObj type // Yellow eye for confusion
+
+
     Actor1e8536 = 0x1E8536, // R0.500-2.000, x1, EventObj type
     Actor1ebfb4 = 0x1EBFB4, // R0.500, x1, EventObj type
-    Exit = 0x1E850B, // R0.500, x1, EventObj type
-    YellowOrb = 0x1EBFBD, // R0.500, x2, EventObj type // Yellow orb
-    PurpleOrb = 0x1EBFBC, // R0.500, x2, EventObj type // Purple orb
-    TeleTrouncingArrow = 0x1EC023, // R0.500, x0 (spawn during fight), EventObj type
 
     // Phase 2
     BossP2 = 0x4C32,
@@ -78,7 +77,7 @@ public enum AID : uint {
     ThrummingThunderIII1 = 47777, // Helper->self, 5.0s cast, range 40 width 10 rect
     ThrummingThunderIIIFake = 47776, // Helper->self, 5.0s cast, range 40 width 10 rect
 
-    LightOfJudgment = 50722, // Kefka->self, 5.0s cast, range 100 circle
+    P1LightOfJudgment = 50722, // Kefka->self, 5.0s cast, range 100 circle
     Hyperdrive = 49739, // Kefka->player, no cast, range 5 circle
 
     Gravitas = 47788, // 4C31->player, no cast, range 5 circle - Purple puddle - Stack
@@ -92,15 +91,12 @@ public enum AID : uint {
     TeleTrouncing1 = 47802, // Helper->players, no cast, range 2 circle
     IdyllicWill = 47798, // _Gen_GravenImage->players, no cast, range 5 circle
     IndulgentWill = 47797, // _Gen_GravenImage->player, no cast, single-target
-    Unknown = 50516, // Kefka->self, 3.0s cast, single-target - most likely if you solve the mechanic correctly or not to get into P3
-
-    // TODO
-
     AveMaria = 47795, // _Gen_GravenImage->self, no cast, range 100 circle
     IndolentWill = 47796, // _Gen_GravenImage->self, no cast, range 100 circle
 
-    Weaponskill2 = 50517, // Kefka->self, no cast, single-target
-    LightOfJudgment2 = 47803, // Kefka->self, 5.0s cast, range 100 circle
+    Unknown = 50516, // Kefka->self, 3.0s cast, single-target - most likely if you solve the mechanic correctly or not to get into P3
+    Unknown1 = 50517, // Kefka->self, no cast, single-target - Most likely if you fail to solve the arrow mechanic correctly
+    P1LightOfJudgmentEnrage = 47803, // Kefka->self, 5.0s cast, range 100 circle
 
     // Phase 2
     UltimateEmbrace = 49740, // BossP2->players, 5.0s cast, range 5 circle
@@ -290,8 +286,7 @@ public enum AID : uint {
     _Ability_ForsakenNull = 47930, // KefkaP5->self, 26.0s cast, range 100 circle - Enrage
 }
 
-public enum SID : uint
-{
+public enum SID : uint {
     // Default
     DamageDown = 2911, // Helper->player, extra=0x0
     MagicVulnerabilityUp = 2941, // Helper/4C31->player, extra=0x0
@@ -380,8 +375,6 @@ public enum IconID : uint {
     PurpleRingQuestionMark = 677, // Kefka->self
     PurpleRingBlueOrb = 678, // Kefka->self
 
-    // TODO OLD
-
     // Phase 2
     SharedTankBuster = 259, // player->self
     TowerStackIcon = 715, // player->self
@@ -401,8 +394,7 @@ public enum IconID : uint {
 
 }
 
-public enum Animations : uint
-{
+public enum Animations : uint {
     // Phase 1
     PulseOrbStart = 0x400080,
     PulseOrbEnd = 0x1000200,
@@ -425,10 +417,7 @@ public enum TetherID : uint {
     // Phase 1
     GravenImageTether = 45, // 4C31->player
 
-    // TODO OLD
-
     // Phase 3
     BlackHoleTether = 84, // 4C38->player
-
     _Gen_Tether_chn_m0109ac = 64, // Exdeath->GravenImage
 }

@@ -1,6 +1,6 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
-[ModuleInfo(BossModuleInfo.Maturity.WIP, PrimaryActorOID = (uint)OID.Kefka, Contributors = "Equilius", Expansion = BossModuleInfo.Expansion.Dawntrail,
+[ModuleInfo(BossModuleInfo.Maturity.Contributed, PrimaryActorOID = (uint)OID.Kefka, Contributors = "Equilius", Expansion = BossModuleInfo.Expansion.Dawntrail,
     Category = BossModuleInfo.Category.Ultimate, GroupType = BossModuleInfo.GroupType.CFC, GroupID = 1094u, NameID = 7131u, SortOrder = 1, PlanLevel = 100)]
 public sealed class DMU : BossModule {
     public DMU(WorldState ws, Actor primary) : this(ws, primary, BuildArena()) { }

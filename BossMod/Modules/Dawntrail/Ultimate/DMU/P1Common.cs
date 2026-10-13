@@ -14,4 +14,4 @@ class LightningSafeSpots : Components.SimpleAOEGroups {
     }
 }
 
-sealed class LightOfJudgment(BossModule module) : Components.RaidwideCast(module, (uint)AID.LightOfJudgment);
+sealed class LightOfJudgment(BossModule module) : Components.RaidwideCast(module, (uint)AID.P1LightOfJudgment);
