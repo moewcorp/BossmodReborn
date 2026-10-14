@@ -195,6 +195,10 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
             return;
         }
 
+        if (!Active) {
+            return;
+        }
+
         if (!dmuConfig.P1TeleTrouncingStaticSpots && supportHasSleep == null) {
             return;
         }
@@ -216,6 +220,10 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.TeleTrouncingNone) {
+            return;
+        }
+
+        if (!Active) {
             return;
         }
 

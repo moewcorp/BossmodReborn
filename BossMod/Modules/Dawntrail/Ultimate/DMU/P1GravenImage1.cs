@@ -37,7 +37,7 @@ sealed class PulseWave(BossModule module) : Components.GenericKnockback(module, 
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
-        if (!dmuConfig.P1PulseWavePrePosition || !active) {
+        if (!active) {
             return;
         }
 
@@ -60,7 +60,7 @@ sealed class PulseWave(BossModule module) : Components.GenericKnockback(module, 
 
 // Custom version specially for GravenImage1 to make the player avoid going to the incorrect side as the pathfinder will override everything when the cast
 // has <1.0f left, so this is needed to ensure the player move to their side only (left/right depending on the role)
-sealed class BlizzardIIIBlowoutGraven1(BossModule module) : BlizzardIIIBlowout(module) {
+sealed class BlizzardIIIBlowoutGravenImage1(BossModule module) : BlizzardIIIBlowout(module) {
     public bool? supportNorth = null;
     public bool? dpsNorth = null;
     private DateTime activation;
@@ -102,7 +102,7 @@ class FlagrantFire(BossModule module) : Components.UniformStackSpread(module, 6.
     protected SpreadStack mechanic = SpreadStack.None;
     private TellingTheTruth tellingTheTruth = TellingTheTruth.Unknown;
     private readonly PulseWave? PulseWave = module.FindComponent<PulseWave>();
-    private readonly BlizzardIIIBlowoutGraven1? blizzardSafeSpots = module.FindComponent<BlizzardIIIBlowoutGraven1>();
+    private readonly BlizzardIIIBlowoutGravenImage1? blizzardSafeSpots = module.FindComponent<BlizzardIIIBlowoutGravenImage1>();
     protected readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
     protected readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
     protected DateTime activation;

@@ -1,11 +1,9 @@
 ﻿namespace BossMod.Dawntrail.Ultimate.DMU;
 
-sealed class DMUStates : StateMachineBuilder
-{
+sealed class DMUStates : StateMachineBuilder {
     private readonly DMU _module;
 
-    public DMUStates(DMU module) : base(module)
-    {
+    public DMUStates(DMU module) : base(module) {
         _module = module;
 
         SimplePhase(0u, Phase1, "P1")
@@ -24,6 +22,163 @@ sealed class DMUStates : StateMachineBuilder
         SimplePhase(4u, Phase5, "P5")
             .SetHint(StateMachine.PhaseHint.StartWithDowntime)
             .Raw.Update = () => _module.KefkaP5()?.IsDeadOrDestroyed == true;
+    }
+
+    private void Phase1(uint id) {
+        Phase1RevoltingRuinIII(id, 10.1f);
+        Phase1GravenImage1(id + 0x1000u, 7.8f);
+        Phase1LightOfJudgement(id + 0x2000u, 4.1f);
+        Phase1Gravitas(id + 0x3000u, 4.0f);
+        Phase1LightOfJudgement(id + 0x4000u, 6.2f);
+        Phase1TeleTrouncing(id + 0x5000u, 6.9f);
+    }
+
+    void Phase1RevoltingRuinIII(uint id, float delay) {
+        CastStart(id, AID.RevoltingRuinIIIFirstHit, delay, "RevoltingRuinIII")
+            .ExecOnEnter<RevoltingRuinIIIFirst>(static o => o.EnableHints = true);
+        ComponentCondition<RevoltingRuinIIIFirst>(id + 0x10, 5.1f, static o => o.NumCasts > 0, "1st Tankbuster Resolve")
+            .DeactivateOnExit<RevoltingRuinIIIFirst>()
+            .ExecOnExit<RevoltingRuinIIISecond>(static o => o.EnableHints = true);
+        ComponentCondition<RevoltingRuinIIISecond>(id + 0x20, 3.2f, static o => o.NumCasts > 0, "2nd Tankbuster Resolve")
+            .DeactivateOnExit<RevoltingRuinIIISecond>();
+    }
+
+    void Phase1GravenImage1(uint id, float delay) {
+        Cast(id + 0x10, AID.GravenImage, delay, 3.0f, "Graven Image 1")
+            .ActivateOnEnter<PulseWave>();
+        CastStart(id + 0x20, AID.MysteryMagic, 3.2f, "MysteryMagic")
+            .ActivateOnEnter<BlizzardIIIBlowoutGravenImage1>()
+            .ActivateOnEnter<FlagrantFire>();
+        ComponentCondition<PulseWave>(id + 0x30, 2.6f, static o => o.NumCasts >= 4, "PulseWave Knockbacks")
+            .DeactivateOnExit<PulseWave>()
+            .ExecOnExit<BlizzardIIIBlowoutGravenImage1>(o => o.Risky = true);
+        ComponentCondition<BlizzardIIIBlowoutGravenImage1>(id + 0x40, 2.4f, static o => o.NumCasts > 0, "BlizzardIII Blowout")
+            .DeactivateOnExit<BlizzardIIIBlowoutGravenImage1>();
+        ComponentCondition<FlagrantFire>(id + 0x50, 0.8f, static o => !o.Active, "Stack / Spread")
+            .DeactivateOnExit<FlagrantFire>()
+            .ActivateOnExit<WaveCannon>();
+        CastStart(id + 0x60, AID.DoubleTroubleTrap, 3.4f, "Double Trouble Cast");
+        ComponentCondition<WaveCannon>(id + 0x70, 0.8f, static o => o.ActiveBaits.Count == 0, "Wave Cannon Spreads")
+            .DeactivateOnExit<WaveCannon>()
+            .ActivateOnExit<WaveCannonTowers>();
+        ComponentCondition<WaveCannonTowers>(id + 0x80, 3.6f, static o => o.NumCasts > 0, "Towers resolve")
+            .ActivateOnEnter<DoubleTroubleTrapStacks>()
+            .ActivateOnEnter<DoubleTroubleTrapKnockback>()
+            .DeactivateOnExit<WaveCannonTowers>()
+            .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = true);
+        CastStart(id + 0x90u, AID.MysteryMagic, 2.7f)
+            .ActivateOnEnter<LightningSafeSpots>()
+            .ActivateOnEnter<BlizzardIIIBlowout>();
+        ComponentCondition<DoubleTroubleTrapStacks>(id + 0x100, 1.0f, static o => o.NumCasts == 2, "Stacks + Knockbacks")
+            .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false)
+            .ExecOnExit<BlizzardIIIBlowout>(static o => o.Risky = true)
+            .ExecOnExit<LightningSafeSpots>(static o => o.Risky = true);
+        ComponentCondition<BlizzardIIIBlowout>(id + 0x110, 4.0f, static o => o.NumCasts > 0, "Blizzard + Lightning safe spots")
+            .DeactivateOnExit<DoubleTroubleTrapStacks>() // Has to be deactivated later since it contains AI movement
+            .DeactivateOnExit<DoubleTroubleTrapKnockback>() // Has to be deactivated later since it contains AI movement
+            .DeactivateOnExit<LightningSafeSpots>()
+            .DeactivateOnExit<BlizzardIIIBlowout>()
+            .ActivateOnExit<HyperDrive>(); // Activated early for pre-position movement
+    }
+
+    void Phase1LightOfJudgement(uint id, float delay) {
+        Cast(id + 0x10u, AID.P1LightOfJudgment, delay, 5.0f, "LightOfJudgment")
+            .ActivateOnEnter<LightOfJudgment>()
+            .DeactivateOnExit<LightOfJudgment>();
+        ComponentCondition<HyperDrive>(id + 0x20, 3.2f, static o => o.NumCasts > 0, "1st Tankbuster");
+        ComponentCondition<HyperDrive>(id + 0x30, 2.1f, static o => o.NumCasts > 1, "2nd Tankbuster");
+        ComponentCondition<HyperDrive>(id + 0x40, 2.1f, static o => o.NumCasts > 2, "3rd Tankbuster")
+            .DeactivateOnExit<HyperDrive>();
+    }
+
+    void Phase1Gravitas(uint id, float delay) {
+        CastStart(id + 0x10, AID.GravenImage, 7.3f, "Graven Image 2")
+            .ActivateOnEnter<BlizzardIIIBlowout>()
+            .ExecOnEnter<BlizzardIIIBlowout>(static o => o.Risky = true)
+            .ActivateOnEnter<Gravitas>()
+            .ExecOnEnter<Gravitas>(static o => o.side = P1GravitasData.Side.NORTH);
+        ComponentCondition<BlizzardIIIBlowout>(id + 0x20, 10.1f, static o => o.NumCasts > 0, "Blizzard safe spots")
+            .DeactivateOnExit<BlizzardIIIBlowout>();
+        ComponentCondition<Gravitas>(id + 0x30, 0.1f, static o => o.ActiveStacks.Count == 0, "Stacks")
+            .ActivateOnEnter<GravitasPuddles>();
+        ComponentCondition<Gravitas>(id + 0x40, 4.1f, static o => !o.Active, "Spreads")
+            .DeactivateOnExit<Gravitas>()
+            .ActivateOnExit<RevoltingRuinIIIFirst>() // Activated early for pre-position movement
+            .ActivateOnExit<RevoltingRuinIIISecond>(); // Activated early for pre-position movement
+
+        CastStart(id + 0x50, AID.RevoltingRuinIIIFirstHit, 0.7f, "RevoltingRuinIII")
+            .ExecOnEnter<RevoltingRuinIIIFirst>(static o => o.EnableHints = true)
+            .ActivateOnExit<GravitationalWave>()
+            .ExecOnExit<GravitationalWave>(static o => o.Risky = true);
+        ComponentCondition<RevoltingRuinIIIFirst>(id + 0x60, 5.1f, static o => o.NumCasts > 0, "1st Tankbuster Resolve")
+            .DeactivateOnExit<RevoltingRuinIIIFirst>()
+            .ExecOnExit<RevoltingRuinIIISecond>(static o => o.EnableHints = true);
+        ComponentCondition<RevoltingRuinIIISecond>(id + 0x70, 3.2f, static o => o.NumCasts > 0, "2nd Tankbuster Resolve")
+            .DeactivateOnExit<RevoltingRuinIIISecond>()
+            .ActivateOnExit<Gravitas>()
+            .ExecOnExit<Gravitas>(static o => o.side = P1GravitasData.Side.SOUTH);
+        ComponentCondition<GravitationalWave>(id + 0x80, 0.80f, static o => o.NumCasts > 0, "Left/Right Cleave")
+            .DeactivateOnExit<GravitationalWave>();
+
+        ComponentCondition<Gravitas>(id + 0x90, 4.6f, static o => o.ActiveStacks.Count == 0, "Stacks");
+        ComponentCondition<Gravitas>(id + 0x100, 4.0f, static o => !o.Active, "Spreads")
+            .ActivateOnEnter<GravitationalWave>()
+            .DeactivateOnExit<Gravitas>()
+            .ExecOnExit<GravitationalWave>(static o => o.Risky = true);
+
+        ComponentCondition<GravitationalWave>(id + 0x110, 4.5f, static o => o.NumCasts > 0, "Left/Right Cleave")
+            .ActivateOnEnter<DoubleTroubleTrapStacksGravitas>()
+            .ActivateOnEnter<DoubleTroubleTrapKnockback>()
+            .ExecOnEnter<DoubleTroubleTrapStacksGravitas>(static o => o.resolving = true)
+            .DeactivateOnExit<GravitationalWave>();
+
+        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x120, 3.8f, static o => o.NumCasts == 2, "Stacks + Knockbacks")
+            .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false);
+
+        ComponentCondition<GravitasPuddles>(id + 0x215, 3.0f, static o => o.Puddles.Count == 0, "Puddle explosions")
+            .DeactivateOnExit<DoubleTroubleTrapStacks>() // Has to be deactivated later since it contains AI movement
+            .DeactivateOnExit<DoubleTroubleTrapKnockback>() // Has to be deactivated later since it contains AI movement
+            .DeactivateOnExit<GravitasPuddles>()
+            .ActivateOnExit<HyperDrive>(); // Activated early for pre-position movement
+    }
+
+    void Phase1TeleTrouncing(uint id, float delay) {
+        Cast(id + 0x10u, AID.TeleTrouncing, delay, 5.0f, "TeleTrouncing")
+            .ActivateOnEnter<TeleTrouncing>();
+        ComponentCondition<TeleTrouncing>(id + 0x20, 7.8f, static o => o.NumCasts > 0, "First Arrows");
+        CastStart(id + 0x30, AID.GravenImage, 1.3f, "Graven Image 3");
+        ComponentCondition<TeleTrouncing>(id + 0x40, 1.7f, static o => o.NumCasts > 8, "Second Arrows")
+            .ActivateOnExit<DoubleTroubleTrapStacksTeleTrouncing>()
+            .ActivateOnExit<DoubleTroubleTrapKnockback>()
+            .ExecOnExit<DoubleTroubleTrapStacksTeleTrouncing>(static o => o.resolving = true);
+        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x50u, 5.4f, static o => o.NumCasts == 2, "Stacks + Knockbacks")
+            .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false)
+            .ActivateOnExit<TeleTrouncingTethers>();
+
+        ComponentCondition<TeleTrouncingTethers>(id + 0x60u, 5.7f, static comp => !comp.Active, "Sleeps + Confusion Spreads - Start")
+            .DeactivateOnExit<DoubleTroubleTrapStacksTeleTrouncing>() // Has to be deactivated later since it contains AI movement
+            .DeactivateOnExit<DoubleTroubleTrapKnockback>() // Has to be deactivated later since it contains AI movement
+            .ActivateOnExit<P1Gaze>()
+            .SetHint(StateMachine.StateHint.DowntimeStart);
+
+        Timeout(id + 0x70, 5.9f, "Sleeps + Confusion Spreads - End")
+            .SetHint(StateMachine.StateHint.DowntimeEnd)
+            .DeactivateOnEnter<TeleTrouncing>();
+
+        CastStart(id + 0x80u, AID.MysteryMagic, 2.0f)
+            .ActivateOnEnter<LightningSafeSpots>()
+            .ActivateOnEnter<GravenImage3FlagrantFire>()
+            .ExecOnEnter<LightningSafeSpots>(static o => o.Risky = true)
+            .DeactivateOnExit<TeleTrouncingTethers>();
+
+        Condition(id + 0x90u, 5.1f, () => Module.FindComponent<LightningSafeSpots>()!.NumCasts > 0 && Module.FindComponent<P1Gaze>()!.NumCasts > 0, "Lightning + Gaze")
+            .DeactivateOnExit<LightningSafeSpots>()
+            .DeactivateOnExit<P1Gaze>();
+
+        ComponentCondition<FlagrantFire>(id + 0x100, 0.6f, static o => !o.Active, "Stack / Spread")
+            .DeactivateOnExit<GravenImage3FlagrantFire>();
+
+        Targetable(id + 0x1000u, false, 10.4f, "Boss disappears");
     }
 
     private void Phase5(uint id)
@@ -616,160 +771,5 @@ sealed class DMUStates : StateMachineBuilder
 
         ActorTargetable(id + 0x30000u, _module.BossP2, false, 4.1f, "Boss disappears")
             .SetHint(StateMachine.StateHint.DowntimeStart);
-    }
-
-    private void Phase1(uint id)
-    {
-        Phase1RevoltingRuinIII(id, 10.1f);
-        Phase1GravenImage(id + 0x1000u, 7.7f);
-        Phase1Gravitas(id + 0x2000u, 4.0f);
-        Phase1TeleTrouncing(id + 0x3000u, 6.8f);
-    }
-
-    void Phase1RevoltingRuinIII(uint id, float delay) {
-        CastStart(id, AID.RevoltingRuinIIIFirstHit, delay)
-            .ExecOnEnter<RevoltingRuinIIIFirst>(static o => o.EnableHints = true);
-        ComponentCondition<RevoltingRuinIIIFirst>(id + 0x10, 5.1f, static o => o.NumCasts > 0, "1st Tankbuster Resolve")
-            .DeactivateOnExit<RevoltingRuinIIIFirst>()
-            .ExecOnExit<RevoltingRuinIIISecond>(static o => o.EnableHints = true);
-        ComponentCondition<RevoltingRuinIIISecond>(id + 0x20, 3.2f, static o => o.NumCasts > 0, "2nd Tankbuster Resolve")
-            .DeactivateOnExit<RevoltingRuinIIISecond>();
-    }
-
-    void Phase1GravenImage(uint id, float delay) {
-        Cast(id + 0x10, AID.GravenImage, delay, 3.0f, "Graven Image")
-            .ActivateOnEnter<PulseWave>()
-            .ActivateOnEnter<BlizzardIIIBlowoutGraven1>()
-            .ActivateOnEnter<FlagrantFire>();
-        CastStart(id + 0x20, AID.MysteryMagic, 3.2f);
-        ComponentCondition<PulseWave>(id + 0x30, 2.6f, static o => o.NumCasts == 4, "Knockbacks")
-            .DeactivateOnExit<PulseWave>()
-            .ExecOnExit<BlizzardIIIBlowoutGraven1>(o => o.Risky = true);
-        ComponentCondition<BlizzardIIIBlowoutGraven1>(id + 0x40, 2.3f, static o => o.NumCasts > 0, "Blizzard safe spots")
-            .DeactivateOnExit<BlizzardIIIBlowoutGraven1>();
-
-        ComponentCondition<FlagrantFire>(id + 0x40, 0.8f, static o => !o.Active, "Stack / Spread")
-            .DeactivateOnExit<FlagrantFire>();
-
-        ComponentCondition<WaveCannon>(id + 0x50, 4.2f, static o => o.ActiveBaits.Count == 0, "Wave Cannon Spreads")
-            .ActivateOnEnter<WaveCannon>()
-            .DeactivateOnExit<WaveCannon>()
-            .ActivateOnEnter<WaveCannonTowers>();
-
-        ComponentCondition<WaveCannonTowers>(id + 0x60, 3.6f, static o => o.NumCasts > 0, "Towers resolve")
-            .ActivateOnEnter<DoubleTroubleTrapStacks>()
-            .ActivateOnEnter<DoubleTroubleTrapKnockback>()
-            .DeactivateOnExit<WaveCannonTowers>()
-            .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = true);
-
-        CastStart(id + 0x70u, AID.MysteryMagic, 2.7f)
-            .ActivateOnEnter<LightningSafeSpots>()
-            .ActivateOnEnter<BlizzardIIIBlowout>();
-
-        ComponentCondition<DoubleTroubleTrapStacks>(id + 0x80, 1.0f, static o => o.NumCasts == 2, "Stacks + Knockbacks")
-            .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false)
-            .ExecOnExit<BlizzardIIIBlowout>(static o => o.Risky = true)
-            .ExecOnExit<LightningSafeSpots>(static o => o.Risky = true);
-
-        ComponentCondition<BlizzardIIIBlowout>(id + 0x90, 3.9f, static o => o.NumCasts > 0, "Blizzard + Lightning safe spots")
-            .DeactivateOnExit<DoubleTroubleTrapStacks>()
-            .DeactivateOnExit<DoubleTroubleTrapKnockback>()
-            .DeactivateOnExit<LightningSafeSpots>()
-            .DeactivateOnExit<BlizzardIIIBlowout>()
-            .ActivateOnExit<HyperDrive>(); // Activated early for pre-position movement
-    }
-
-    void Phase1Gravitas(uint id, float delay)
-    {
-        Cast(id + 0x90u, AID.P1LightOfJudgment, delay, 5.0f, "Raidwide")
-            .ActivateOnEnter<LightOfJudgment>()
-            .DeactivateOnExit<LightOfJudgment>();
-        ComponentCondition<HyperDrive>(id + 0x100, 3.2f, static o => o.NumCasts > 0, "1st Tankbuster");
-        ComponentCondition<HyperDrive>(id + 0x110, 2.1f, static o => o.NumCasts > 1, "2nd Tankbuster");
-        ComponentCondition<HyperDrive>(id + 0x120, 2.1f, static o => o.NumCasts > 2, "3rd Tankbuster")
-            .DeactivateOnExit<HyperDrive>();
-
-        CastStart(id + 0x130, AID.GravenImage, 7.3f, "Graven Image")
-            .ActivateOnEnter<BlizzardIIIBlowout>()
-            .ExecOnEnter<BlizzardIIIBlowout>(static o => o.Risky = true)
-            .ActivateOnEnter<Gravitas>()
-            .ExecOnEnter<Gravitas>(static o => o.side = P1GravitasData.Side.NORTH)
-            .ActivateOnEnter<GravitasPuddles>();
-        ComponentCondition<BlizzardIIIBlowout>(id + 0x140, 10.1f, static o => o.NumCasts > 0, "Blizzard safe spots + Stack")
-            .DeactivateOnExit<BlizzardIIIBlowout>();
-        ComponentCondition<Gravitas>(id + 0x150, 4.1f, static o => !o.Active, "Spreads")
-            .DeactivateOnExit<Gravitas>()
-            .ActivateOnExit<RevoltingRuinIIIFirst>()
-            .ActivateOnExit<RevoltingRuinIIISecond>()
-            .ActivateOnExit<GravitationalWave>()
-            .ExecOnExit<GravitationalWave>(static o => o.Risky = true);
-        CastStart(id + 0x160, AID.RevoltingRuinIIIFirstHit, 0.7f)
-            .ExecOnEnter<RevoltingRuinIIIFirst>(static o => o.EnableHints = true);
-        ComponentCondition<RevoltingRuinIIIFirst>(id + 0x162, 5.0f, static o => o.NumCasts > 0, "1st Tankbuster Resolve")
-            .DeactivateOnExit<RevoltingRuinIIIFirst>()
-            .ExecOnExit<RevoltingRuinIIISecond>(static o => o.EnableHints = true);
-        ComponentCondition<RevoltingRuinIIISecond>(id + 0x165, 3.2f, static o => o.NumCasts > 0, "2nd Tankbuster Resolve")
-            .DeactivateOnExit<RevoltingRuinIIISecond>()
-            .ActivateOnExit<Gravitas>()
-            .ExecOnExit<Gravitas>(static o => o.side = P1GravitasData.Side.SOUTH);
-        ComponentCondition<GravitationalWave>(id + 0x170, 0.80f, static o => o.NumCasts > 0, "Left/Right Cleave")
-            .DeactivateOnExit<GravitationalWave>();
-        ComponentCondition<Gravitas>(id + 0x180, 4.6f, static o => o.Stacks.Count == 0, "Stack");
-        ComponentCondition<Gravitas>(id + 0x190, 4.0f, static o => !o.Active, "Spreads")
-            .DeactivateOnExit<Gravitas>()
-            .ActivateOnEnter<GravitationalWave>()
-            .ExecOnExit<GravitationalWave>(static o => o.Risky = true);
-        ComponentCondition<GravitationalWave>(id + 0x200, 4.5f, static o => o.NumCasts > 0, "Left/Right Cleave")
-            .ActivateOnEnter<DoubleTroubleTrapStacksGravitas>()
-            .ActivateOnEnter<DoubleTroubleTrapKnockback>()
-            .ExecOnEnter<DoubleTroubleTrapStacksGravitas>(static o => o.resolving = true);
-        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x210, 3.8f, static o => o.NumCasts == 2, "Stacks + Knockbacks")
-            .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false);
-
-        ComponentCondition<GravitasPuddles>(id + 0x215, 3.0f, static o => o.Puddles.Count == 0, "Puddle explosions")
-            .DeactivateOnExit<DoubleTroubleTrapStacks>()
-            .DeactivateOnExit<DoubleTroubleTrapKnockback>()
-            .DeactivateOnExit<GravitationalWave>()
-            .DeactivateOnExit<GravitasPuddles>()
-            .ActivateOnExit<HyperDrive>(); // Activated early for pre-position movement
-
-        Cast(id + 0x220, AID.P1LightOfJudgment, 6.5f, 5.0f, "Raidwide")
-            .ActivateOnEnter<LightOfJudgment>()
-            .DeactivateOnExit<LightOfJudgment>();
-        ComponentCondition<HyperDrive>(id + 0x215, 3.2f, static o => o.NumCasts > 0, "1st Tankbuster");
-        ComponentCondition<HyperDrive>(id + 0x220, 2.1f, static o => o.NumCasts > 1, "2nd Tankbuster");
-        ComponentCondition<HyperDrive>(id + 0x225, 2.1f, static o => o.NumCasts > 2, "3rd Tankbuster")
-            .DeactivateOnExit<HyperDrive>();
-    }
-
-    void Phase1TeleTrouncing(uint id, float delay)
-    {
-        Cast(id + 0x240u, AID.TeleTrouncing, delay, 5.0f, "TeleTrouncing")
-            .ActivateOnEnter<TeleTrouncing>();
-        ComponentCondition<TeleTrouncing>(id + 0x240, 7.8f, static o => o.NumCasts > 0, "First Arrows");
-        ComponentCondition<TeleTrouncing>(id + 0x250, 3.0f, static o => o.NumCasts > 9, "Second Arrows")
-            .ActivateOnExit<DoubleTroubleTrapStacksTeleTrouncing>()
-            .ActivateOnExit<DoubleTroubleTrapKnockback>()
-            .ExecOnExit<DoubleTroubleTrapStacksTeleTrouncing>(static o => o.resolving = true);
-        ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x260u, 5.4f, static o => o.NumCasts == 2, "Stacks + Knockbacks")
-            .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false);
-        ComponentCondition<TeleTrouncingTethers>(id + 0x270u, 5.6f, static comp => !comp.Active, "Sleeps + Confusion Spreads")
-            .ActivateOnEnter<TeleTrouncingTethers>()
-            .ActivateOnExit<LightningSafeSpots>()
-            .ActivateOnExit<GravenImage3FlagrantFire>()
-            .DeactivateOnExit<DoubleTroubleTrapStacksTeleTrouncing>()
-            .DeactivateOnExit<DoubleTroubleTrapKnockback>()
-            .DeactivateOnExit<TeleTrouncingTethers>()
-            .ActivateOnExit<Gaze>()
-            .DeactivateOnExit<TeleTrouncing>();
-
-        CastStart(id + 0x280u, AID.MysteryMagic, 7.9f)
-            .ExecOnExit<LightningSafeSpots>(static o => o.Risky = true);
-
-        Condition(id + 0x290u, 5.0f, () => Module.FindComponent<LightningSafeSpots>()!.NumCasts > 0 && Module.FindComponent<Gaze>()!.NumCasts > 0, "Lightning + Gaze")
-            .DeactivateOnExit<LightningSafeSpots>()
-            .DeactivateOnExit<Gaze>();
-
-        Targetable(id + 0x1000u, false, 11.0f, "Boss disappears");
     }
 }

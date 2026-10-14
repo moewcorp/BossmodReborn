@@ -8,6 +8,16 @@
 sealed class GravenImage3FlagrantFire(BossModule module) : FlagrantFire(module) {
     private readonly TeleTrouncingTethers? teleTrouncingTethers = module.FindComponent<TeleTrouncingTethers>();
     private readonly LightningSafeSpots? lightningSafeSpots = module.FindComponent<LightningSafeSpots>();
+    private readonly List<Components.GenericAOEs.AOEInstance> cacheLightning = []; // Used to cache the lightning aoes so the safe spots don't move back
+
+    public override void OnCastStarted(Actor caster, ActorCastInfo spell) {
+        base.OnCastStarted(caster, spell);
+
+        if ((spell.Action.ID is (uint)AID.ThrummingThunderIII or (uint)AID.ThrummingThunderIII1) && lightningSafeSpots != null) {
+            cacheLightning.Clear();
+            cacheLightning.AddRange(lightningSafeSpots.Casters);
+        }
+    }
 
     protected override void drawSafeSpots(int pcSlot, Actor pc) {
         if (dmuConfig.P1GravenImage3 == DMUConfig.P1GravenImage3Strategy.GravenImage3None) {
@@ -35,7 +45,7 @@ sealed class GravenImage3FlagrantFire(BossModule module) : FlagrantFire(module) 
 
         var safeSpot = SafeSpot(actor, assignment);
         // Lightning aoes are not active yet => pre-position
-        if (lightningSafeSpots == null || lightningSafeSpots.Casters.Count == 0) {
+        if (cacheLightning.Count == 0) {
             if (safeSpot != default) {
                 hints.GoalZones.Add(AIHints.GoalProximity(safeSpot, PositionAIRadius.NORMAL, PositionWeights.PRE_POSITION));
             }
@@ -53,14 +63,14 @@ sealed class GravenImage3FlagrantFire(BossModule module) : FlagrantFire(module) 
 
             addBasicAIHints(slot, actor, assignment, hints);
             foreach (var meleePosition in P1GravenImage3Data.MeleePrePositions.Keys) {
-                hints.AddForbiddenZone(new SDCircle(SafeSpot(actor, meleePosition), SpreadRadius), lightningSafeSpots.Casters[0].Activation);
+                hints.AddForbiddenZone(new SDCircle(SafeSpot(actor, meleePosition), SpreadRadius), cacheLightning[0].Activation);
             }
 
             return;
         }
 
         // Melee players: They have a safeSpot always around the boss
-        hints.AddForbiddenZone(new SDInvertedCircle(safeSpot, PositionAIRadius.PRECISE), lightningSafeSpots.Casters[0].Activation);
+        hints.AddForbiddenZone(new SDInvertedCircle(safeSpot, PositionAIRadius.PRECISE), cacheLightning[0].Activation);
     }
 
     private WPos SafeSpot(Actor actor, PartyRolesConfig.Assignment assignment) {
@@ -69,19 +79,19 @@ sealed class GravenImage3FlagrantFire(BossModule module) : FlagrantFire(module) 
         }
 
         // lightning aoes are not active yet => go to pre-position spot
-        if (lightningSafeSpots == null || lightningSafeSpots.Casters.Count == 0) {
+        if (cacheLightning.Count == 0) {
             return prePositionSpot(assignment);
         }
 
         // Case: the mechanic is stack: This means we only care about the line going through the boss to stand correctly
         if (mechanic == SpreadStack.Stack) {
             var boss = Module.PrimaryActor;
-            var lightningDirection = lightningSafeSpots.Casters[0].Rotation.ToDirection();
-            var northZone = lightningDirection.Z < 0.0f ? lightningDirection : - lightningDirection;
+            var lightningDirection = cacheLightning[0].Rotation.ToDirection();
+            var northZone = lightningDirection.Z < 0.0f ? lightningDirection : -lightningDirection;
             var stackZone = actor.Class.IsSupport() ? -northZone : northZone;
             var safeSpot = boss.Position + stackZone * (boss.HitboxRadius + 1.0f);
 
-            foreach (var aoe in lightningSafeSpots.Casters) {
+            foreach (var aoe in cacheLightning) {
                 if (aoe.ShapeDistance == null) {
                     continue;
                 }
@@ -107,7 +117,7 @@ sealed class GravenImage3FlagrantFire(BossModule module) : FlagrantFire(module) 
                 return default;
             }
 
-            foreach (var aoe in lightningSafeSpots.Casters) {
+            foreach (var aoe in cacheLightning) {
                 if (aoe.ShapeDistance == null) {
                     continue;
                 }
@@ -158,3 +168,26 @@ sealed class GravenImage3FlagrantFire(BossModule module) : FlagrantFire(module) 
         return default;
     }
 }
+
+sealed class P1Gaze(BossModule module) : Components.GenericGaze(module) {
+    private Eye[] _eye = [];
+
+    public override void OnActorEAnim(Actor actor, uint state) {
+        if (state == (uint)Animations.EyeStart) {
+            var pos = actor.Position.Quantized();
+            _eye = [new Eye(pos, WorldState.FutureTime(9.9d), inverted: actor.OID == (uint)OID.StatueYellowEye, eyeCenter: IndicatorWorldPos(pos))];
+        }
+    }
+
+    public override void OnEventCast(Actor caster, ActorCastEvent spell) {
+        if (spell.Action.ID is ((uint)AID.IndolentWill) or ((uint)AID.AveMaria)) {
+            ++NumCasts;
+            _eye = [];
+        }
+    }
+
+    public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor) => _eye;
+}
+
+// TODO update OT tank + all spots to fit raid plan
+// TODO check activation timers - any that we set ourself
