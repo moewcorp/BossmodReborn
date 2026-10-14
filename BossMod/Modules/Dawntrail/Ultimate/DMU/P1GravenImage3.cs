@@ -190,4 +190,3 @@ sealed class P1Gaze(BossModule module) : Components.GenericGaze(module) {
 }
 
 // TODO update OT tank + all spots to fit raid plan
-// TODO check activation timers - any that we set ourself

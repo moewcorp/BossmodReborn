@@ -2,7 +2,7 @@
 
 sealed class WaveCannon : Components.BaitAwayEveryone {
     private readonly DateTime activation;
-    private const float baitActivation = 4.0f;
+    private const float baitActivation = 4.2f;
     private readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
     private readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
 

@@ -173,7 +173,7 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
         if (source.Position.AlmostEqual(tetherSleepSource, 5.0f)) {
             sleepPlayers.Set(slot);
             supportHasSleep = target.Class.IsSupport();
-            AddSpread(target, WorldState.FutureTime(5.6f));
+            AddSpread(target, WorldState.FutureTime(5.7f));
             return;
         }
 

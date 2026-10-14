@@ -12,7 +12,7 @@ sealed class PulseWave(BossModule module) : Components.GenericKnockback(module, 
         if (tether.ID == (uint)TetherID.GravenImageTether && Raid.FindSlot(tether.Target) is var slot && slot >= 0) {
             tetherSource = source;
             affectedPlayers[slot] = true;
-            activation = WorldState.FutureTime(5.0f);
+            activation = WorldState.FutureTime(5.1f);
             active = true;
         }
     }
