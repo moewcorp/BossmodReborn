@@ -223,26 +223,24 @@ public class P1GravenImage3Data {
 
     private static readonly Dictionary<PartyRolesConfig.Assignment, WPos> meleePrePositions = new() {
         [PartyRolesConfig.Assignment.M1] = new WPos(95.000f, 94.500f),
-        [PartyRolesConfig.Assignment.M2] = new WPos(94.000f, 106.000f),
-        [PartyRolesConfig.Assignment.MT] = new WPos(104.500f, 95.500f),
-        [PartyRolesConfig.Assignment.OT] = new WPos(106.500f, 106.500f),
+        [PartyRolesConfig.Assignment.M2] = new WPos(104.500f, 95.500f),
+        [PartyRolesConfig.Assignment.MT] = new WPos(94.000f, 106.000f),
+        [PartyRolesConfig.Assignment.OT] = new WPos(106.000f, 106.000f),
     };
 
-    // TODO update with actual versions once plugins are backup
-    // TODO also consider just setting there movement to no movement in the AIHints until the spreads come out? it might be easier and better since arrows could be off slightly
     private static readonly Dictionary<bool, Dictionary<PartyRolesConfig.Assignment, WPos>> rangePrePositions = new() {
-        [true] = new() {
-            [PartyRolesConfig.Assignment.R1] = new WPos(95.000f, 94.500f),
-            [PartyRolesConfig.Assignment.R2] = new WPos(94.000f, 106.000f),
-            [PartyRolesConfig.Assignment.H1] = new WPos(104.500f, 95.500f),
-            [PartyRolesConfig.Assignment.H2] = new WPos(106.500f, 106.500f),
+        [true] = new() { // DPS took the arrows
+            [PartyRolesConfig.Assignment.R1] = new WPos(112.000f, 100.000f),
+            [PartyRolesConfig.Assignment.R2] = new WPos(100.000f, 88.000f),
+            [PartyRolesConfig.Assignment.H1] = new WPos(100.000f, 116.000f),
+            [PartyRolesConfig.Assignment.H2] = new WPos(116.000f, 100.000f),
         },
 
-        [false] = new() {
-            [PartyRolesConfig.Assignment.R1] = new WPos(95.000f, 94.500f),
-            [PartyRolesConfig.Assignment.R2] = new WPos(94.000f, 106.000f),
-            [PartyRolesConfig.Assignment.H1] = new WPos(104.500f, 95.500f),
-            [PartyRolesConfig.Assignment.H2] = new WPos(106.500f, 106.500f),
+        [false] = new() { // Support took the arrows
+            [PartyRolesConfig.Assignment.R1] = new WPos(100.000f, 84.000f),
+            [PartyRolesConfig.Assignment.R2] = new WPos(84.000f, 100.000f),
+            [PartyRolesConfig.Assignment.H1] = new WPos(87.500f, 100.000f),
+            [PartyRolesConfig.Assignment.H2] = new WPos(100.000f, 112.000f),
         }
     };
 }

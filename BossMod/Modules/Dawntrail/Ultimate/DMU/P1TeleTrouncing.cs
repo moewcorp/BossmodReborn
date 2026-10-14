@@ -99,8 +99,8 @@ sealed class TeleTrouncing : Components.GenericAOEs {
         }
     }
 
-    public override void OnActorDestroyed(Actor actor) {
-        if (actor.OID == (uint)OID.TeleTrouncingArrow) {
+    public override void OnActorEventStateChange(Actor actor, byte value) {
+        if (actor.OID == (uint)OID.TeleTrouncingArrow && value == 7) {
             arrows.RemoveAll(aoe => aoe.ActorID == actor.InstanceID);
         }
     }

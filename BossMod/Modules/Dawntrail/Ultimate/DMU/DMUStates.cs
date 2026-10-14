@@ -135,7 +135,7 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<DoubleTroubleTrapKnockback>(id + 0x120, 3.8f, static o => o.NumCasts == 2, "Stacks + Knockbacks")
             .ExecOnExit<DoubleTroubleTrapStacks>(static o => o.resolving = false);
 
-        ComponentCondition<GravitasPuddles>(id + 0x215, 3.0f, static o => o.Puddles.Count == 0, "Puddle explosions")
+        ComponentCondition<GravitasPuddles>(id + 0x130, 3.0f, static o => o.Puddles.Count == 0, "Puddle explosions")
             .DeactivateOnExit<DoubleTroubleTrapStacks>() // Has to be deactivated later since it contains AI movement
             .DeactivateOnExit<DoubleTroubleTrapKnockback>() // Has to be deactivated later since it contains AI movement
             .DeactivateOnExit<GravitasPuddles>()
@@ -158,24 +158,20 @@ sealed class DMUStates : StateMachineBuilder {
         ComponentCondition<TeleTrouncingTethers>(id + 0x60u, 5.7f, static comp => !comp.Active, "Sleeps + Confusion Spreads - Start")
             .DeactivateOnExit<DoubleTroubleTrapStacksTeleTrouncing>() // Has to be deactivated later since it contains AI movement
             .DeactivateOnExit<DoubleTroubleTrapKnockback>() // Has to be deactivated later since it contains AI movement
-            .ActivateOnExit<P1Gaze>()
-            .SetHint(StateMachine.StateHint.DowntimeStart);
+            .ActivateOnExit<P1Gaze>();
 
-        Timeout(id + 0x70, 5.9f, "Sleeps + Confusion Spreads - End")
-            .SetHint(StateMachine.StateHint.DowntimeEnd)
-            .DeactivateOnEnter<TeleTrouncing>();
-
-        CastStart(id + 0x80u, AID.MysteryMagic, 2.0f)
+        CastStart(id + 0x70u, AID.MysteryMagic, 7.9f)
             .ActivateOnEnter<LightningSafeSpots>()
             .ActivateOnEnter<GravenImage3FlagrantFire>()
             .ExecOnEnter<LightningSafeSpots>(static o => o.Risky = true)
+            .DeactivateOnExit<TeleTrouncing>()
             .DeactivateOnExit<TeleTrouncingTethers>();
 
-        Condition(id + 0x90u, 5.1f, () => Module.FindComponent<LightningSafeSpots>()!.NumCasts > 0 && Module.FindComponent<P1Gaze>()!.NumCasts > 0, "Lightning + Gaze")
+        Condition(id + 0x80u, 5.1f, () => Module.FindComponent<LightningSafeSpots>()!.NumCasts > 0 && Module.FindComponent<P1Gaze>()!.NumCasts > 0, "Lightning + Gaze")
             .DeactivateOnExit<LightningSafeSpots>()
             .DeactivateOnExit<P1Gaze>();
 
-        ComponentCondition<FlagrantFire>(id + 0x100, 0.6f, static o => !o.Active, "Stack / Spread")
+        ComponentCondition<FlagrantFire>(id + 0x90, 0.6f, static o => !o.Active, "Stack / Spread")
             .DeactivateOnExit<GravenImage3FlagrantFire>();
 
         Targetable(id + 0x1000u, false, 10.4f, "Boss disappears");

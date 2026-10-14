@@ -30,6 +30,12 @@ sealed class GravenImage3FlagrantFire(BossModule module) : FlagrantFire(module) 
         }
         var assignment = partyConfig[Raid.Members[pcSlot].ContentId];
 
+        // Only melee players will have pre-position drawn - LPDU doesn't really have pre-positions for range players, we only draw a green circle for the
+        // range players if it is stack
+        if (!P1GravenImage3Data.MeleePrePositions.ContainsKey(assignment) && mechanic != SpreadStack.Stack) {
+            return;
+        }
+
         var safeSpot = SafeSpot(pc, assignment);
         if (safeSpot == default) {
             return;
@@ -188,5 +194,3 @@ sealed class P1Gaze(BossModule module) : Components.GenericGaze(module) {
 
     public override ReadOnlySpan<Eye> ActiveEyes(int slot, Actor actor) => _eye;
 }
-
-// TODO update OT tank + all spots to fit raid plan
