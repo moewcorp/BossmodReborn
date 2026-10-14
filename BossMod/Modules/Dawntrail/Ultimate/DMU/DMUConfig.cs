@@ -89,18 +89,18 @@ public sealed class DMUConfig : ConfigNode {
     [PropertyDisplay("P2 Forsaken strategy")]
     public P2ForsakenStrategy P2Forsaken = P2ForsakenStrategy.Meow_Markerless;
 
-    [SectionStart("AI Settings - This doesn't work! - Don't ask about it")]
-    [PropertyDisplay("P1 RevoltingRuinIII always around true north?", tooltip: "Only used by AI - This doesn't work! - Don't ask about it")]
+    [SectionStart("AI Settings")]
+    [PropertyDisplay("P1 RevoltingRuinIII always around true north?", tooltip: "Only used by AI - Doesn't do anything at the moment")]
     public bool P1RevoltingRuinIIIAlwaysAroundTrueNorth = true;
 
-    [PropertyDisplay("P1 RevoltingRuinIII 1st bait", tooltip: "Only used by AI - This doesn't work! - Don't ask about it")]
+    [PropertyDisplay("P1 RevoltingRuinIII 1st bait", tooltip: "Only used by AI - Doesn't do anything at the moment")]
     [PropertyCombo("MT", "OT")]
     public bool P1RevoltingRuinIIIBait1OT = false;
 
-    [PropertyDisplay("P1 HyperDrive always around true north?", tooltip: "Only used by AI - This doesn't work! - Don't ask about it")]
+    [PropertyDisplay("P1 HyperDrive always around true north?", tooltip: "Only used by AI - Doesn't do anything at the moment")]
     public bool P1HyperDriveAlwaysAroundTrueNorth = true;
 
-    [PropertyDisplay("P1 HyperDrive 1st bait", tooltip: "Only used by AI - This doesn't work! - Don't ask about it")]
+    [PropertyDisplay("P1 HyperDrive 1st bait", tooltip: "Only used by AI - Doesn't do anything at the moment")]
     [PropertyCombo("MT", "OT")]
     public bool P1HyperDriveBait1OT = false;
 

@@ -152,13 +152,26 @@ sealed class TeleTrouncing : Components.GenericAOEs {
 
 sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSpread(module, 5.0f, 5.0f) {
     private readonly WPos tetherSleepSource = new WPos(107.000f, 43.000f);
-    private readonly WPos tetherConfusionSource = new WPos(95.000f, 25.000f);
-    private BitMask sleepPlayers = default;
-    private BitMask confusionPlayers = default;
+    //private readonly WPos tetherConfusionSource = new WPos(95.000f, 25.000f); - keep for the position as it might be needed later on
     public bool? supportHasSleep = null;
     private static readonly PartyRolesConfig partyConfig = Service.Config.Get<PartyRolesConfig>();
     private static readonly DMUConfig dmuConfig = Service.Config.Get<DMUConfig>();
     private readonly DoubleTroubleTrapStacksTeleTrouncing? doubleTroubleTrapStacksTeleTrouncing = module.FindComponent<DoubleTroubleTrapStacksTeleTrouncing>();
+    public bool debuffActive = false; // There is a slight delay between the tethers being removed & applying the debuff, so we want for a player to actually get the debuff
+    public BitMask debuffPlayers = default; // Used to count how many have the debuffs since players can die, and we don't want to exit the component early
+
+    public override void OnStatusGain(Actor actor, ref ActorStatus status) {
+        if (status.ID is (uint)SID.Sleep or (uint)SID.Confused && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0) {
+            debuffActive = true;
+            debuffPlayers.Set(slot);
+        }
+    }
+
+    public override void OnStatusLose(Actor actor, ref ActorStatus status) {
+        if (status.ID is (uint)SID.Sleep or (uint)SID.Confused && Raid.FindSlot(actor.InstanceID) is var slot && slot >= 0) {
+            debuffPlayers.Clear(slot);
+        }
+    }
 
     public override void OnTethered(Actor source, in ActorTetherInfo tether) {
         if (tether.ID != (uint)TetherID.GravenImageTether || Raid.FindSlot(tether.Target) is var slot && slot < 0) {
@@ -171,14 +184,9 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
         }
 
         if (source.Position.AlmostEqual(tetherSleepSource, 5.0f)) {
-            sleepPlayers.Set(slot);
             supportHasSleep = target.Class.IsSupport();
             AddSpread(target, WorldState.FutureTime(5.7f));
             return;
-        }
-
-        if (source.Position.AlmostEqual(tetherConfusionSource, 5.0f)) {
-            confusionPlayers.Set(slot);
         }
     }
 
@@ -192,10 +200,6 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
         base.DrawArenaForeground(pcSlot, pc);
 
         if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.TeleTrouncingNone) {
-            return;
-        }
-
-        if (!Active) {
             return;
         }
 
@@ -215,15 +219,15 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
             return;
         }
 
+        if (supportHasSleep == null || debuffPlayers[pcSlot]) {
+            return;
+        }
+
         Arena.ZoneCircleOutline(safeSpot, PositionDrawSize.NORMAL, Colors.Safe, 2.0f);
     }
 
     public override void AddAIHints(int slot, Actor actor, PartyRolesConfig.Assignment assignment, AIHints hints) {
         if (dmuConfig.P1TeleTrouncing == DMUConfig.P1TeleTrouncingStrategy.TeleTrouncingNone) {
-            return;
-        }
-
-        if (!Active) {
             return;
         }
 
@@ -242,11 +246,13 @@ sealed class TeleTrouncingTethers(BossModule module) : Components.UniformStackSp
             return;
         }
 
-        if (Spreads.Count == 0) {
+        if (supportHasSleep == null || debuffPlayers[slot]) {
             return;
         }
 
-        hints.AddForbiddenZone(new SDInvertedCircle(safeSpot, PositionAIRadius.PRECISE), Spreads[0].Activation);
+        // There is a gap between the spread being removed & the debuff being applied
+        var activation = Spreads.Count > 0 ? Spreads[0].Activation : default;
+        hints.AddForbiddenZone(new SDInvertedCircle(safeSpot, PositionAIRadius.PRECISE), activation);
     }
 }
 

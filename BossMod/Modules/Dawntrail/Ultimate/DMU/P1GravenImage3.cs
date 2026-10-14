@@ -155,11 +155,9 @@ sealed class GravenImage3FlagrantFire(BossModule module) : FlagrantFire(module) 
 
     // Handles the pre-position for players before the lightning aoes show up
     private WPos prePositionSpot(PartyRolesConfig.Assignment assignment) {
-        WPos prePosition = default;
-
         // Case: melee pre-position spot
-        if (P1GravenImage3Data.MeleePrePositions.TryGetValue(assignment, out prePosition)) {
-            return prePosition;
+        if (P1GravenImage3Data.MeleePrePositions.TryGetValue(assignment, out var meleePrePosition)) {
+            return meleePrePosition;
         }
 
         if (teleTrouncingTethers == null || teleTrouncingTethers.supportHasSleep == null) {
@@ -167,8 +165,8 @@ sealed class GravenImage3FlagrantFire(BossModule module) : FlagrantFire(module) 
         }
 
         // Case: range pre-position spot
-        if (P1GravenImage3Data.RangePrePositions[teleTrouncingTethers.supportHasSleep.Value].TryGetValue(assignment, out prePosition)) {
-            return prePosition;
+        if (P1GravenImage3Data.RangePrePositions.TryGetValue(assignment, out var rangePrePosition)) {
+            return teleTrouncingTethers.supportHasSleep.Value ? rangePrePosition.dpsTookArrows : rangePrePosition.supportTookArrows;
         }
 
         return default;

@@ -160,18 +160,20 @@ sealed class DMUStates : StateMachineBuilder {
             .DeactivateOnExit<DoubleTroubleTrapKnockback>() // Has to be deactivated later since it contains AI movement
             .ActivateOnExit<P1Gaze>();
 
-        CastStart(id + 0x70u, AID.MysteryMagic, 7.9f)
-            .ActivateOnEnter<LightningSafeSpots>()
-            .ActivateOnEnter<GravenImage3FlagrantFire>()
-            .ExecOnEnter<LightningSafeSpots>(static o => o.Risky = true)
-            .DeactivateOnExit<TeleTrouncing>()
+        ComponentCondition<TeleTrouncingTethers>(id + 0x70u, 6.6f, static comp => comp.debuffActive && comp.debuffPlayers.None(), "Sleeps + Confusion Spreads - End")
+            .ActivateOnExit<LightningSafeSpots>()
+            .ActivateOnExit<GravenImage3FlagrantFire>()
+            .ExecOnExit<LightningSafeSpots>(static o => o.Risky = true)
             .DeactivateOnExit<TeleTrouncingTethers>();
 
-        Condition(id + 0x80u, 5.1f, () => Module.FindComponent<LightningSafeSpots>()!.NumCasts > 0 && Module.FindComponent<P1Gaze>()!.NumCasts > 0, "Lightning + Gaze")
+        CastStart(id + 0x80u, AID.MysteryMagic, 1.3f)
+            .DeactivateOnExit<TeleTrouncing>();
+
+        Condition(id + 0x90u, 5.1f, () => Module.FindComponent<LightningSafeSpots>()!.NumCasts > 0 && Module.FindComponent<P1Gaze>()!.NumCasts > 0, "Lightning + Gaze")
             .DeactivateOnExit<LightningSafeSpots>()
             .DeactivateOnExit<P1Gaze>();
 
-        ComponentCondition<FlagrantFire>(id + 0x90, 0.6f, static o => !o.Active, "Stack / Spread")
+        ComponentCondition<FlagrantFire>(id + 0x100, 0.6f, static o => !o.Active, "Stack / Spread")
             .DeactivateOnExit<GravenImage3FlagrantFire>();
 
         Targetable(id + 0x1000u, false, 10.4f, "Boss disappears");

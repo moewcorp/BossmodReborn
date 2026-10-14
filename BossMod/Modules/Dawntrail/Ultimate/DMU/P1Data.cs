@@ -219,7 +219,7 @@ public class P1TeleTrouncingTethersData {
 
 public class P1GravenImage3Data {
     public static IReadOnlyDictionary<PartyRolesConfig.Assignment, WPos> MeleePrePositions => meleePrePositions;
-    public static IReadOnlyDictionary<bool, Dictionary<PartyRolesConfig.Assignment, WPos>> RangePrePositions => rangePrePositions;
+    public static IReadOnlyDictionary<PartyRolesConfig.Assignment, (WPos dpsTookArrows, WPos supportTookArrows)> RangePrePositions => rangePrePositions;
 
     private static readonly Dictionary<PartyRolesConfig.Assignment, WPos> meleePrePositions = new() {
         [PartyRolesConfig.Assignment.M1] = new WPos(95.000f, 94.500f),
@@ -228,19 +228,10 @@ public class P1GravenImage3Data {
         [PartyRolesConfig.Assignment.OT] = new WPos(106.000f, 106.000f),
     };
 
-    private static readonly Dictionary<bool, Dictionary<PartyRolesConfig.Assignment, WPos>> rangePrePositions = new() {
-        [true] = new() { // DPS took the arrows
-            [PartyRolesConfig.Assignment.R1] = new WPos(112.000f, 100.000f),
-            [PartyRolesConfig.Assignment.R2] = new WPos(100.000f, 88.000f),
-            [PartyRolesConfig.Assignment.H1] = new WPos(100.000f, 116.000f),
-            [PartyRolesConfig.Assignment.H2] = new WPos(116.000f, 100.000f),
-        },
-
-        [false] = new() { // Support took the arrows
-            [PartyRolesConfig.Assignment.R1] = new WPos(100.000f, 84.000f),
-            [PartyRolesConfig.Assignment.R2] = new WPos(84.000f, 100.000f),
-            [PartyRolesConfig.Assignment.H1] = new WPos(87.500f, 100.000f),
-            [PartyRolesConfig.Assignment.H2] = new WPos(100.000f, 112.000f),
-        }
+    private static readonly Dictionary<PartyRolesConfig.Assignment, (WPos dpsTookArrows, WPos supportTookArrows)> rangePrePositions = new() {
+        [PartyRolesConfig.Assignment.R1] = (new WPos(112.000f, 100.000f), new WPos(100.000f, 84.000f)),
+        [PartyRolesConfig.Assignment.R2] = (new WPos(100.000f, 88.000f), new WPos(84.000f, 100.000f)),
+        [PartyRolesConfig.Assignment.H1] = (new WPos(100.000f, 116.000f), new WPos(87.500f, 100.000f)),
+        [PartyRolesConfig.Assignment.H2] = (new WPos(116.000f, 100.000f), new WPos(100.000f, 112.000f)),
     };
 }
