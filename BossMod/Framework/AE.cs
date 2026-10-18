@@ -96,7 +96,20 @@ public sealed class AEAssistModule : IDisposable
     }
 
     // 让 AEAssist 进入指定特殊状态并持续指定时长（如 NoCasting 停手）；AEAssist 未加载时静默失败
-    public void TriggerSpecialStateWithDuration(SpecialCommandType specialCommand, float duration) => _triggerSpecialStateWithDuration.InvokeAction((byte)specialCommand, duration);
+    // AEAssist 仅在通过验证后（AfterVerified）才注册该 IPC 端点，而插件在验证前就已 IsLoaded，
+    // 因此这里必须容错：端点未注册时 InvokeAction 会抛 IpcNotReadyError，不能让底层异常冒泡到 UI 渲染。
+    public void TriggerSpecialStateWithDuration(SpecialCommandType specialCommand, float duration)
+    {
+        try
+        {
+            if (_triggerSpecialStateWithDuration.HasAction)
+                _triggerSpecialStateWithDuration.InvokeAction((byte)specialCommand, duration);
+        }
+        catch
+        {
+            // AEAssist 未加载/尚未注册端点 - 忽略
+        }
+    }
 
     private void OnDesiredPositionalChanged(byte value)
     {
