@@ -169,8 +169,8 @@ class TailMarker(BossModule module) : BossComponent(module)
 // phase 2
 class Cocoons(BossModule module) : Components.AddsMulti(module, [(uint)OID.Cocoon, (uint)OID.MassiveCocoon]);
 class DragonAdds(BossModule module) : Components.AddsMulti(module, [(uint)OID.Ginryu, (uint)OID.Hakkinryu], 1);
-class MeteorImpact(BossModule module) : Components.ProximityAOEs(module, (uint)AID.MeteorImpact, 14f); // real range is 60, drawn smaller so the arena stays readable
-class MeteorImpact2(BossModule module) : Components.ProximityAOEs(module, (uint)AID.MeteorImpact2, 14f);
+class MeteorImpact(BossModule module) : Components.ProximityAOEs(module, (uint)AID.MeteorImpact, 10f); // proximity with range 60, drawn small so 5 of them stay readable on the platform
+class MeteorImpact2(BossModule module) : Components.ProximityAOEs(module, (uint)AID.MeteorImpact2, 10f);
 class Touchdown(BossModule module) : Components.ProximityAOEs(module, (uint)AID.TouchdownAOE, 14f);
 class Fireball(BossModule module) : Components.SimpleAOEs(module, (uint)AID.Fireball, 4f);
 class BlazingTrail(BossModule module) : Components.SimpleAOEs(module, (uint)AID.BlazingTrail, new AOEShapeRect(15f, 5.5f));
