@@ -98,8 +98,8 @@ public enum AID : uint
     AtomicRayVisual = 50297, // Boss->self, 2.5s cast, single-target
     AtomicRay = 50298, // Helper2->players, no cast, range 6 circle, 2-player stacks on icon targets
     Wormwail = 50293, // Boss->self, 5.0s cast, range 50 donut
-    BenightingBreathVisual = 50294, // Boss->self, 3.3s cast, single-target, not seen in the replay
-    BenightingBreath = 50295, // Helper2->self, 4.0s cast, range 50 cone, not seen in the replay
+    BenightingBreathVisual = 50294, // Boss->self, 3.3s cast, single-target, alternates with wormwail
+    BenightingBreath = 50295, // Helper2->self, 4.0s cast, range 50 90-degree cone
     IceStormVisualP3 = 50308, // LeftWingP3->self, 6.0s cast, single-target
     SummonIcicleP3 = 50307, // LeftWingP3->self, 4.0s cast, single-target
     LevinboltVisualP3 = 50306, // RightWingP3->self, 10.0s cast, single-target
