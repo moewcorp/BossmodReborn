@@ -1,15 +1,21 @@
 ﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Utility.Raii;
+using RebornMaterial;
 
 namespace BossMod;
 
-public sealed class BossModulePrePullHintsWindow : UIWindow
+public sealed class BossModulePrePullHintsWindow : RebornUI.RebornWindow
 {
     private const string WindowID = "###Boss module pre-pull hints";
+    private const string NeverShowTooltip = "可在本场战斗的配置窗口中重新启用该弹窗。";
 
     private readonly BossModuleManager _mgr;
     private BossModule? _displayedModule;
     private BossModule? _dismissedModule;
     private bool _permanentlySuppressing;
+
+    protected override M3Density Density => SettingsDensity;
 
     public BossModulePrePullHintsWindow(BossModuleManager mgr) : base(WindowID, false, new(450f, 180f))
     {
@@ -30,7 +36,7 @@ public sealed class BossModulePrePullHintsWindow : UIWindow
         if (show)
         {
             var encounterName = string.IsNullOrEmpty(module!.PrimaryActor.Name) ? module.GetType().Name : module.PrimaryActor.Name;
-            WindowName = $"开怪前提示：{encounterName}{WindowID}";
+            WindowName = $"Pre-fight hints: {encounterName}{WindowID}";
         }
     }
 
@@ -42,47 +48,99 @@ public sealed class BossModulePrePullHintsWindow : UIWindow
             return;
         }
 
+        if (M3.IsInitialized)
+        {
+            DrawThemed(module);
+        }
+        else
+        {
+            DrawClassic(module);
+        }
+    }
+
+    private void DrawThemed(BossModule module)
+    {
+        M3Text.Draw("开怪前", M3TextStyle.Heading);
+        ImGui.Dummy(new(0f, M3.Space1));
+        using (ImRaii.TextWrapPos(0f))
+        {
+            var hints = module.PrePullHints;
+            var len = hints.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                M3Text.Bullet(hints[i]);
+            }
+        }
+
+        M3Widgets.Divider(6f);
+
+        if (M3Widgets.Button("##dismiss", "暂时关闭", M3ButtonStyle.Filled, FontAwesomeIcon.Check))
+        {
+            Dismiss(module);
+        }
+
+        ImGui.SameLine(0f, M3.Space2);
+        if (M3Widgets.Button("##never", "不再显示", M3ButtonStyle.Text, FontAwesomeIcon.EyeSlash, tooltip: NeverShowTooltip))
+        {
+            NeverShowAgain(module);
+        }
+    }
+
+    private void DrawClassic(BossModule module)
+    {
         ImGui.TextWrapped("开怪前：");
         ImGui.Separator();
-        ImGui.PushTextWrapPos();
-        var hints = module.PrePullHints;
-        var len = hints.Length;
-        for (var i = 0; i < len; ++i)
+        using (ImRaii.TextWrapPos(0f))
         {
-            ImGui.Bullet();
-            ImGui.SameLine();
-            ImGui.TextUnformatted(hints[i]);
+            var hints = module.PrePullHints;
+            var len = hints.Length;
+            for (var i = 0; i < len; ++i)
+            {
+                ImGui.Bullet();
+                ImGui.SameLine();
+                ImGui.TextUnformatted(hints[i]);
+            }
         }
-        ImGui.PopTextWrapPos();
 
         ImGui.Spacing();
         ImGui.Separator();
 
-        if (ImGui.Button("不再显示"))
+        if (ImGui.Button("暂时关闭"))
         {
-            _permanentlySuppressing = true;
-            if (module.Info != null)
-            {
-                BossModuleManager.Config.SetShowPrePullHintsFor(module.Info.PrimaryActorOID, false);
-            }
-            IsOpen = false;
-        }
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip("可在本场战斗的配置窗口中重新启用该弹窗。");
+            Dismiss(module);
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("暂时关闭"))
+        if (ImGui.Button("不再显示"))
         {
-            _dismissedModule = module;
-            IsOpen = false;
+            NeverShowAgain(module);
         }
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip(NeverShowTooltip);
+        }
+    }
+
+    private void Dismiss(BossModule module)
+    {
+        _dismissedModule = module;
+        IsOpen = false;
+    }
+
+    private void NeverShowAgain(BossModule module)
+    {
+        _permanentlySuppressing = true;
+        if (module.Info != null)
+        {
+            BossModuleManager.Config.SetShowPrePullHintsFor(module.Info.PrimaryActorOID, false);
+        }
+        IsOpen = false;
     }
 
     public override void PostDraw()
     {
-        // Closing with the title-bar X should behave like "Dismiss for now" rather than reopening next frame.
+        base.PostDraw();
+        // Closing with the title-bar X should behave like "暂时关闭" rather than reopening next frame.
         if (!IsOpen && _displayedModule != null && !_permanentlySuppressing)
         {
             _dismissedModule = _displayedModule;

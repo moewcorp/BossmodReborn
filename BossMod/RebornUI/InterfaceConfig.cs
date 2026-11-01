@@ -1,0 +1,51 @@
+﻿using RebornMaterial;
+
+namespace BossMod.RebornUI;
+
+[ConfigDisplay(Name = "界面", Order = -2, Tags = ["theme", "accent", "scale", "size", "material"])]
+public sealed class InterfaceConfig : ConfigNode, IM3Settings
+{
+    [SectionStart("主题")]
+    [PropertyDisplay("强调色", tooltip: "BossMod Reborn 窗口的所有颜色均由此颜色生成。灰色或黑色会回退为默认颜色。")]
+    public Color AccentColor = Color.FromRGBA(0x5BA7B7FF);
+
+    [SectionStart("尺寸")]
+    [PropertyDisplay("文字大小", tooltip: "在 Dalamud 字号基础上缩放主题窗口的文字。")]
+    [PropertySlider(0.5f, 3f)]
+    public float TextScale = 1f;
+
+    [PropertyDisplay("控件大小", tooltip: "缩放按钮、开关、输入框等控件。")]
+    [PropertySlider(0.5f, 2.5f)]
+    public float ElementScale = 1f;
+
+    [PropertyDisplay("间距", tooltip: "缩放控件周围及控件之间的间距，不改变控件大小。")]
+    [PropertySlider(0f, 3f)]
+    public float PaddingScale = 1f;
+
+    [PropertyDisplay("紧凑设置窗口", tooltip: "缩小设置窗口的间距，以显示更多内容。")]
+    public bool CompactSettings = false;
+
+    Vector4 IM3Settings.UiAccentColor
+    {
+        get => AccentColor.ToFloat4();
+        set => AccentColor = Color.FromFloat4(value);
+    }
+
+    float IM3Settings.UiTextScale
+    {
+        get => TextScale;
+        set => TextScale = value;
+    }
+
+    float IM3Settings.UiElementScale
+    {
+        get => ElementScale;
+        set => ElementScale = value;
+    }
+
+    float IM3Settings.UiPaddingScale
+    {
+        get => PaddingScale;
+        set => PaddingScale = value;
+    }
+}

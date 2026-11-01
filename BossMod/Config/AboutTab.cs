@@ -1,4 +1,4 @@
-﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using System.Diagnostics;
 using System.IO;
@@ -46,7 +46,7 @@ public sealed class AboutTab(DirectoryInfo? replayDir)
             "使用此功能请参考 Wiki 上的指南。",
         ]);
         ImGui.Spacing();
-        DrawSection("AI",
+        DrawSection("自动移动系统",
         [
             "在Boss战斗中自动化移动。",
             "根据Boss模块确定的安全区域（在雷达上可见）自动移动你的角色。",
