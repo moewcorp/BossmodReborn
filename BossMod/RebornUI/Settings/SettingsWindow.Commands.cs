@@ -1,4 +1,4 @@
-﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using RebornMaterial;
@@ -83,11 +83,7 @@ internal sealed partial class SettingsWindow
             var command = args.Length > 0 ? $"{prefix} {args}" : prefix;
             var row = M3SettingRow.Begin(command, description, new(button, button), M3.Scheme.Primary);
             ImGui.SetCursorScreenPos(row.ControlPosition);
-            if (M3Widgets.IconButton($"##{command}", FontAwesomeIcon.Copy, "复制到剪贴板"))
-            {
-                ImGui.SetClipboardText(command);
-                M3Snackbar.Show($"已复制 {command}");
-            }
+            _ = M3Widgets.CopyIconButton($"##{command}", command, snackbar: $"已复制 {command}");
             M3SettingRow.End(row);
         }
     }

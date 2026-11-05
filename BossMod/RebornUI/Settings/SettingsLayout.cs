@@ -27,9 +27,21 @@ internal static class SettingsLayout
 
     public sealed record class Section(string Label, FontAwesomeIcon Icon, string[] Fields, string? StripPrefix = null);
 
-    public sealed record class Field(string? Label = null, string? Tooltip = null, string? Depends = null, string? Format = null, string[]? Options = null, float? Min = null, float? Max = null);
+    public sealed record class Field(string? Label = null, string? Tooltip = null, string? Depends = null, string? Format = null, string[]? Options = null, float? Min = null, float? Max = null,
+        M3ColorChoice[]? Choices = null);
 
     private static readonly string[] _maturityOptions = ["占位（仅供开发）", "开发中", "已贡献", "已验证", "支持AI"];
+
+    private static readonly M3ColorChoice[] _accentChoices =
+    [
+        new("Reborn 青色（默认）", M3ColorMath.FromRgb(0x5BA7B7)),
+        new("宝蓝", M3ColorMath.FromRgb(0x2F6DB5)),
+        new("紫罗兰", M3ColorMath.FromRgb(0x7E57C2)),
+        new("玫红", M3ColorMath.FromRgb(0xC2185B)),
+        new("绯红", M3ColorMath.FromRgb(0xC62828)),
+        new("琥珀", M3ColorMath.FromRgb(0xC98A00)),
+        new("森林绿", M3ColorMath.FromRgb(0x3E8E41)),
+    ];
 
     public static Node? For(Type type) => _nodes.GetValueOrDefault(type);
 
@@ -38,17 +50,23 @@ internal static class SettingsLayout
         [typeof(InterfaceConfig)] = new()
         {
             Icon = FontAwesomeIcon.PaintBrush,
-            Description = "BossMod Reborn 窗口的强调色与尺寸",
+            Description = "BossMod Reborn 窗口的强调色、尺寸与动画",
             Sections =
             [
                 new("主题", FontAwesomeIcon.Palette, [nameof(InterfaceConfig.AccentColor)]),
-                new("尺寸", FontAwesomeIcon.TextHeight, [nameof(InterfaceConfig.TextScale), nameof(InterfaceConfig.ElementScale), nameof(InterfaceConfig.PaddingScale), nameof(InterfaceConfig.CompactSettings)]),
+                new("尺寸", FontAwesomeIcon.TextHeight,
+                [
+                    nameof(InterfaceConfig.TextScale), nameof(InterfaceConfig.ElementScale), nameof(InterfaceConfig.PaddingScale), nameof(InterfaceConfig.MotionScale),
+                    nameof(InterfaceConfig.CompactSettings),
+                ]),
             ],
             Fields = new()
             {
+                [nameof(InterfaceConfig.AccentColor)] = new(Choices: _accentChoices),
                 [nameof(InterfaceConfig.TextScale)] = new(Format: "%.2fx"),
                 [nameof(InterfaceConfig.ElementScale)] = new(Format: "%.2fx"),
                 [nameof(InterfaceConfig.PaddingScale)] = new(Format: "%.2fx"),
+                [nameof(InterfaceConfig.MotionScale)] = new(Format: "%.2fx"),
             },
         },
 
@@ -105,10 +123,10 @@ internal static class SettingsLayout
             Custom = NoCustom,
             SectionExtras = static (_, section, _, _) =>
             {
-                if (section == "雷达窗口")
+                if (section == "雷达窗口" && M3Widgets.RowButton("雷达窗口位置###recenter", "居中",
+                    "将雷达窗口移回屏幕中央，也可使用 /bmr radar reset。", icon: FontAwesomeIcon.Crosshairs))
                 {
-                    ButtonRow("##recenter", "雷达窗口位置", "将雷达窗口移回屏幕中央，也可使用 /bmr radar reset。", "居中", FontAwesomeIcon.Crosshairs,
-                        () => Service.BossModWindow?.RecenterWindow());
+                    Service.BossModWindow?.RecenterWindow();
                 }
             },
         },
@@ -318,18 +336,6 @@ internal static class SettingsLayout
             Fields = new() { [nameof(DeveloperConfig.MapSourcePath)] = new(Depends: nameof(DeveloperConfig.MapLoadFromSource)) },
         },
     };
-
-    private static void ButtonRow(string id, string label, string supporting, string button, FontAwesomeIcon icon, Action click)
-    {
-        var width = M3Widgets.ButtonWidth(icon, button);
-        var row = M3SettingRow.Begin(label, supporting, new(width, M3Widgets.ButtonHeight));
-        ImGui.SetCursorScreenPos(row.ControlPosition);
-        if (M3Widgets.Button(id, button, M3ButtonStyle.Tonal, icon))
-        {
-            click();
-        }
-        M3SettingRow.End(row);
-    }
 
     private static void SmartTargetingRow(ActionTweaksConfig config)
     {

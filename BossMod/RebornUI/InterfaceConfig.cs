@@ -1,8 +1,8 @@
-﻿using RebornMaterial;
+using RebornMaterial;
 
 namespace BossMod.RebornUI;
 
-[ConfigDisplay(Name = "界面", Order = -2, Tags = ["theme", "accent", "scale", "size", "material"])]
+[ConfigDisplay(Name = "界面", Order = -2, Tags = ["theme", "accent", "scale", "size", "material", "animation", "motion"])]
 public sealed class InterfaceConfig : ConfigNode, IM3Settings
 {
     [SectionStart("主题")]
@@ -21,6 +21,10 @@ public sealed class InterfaceConfig : ConfigNode, IM3Settings
     [PropertyDisplay("间距", tooltip: "缩放控件周围及控件之间的间距，不改变控件大小。")]
     [PropertySlider(0f, 3f)]
     public float PaddingScale = 1f;
+
+    [PropertyDisplay("动画时长", tooltip: "调整主题窗口的动画时长，设为 0 可关闭动画。")]
+    [PropertySlider(0f, 3f)]
+    public float MotionScale = 1f;
 
     [PropertyDisplay("紧凑设置窗口", tooltip: "缩小设置窗口的间距，以显示更多内容。")]
     public bool CompactSettings = false;
@@ -47,5 +51,11 @@ public sealed class InterfaceConfig : ConfigNode, IM3Settings
     {
         get => PaddingScale;
         set => PaddingScale = value;
+    }
+
+    float IM3Settings.UiMotionScale
+    {
+        get => MotionScale;
+        set => MotionScale = value;
     }
 }

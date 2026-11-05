@@ -1,4 +1,4 @@
-﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using RebornMaterial;
@@ -11,14 +11,10 @@ internal static class PartyRolesPanel
 
     public static void Draw(PartyRolesConfig config, WorldState ws)
     {
-        var autoWidth = M3Widgets.ButtonWidth(FontAwesomeIcon.Magic, "Auto-assign");
-        var row = M3SettingRow.Begin("自动分配职责", "根据队员职业及队伍顺序自动分配职责。", new(autoWidth, M3Widgets.ButtonHeight));
-        ImGui.SetCursorScreenPos(row.ControlPosition);
-        if (M3Widgets.Button("##autoassign", "Auto-assign", M3ButtonStyle.Filled, FontAwesomeIcon.Magic))
+        if (M3Widgets.RowButton("自动分配职责###autoassign", "自动分配", "根据队员职业及队伍顺序自动分配职责。", M3ButtonStyle.Filled, FontAwesomeIcon.Magic))
         {
             config.AutoAssignRoles(ws.Party);
         }
-        M3SettingRow.End(row);
 
         M3Widgets.SectionLabel("当前队伍");
         DrawPartyAssignments(config, ws);
@@ -39,15 +35,12 @@ internal static class PartyRolesPanel
         }
 
         ImGui.Dummy(new(0f, M3.Space1));
-        var clearWidth = M3Widgets.ButtonWidth(FontAwesomeIcon.TrashAlt, "按住清除");
-        row = M3SettingRow.Begin("清除所有分配", "删除保存的全部职责分配，可用于缩小配置文件。", new(clearWidth, M3Widgets.ButtonHeight));
-        ImGui.SetCursorScreenPos(row.ControlPosition);
-        if (M3Widgets.HoldButton("##clearassignments", "按住清除", 1f, M3ButtonStyle.Danger, FontAwesomeIcon.TrashAlt, enabled: config.Assignments.Count > 0))
+        if (M3Widgets.RowHoldButton("清除所有分配###clearassignments", "按住清除", "删除保存的全部职责分配，可用于缩小配置文件。",
+            1f, M3ButtonStyle.Danger, FontAwesomeIcon.TrashAlt, enabled: config.Assignments.Count > 0))
         {
             config.Assignments.Clear();
             config.Modified.Fire();
         }
-        M3SettingRow.End(row);
     }
 
     private static void DrawTankPriority(PartyRolesConfig config, string id, Class[] order)

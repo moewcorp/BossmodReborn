@@ -10,7 +10,7 @@ public sealed class DMUConfig : ConfigNode {
         [PropertyDisplay("无")]
         GravenImage1None,
 
-        [PropertyDisplay("LPDU")]
+        [PropertyDisplay("LPDU / Kefka Bin（北美）")]
         GravenImage1LPDU,
     }
 
@@ -27,7 +27,10 @@ public sealed class DMUConfig : ConfigNode {
         DoubleTroubleNone,
 
         [PropertyDisplay("LPDU")]
-        DoubleTroubleLPDU
+        DoubleTroubleLPDU,
+
+        [PropertyDisplay("Kefka Bin（北美）")]
+        DoubleTroubleKefkaBin
     }
 
     [PropertyDisplay("P1 连环环陷阱策略")]
@@ -42,6 +45,9 @@ public sealed class DMUConfig : ConfigNode {
 
         [PropertyDisplay("LPDU - 无损众神之像2")]
         GravenImage2LPDUUptime,
+
+        [PropertyDisplay("Kefka Bin（北美）")]
+        GravenImage2KefkaBin,
     }
 
     [PropertyDisplay("P1 众神之像2 策略")]
@@ -73,6 +79,9 @@ public sealed class DMUConfig : ConfigNode {
 
         [PropertyDisplay("LPDU")]
         GravenImage3LPDU,
+
+        [PropertyDisplay("Kefka Bin（北美）")]
+        GravenImage3KefkaBin,
     }
 
     public enum P2ForsakenStrategy {
