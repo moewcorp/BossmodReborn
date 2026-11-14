@@ -67,25 +67,25 @@ public enum OffensiveStrategy
 [Renderer(typeof(TargetingRenderer))]
 public enum Targeting
 {
-    [Option("Use player's target")]
+    [Option("使用玩家当前目标")]
     Manual,
-    [Option("Automatically pick best target for all actions")]
+    [Option("为所有技能自动选择最佳目标")]
     Auto,
-    [Option("Automatically pick best target; player target must be hit")]
+    [Option("自动选择最佳目标，必须命中玩家当前目标")]
     AutoPrimary,
-    [Option("Automatically pick best target; if player has a target, hit it")]
+    [Option("自动选择最佳目标；若玩家已选目标则命中该目标")]
     AutoTryPri
 }
 
 public enum AOEStrategy
 {
-    [Option("Use AOE rotation if beneficial")]
+    [Option("有收益时使用群体循环")]
     AOE,
-    [Option("Use single-target rotation")]
+    [Option("使用单体循环")]
     ST,
-    [Option("Always use AOE rotation, even on one target")]
+    [Option("始终使用群体循环，即使只有一个目标")]
     ForceAOE,
-    [Option("Use single-target rotation; do not use ANY actions that can hit multiple targets")]
+    [Option("使用单体循环，禁用所有可命中多个目标的技能")]
     ForceST
 }
 
@@ -189,6 +189,7 @@ public sealed class OptionAttribute() : Attribute
     }
 
     public string? DisplayName { get; }
+    public bool DisablesAction;
     public float Cooldown;
     public float Effect;
     public ActionTargets Targets;
