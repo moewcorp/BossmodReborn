@@ -78,7 +78,7 @@ internal static class SettingsLayout
             Tags = ["boss modules and radar", "radar", "hints", "arena", "3d"],
             Sections =
             [
-                new("Boss模块", FontAwesomeIcon.PuzzlePiece, [nameof(BossModuleConfig.MinMaturity), nameof(BossModuleConfig.AllowAutomaticActions), nameof(BossModuleConfig.MaxLoadDistance)]),
+                new("Boss模块", FontAwesomeIcon.PuzzlePiece, [nameof(BossModuleConfig.MinMaturity), nameof(BossModuleConfig.AllowAutomaticActions), nameof(BossModuleConfig.ShowDutyFinderIndicator), nameof(BossModuleConfig.MaxLoadDistance)]),
                 new("雷达窗口", FontAwesomeIcon.WindowMaximize,
                 [
                     nameof(BossModuleConfig.EnableRadar), nameof(BossModuleConfig.ShowDemo), nameof(BossModuleConfig.Lock), nameof(BossModuleConfig.TrishaMode),
