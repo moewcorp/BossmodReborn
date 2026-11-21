@@ -1,4 +1,4 @@
-﻿namespace BossMod.Dawntrail.Savage.M02SHoneyBLovely;
+namespace BossMod.Dawntrail.Savage.M02SHoneyBLovely;
 
 sealed class StingingSlash(BossModule module) : Components.BaitAwayIcon(module, new AOEShapeCone(50f, 45f.Degrees()), (uint)IconID.StingingSlash, (uint)AID.StingingSlashAOE);
 sealed class KillerSting(BossModule module) : Components.IconSharedTankbuster(module, (uint)IconID.KillerSting, (uint)AID.KillerStingAOE, 6f);
@@ -13,7 +13,29 @@ sealed class BlindingLoveCharge1(BossModule module) : BlindingLoveCharge(module,
 sealed class BlindingLoveCharge2(BossModule module) : BlindingLoveCharge(module, (uint)AID.BlindingLoveCharge2AOE);
 
 sealed class PoisonStingBait(BossModule module) : Components.BaitAwayCast(module, (uint)AID.PoisonStingAOE, 6f);
-sealed class PoisonStingVoidzone(BossModule module) : Components.Voidzone(module, 6f, m => m.Enemies((uint)OID.PoisonStingVoidzone).Where(z => z.EventState != 7));
+sealed class PoisonStingVoidzone(BossModule module) : Components.Voidzone(module, 6f, GetVoidzones)
+{
+    private static Actor[] GetVoidzones(BossModule module)
+    {
+        var enemies = module.Enemies((uint)OID.PoisonStingVoidzone);
+        var count = enemies.Count;
+        if (count == 0)
+        {
+            return [];
+        }
+        var voidzones = new Actor[count];
+        var index = 0;
+        for (var i = 0; i < count; ++i)
+        {
+            var z = enemies[i];
+            if (z.EventState != 7)
+            {
+                voidzones[index++] = z;
+            }
+        }
+        return voidzones[..index];
+    }
+}
 sealed class BeeSting(BossModule module) : Components.StackWithCastTargets(module, (uint)AID.BeeStingAOE, 6f, 4, 4);
 
 [ModuleInfo(BossModuleInfo.Maturity.Verified, Contributors = "Malediktus", GroupType = BossModuleInfo.GroupType.CFC, GroupID = 988, NameID = 12685, PlanLevel = 100)]

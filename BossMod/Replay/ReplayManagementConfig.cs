@@ -28,6 +28,9 @@ public sealed class ReplayManagementConfig : ConfigNode
     [PropertyDisplay("在回放中记录并存储服务器数据包")]
     public bool RecordServerPackets = false;
 
+    [PropertyDisplay("录制时过滤高频服务器数据包（移动、体力／魔力、背包）", depends: nameof(RecordServerPackets))]
+    public bool FilterNoisyServerPackets = true;
+
     [PropertyDisplay("将服务器数据包导出到 dalamud.log")]
     public bool DumpServerPackets = false;
 
