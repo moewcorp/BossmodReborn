@@ -29,7 +29,7 @@ public sealed class ReplayManagementConfig : ConfigNode
     public bool RecordServerPackets = false;
 
     [PropertyDisplay("录制时过滤高频服务器数据包（移动、体力／魔力、背包）", depends: nameof(RecordServerPackets))]
-    public bool FilterNoisyServerPackets = true;
+    public bool FilterNoisyServerPackets = false;
 
     [PropertyDisplay("将服务器数据包导出到 dalamud.log")]
     public bool DumpServerPackets = false;

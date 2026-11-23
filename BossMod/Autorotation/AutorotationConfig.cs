@@ -20,7 +20,7 @@ public sealed class AutorotationConfig : ConfigNode
     [PropertyRadio]
     public DtrStatus ShowDTR = DtrStatus.None;
 
-    [PropertyDisplay("隐藏 VBM 默认预设", tooltip: "如果你已创建了自己的预设且不再需要内置默认预设，此选项将阻止其在自动循环和预设编辑器窗口中显示。")]
+    [PropertyDisplay("隐藏 VBM 默认预设", tooltip: "启用后，自动循环、AI 和预设编辑器中将隐藏内置的 VBM Default、VBM AI 和 VBM Multibox 预设。")]
     public bool HideDefaultPresets = true;
 
     public bool SuggestHealerAI = true;

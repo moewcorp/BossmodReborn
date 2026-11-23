@@ -28,20 +28,37 @@ internal static class SettingsLayout
     public sealed record class Section(string Label, FontAwesomeIcon Icon, string[] Fields, string? StripPrefix = null);
 
     public sealed record class Field(string? Label = null, string? Tooltip = null, string? Depends = null, string? Format = null, string[]? Options = null, float? Min = null, float? Max = null,
-        M3ColorChoice[]? Choices = null);
+        M3ColorChoice[]? Choices = null, float Step = 0f, float Factor = 1f);
 
     private static readonly string[] _maturityOptions = ["占位（仅供开发）", "开发中", "已贡献", "已验证", "支持AI"];
 
     private static readonly M3ColorChoice[] _accentChoices =
     [
         new("Reborn 青色（默认）", M3ColorMath.FromRgb(0x5BA7B7)),
-        new("宝蓝", M3ColorMath.FromRgb(0x2F6DB5)),
-        new("紫罗兰", M3ColorMath.FromRgb(0x7E57C2)),
-        new("玫红", M3ColorMath.FromRgb(0xC2185B)),
-        new("绯红", M3ColorMath.FromRgb(0xC62828)),
-        new("琥珀", M3ColorMath.FromRgb(0xC98A00)),
+        new("海蓝", M3ColorMath.FromRgb(0x2F6DB5)),
+        new("蓝绿", M3ColorMath.FromRgb(0x00897B)),
         new("森林绿", M3ColorMath.FromRgb(0x3E8E41)),
+        new("琥珀", M3ColorMath.FromRgb(0xC98A00)),
+        new("紫罗兰", M3ColorMath.FromRgb(0x7E57C2)),
+        new("绯红", M3.DefaultSeed),
     ];
+
+    private const string ThemeSection = "主题";
+
+    private static void DrawResetSizes(InterfaceConfig config)
+    {
+        var isDefault = config.TextScale == 1f && config.ElementScale == 1f && config.PaddingScale == 1f && config.MotionScale == 1f;
+        if (!M3Widgets.Button("##theme_reset_sizes", "重置缩放", M3ButtonStyle.Text, FontAwesomeIcon.Undo, enabled: !isDefault))
+        {
+            return;
+        }
+
+        config.TextScale = 1f;
+        config.ElementScale = 1f;
+        config.PaddingScale = 1f;
+        config.MotionScale = 1f;
+        config.Modified.Fire();
+    }
 
     public static Node? For(Type type) => _nodes.GetValueOrDefault(type);
 
@@ -50,23 +67,29 @@ internal static class SettingsLayout
         [typeof(InterfaceConfig)] = new()
         {
             Icon = FontAwesomeIcon.PaintBrush,
-            Description = "BossMod Reborn 窗口的强调色、尺寸与动画",
+            Description = "调整 BossMod Reborn 窗口的强调色、尺寸、间距、动画和布局",
             Sections =
             [
-                new("主题", FontAwesomeIcon.Palette, [nameof(InterfaceConfig.AccentColor)]),
-                new("尺寸", FontAwesomeIcon.TextHeight,
+                new(ThemeSection, FontAwesomeIcon.Palette,
                 [
-                    nameof(InterfaceConfig.TextScale), nameof(InterfaceConfig.ElementScale), nameof(InterfaceConfig.PaddingScale), nameof(InterfaceConfig.MotionScale),
-                    nameof(InterfaceConfig.CompactSettings),
+                    nameof(InterfaceConfig.AccentColor), nameof(InterfaceConfig.TextScale), nameof(InterfaceConfig.ElementScale), nameof(InterfaceConfig.PaddingScale),
+                    nameof(InterfaceConfig.MotionScale), nameof(InterfaceConfig.CompactSettings), nameof(InterfaceConfig.InlineDescriptions), nameof(InterfaceConfig.IconSidebar),
                 ]),
             ],
             Fields = new()
             {
                 [nameof(InterfaceConfig.AccentColor)] = new(Choices: _accentChoices),
-                [nameof(InterfaceConfig.TextScale)] = new(Format: "%.2fx"),
-                [nameof(InterfaceConfig.ElementScale)] = new(Format: "%.2fx"),
-                [nameof(InterfaceConfig.PaddingScale)] = new(Format: "%.2fx"),
-                [nameof(InterfaceConfig.MotionScale)] = new(Format: "%.2fx"),
+                [nameof(InterfaceConfig.TextScale)] = new(Format: "%.2fx", Step: 0.05f),
+                [nameof(InterfaceConfig.ElementScale)] = new(Format: "%.2fx", Step: 0.05f),
+                [nameof(InterfaceConfig.PaddingScale)] = new(Format: "%.2fx", Step: 0.05f),
+                [nameof(InterfaceConfig.MotionScale)] = new(Format: "%.0f%", Step: 0.05f, Factor: 100f),
+            },
+            SectionExtras = static (node, section, _, _) =>
+            {
+                if (section == ThemeSection && node is InterfaceConfig config)
+                {
+                    DrawResetSizes(config);
+                }
             },
         },
 
