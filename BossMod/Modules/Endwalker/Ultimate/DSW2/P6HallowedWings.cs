@@ -83,13 +83,27 @@ abstract class P6HallowedPlume(BossModule module) : Components.GenericBaitAway(m
         {
             if (shouldBait)
             {
-                if (ActiveBaitsOn(actor).Any(b => PlayersClippedBy(ref b).Count != 0))
-                    hints.Add("Bait away from raid!");
+                var baits = CollectionsMarshal.AsSpan(ActiveBaitsOn(actor));
+                for (var i = 0; i < baits.Length; ++i)
+                {
+                    if (PlayersClippedBy(ref baits[i]).Count != 0)
+                    {
+                        hints.Add("把攻击引离队友！");
+                        break;
+                    }
+                }
             }
             else
             {
-                if (ActiveBaitsNotOn(actor).Any(b => IsClippedBy(actor, ref b)))
-                    hints.Add("GTFO from baited aoe!");
+                var baits = CollectionsMarshal.AsSpan(ActiveBaitsNotOn(actor));
+                for (var i = 0; i < baits.Length; ++i)
+                {
+                    if (IsClippedBy(actor, ref baits[i]))
+                    {
+                        hints.Add("躲开引导出的范围攻击！");
+                        break;
+                    }
+                }
             }
         }
     }

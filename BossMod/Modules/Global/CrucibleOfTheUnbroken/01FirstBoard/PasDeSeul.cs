@@ -47,6 +47,10 @@ sealed class SuccubusMageAdd(BossModule module) : Components.Adds(module, (uint)
 sealed class SuccubusKnightAdd(BossModule module) : Components.Adds(module, (uint)OID.SuccubusKnight, 1);
 
 sealed class VoidFireII(BossModule module) : Components.SimpleAOEs(module, (uint)AID.VoidFireII, 10f);
+sealed class Fanaticism(BossModule module) : Components.CastInterruptHint(module, (uint)AID.Fanaticism, showNameInHint: true);
+sealed class BloodSword(BossModule module) : Components.SingleTargetCast(module, (uint)AID.BloodSword, "死刑并吸血");
+sealed class ColdCaress(BossModule module) : Components.SingleTargetCast(module, (uint)AID.ColdCaress, "死刑并附加中毒");
+sealed class BeguilingMist(BossModule module) : Components.RaidwideCast(module, (uint)AID.BeguilingMist, "全屏伤害并附加噩梦");
 
 //HeartShatter1 = 46938, // 233C->self, 1.0s cast, range 24 circle
 sealed class HeartShatter(BossModule module) : Components.GenericAOEs(module)
@@ -94,6 +98,10 @@ sealed class PasDeSeulStates : StateMachineBuilder
     public PasDeSeulStates(BossModule module) : base(module)
     {
         TrivialPhase()
+            .ActivateOnEnter<Fanaticism>()
+            .ActivateOnEnter<BloodSword>()
+            .ActivateOnEnter<ColdCaress>()
+            .ActivateOnEnter<BeguilingMist>()
             .ActivateOnEnter<BloodRainCircle>()
             .ActivateOnEnter<BloodRainDonut>()
             .ActivateOnEnter<VoidAeroIIRect>()
@@ -102,8 +110,7 @@ sealed class PasDeSeulStates : StateMachineBuilder
             .ActivateOnEnter<SuccubusKnightAdd>()
             .ActivateOnEnter<VoidFireII>()
             .ActivateOnEnter<HeartShatter>()
-            .ActivateOnEnter<SweetSteel>()
-            ;
+            .ActivateOnEnter<SweetSteel>();
     }
 }
 
@@ -114,6 +121,9 @@ sealed class PasDeSeulStates : StateMachineBuilder
     GroupID = 1088u,
     NameID = 14541u,
     SortOrder = 6)]
+[PreferredKinship(BST.Kinship.Soul, "打断奇子·梦魔法师的盲信")]
+[PreferredKinship(BST.Kinship.Wave, "盲信生效后，驱散帕德索的伤害提高")]
+[PreferredKinship(BST.Kinship.Ash, "解除寒毒接触造成的中毒")]
 public sealed class PasDeSeul : BossModule
 {
     public PasDeSeul(WorldState ws, Actor primary) : this(ws, primary, BuildArena()) { }
