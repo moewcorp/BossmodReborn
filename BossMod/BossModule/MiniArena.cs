@@ -18,19 +18,75 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
     // Batch = component index + 1 (0 = module-own drawing); lets the consumer tell which zones
     // belong to the same mechanic batch, so stepping-alpha never dims an unrelated component's
     // zones just because another component's danger zone happens to be nearby.
-    public readonly record struct DrawnZone(int Shape, WPos Origin, Angle Rotation, float P1, float P2, float P3, bool IsDanger, int Batch, bool IsFriendly);
-    public static readonly List<DrawnZone> DrawnZones = [];
-    public static void ResetDrawnZones() => DrawnZones.Clear();
+    public readonly record struct DrawnZone(int Shape, WPos Origin, Angle Rotation, float P1, float P2, float P3, bool IsDanger, int Batch, bool IsFriendly, float OriginY);
+    internal readonly record struct ExternalZoneProjection(int? Layer, bool AllLayers = false, bool Visible = true);
+    private List<DrawnZone>? _externalZones;
+    private ExternalZoneProjection _externalProjection;
+    private int? _externalPlayerLayer;
+    private float _externalPlayerY;
     private int _batch;
-    public void SetBatch(int b) => _batch = b;
+    internal void SetBatch(int batch) => _batch = batch;
+
+    internal List<DrawnZone> CaptureExternalZones(Actor player, int? playerLayer, Action drawMechanics)
+    {
+        var zones = new List<DrawnZone>(16);
+        var previousBatch = _batch;
+        var previousSuppress2D = _frameSuppress2DZoneRendering;
+        var previousProjectIntoWorld = _frameProjectIntoWorld;
+        var previousCamera = _frameWorldCamera;
+        _externalPlayerLayer = playerLayer;
+        _externalPlayerY = player.PosRot.Y;
+        _externalProjection = new(_externalPlayerLayer);
+        _externalZones = zones;
+        _frameSuppress2DZoneRendering = true;
+        _frameProjectIntoWorld = false;
+        _frameWorldCamera = null;
+        try
+        {
+            drawMechanics();
+            return zones;
+        }
+        finally
+        {
+            _externalZones = null;
+            _batch = previousBatch;
+            _frameSuppress2DZoneRendering = previousSuppress2D;
+            _frameProjectIntoWorld = previousProjectIntoWorld;
+            _frameWorldCamera = previousCamera;
+        }
+    }
+
+    internal float ExternalZoneHeight(int? layer, float fallbackY)
+    {
+        if (_bounds is ArenaBoundsCustom { WorldProjectionLayers: { } layers } && layer is int index && (uint)index < (uint)layers.Length)
+        {
+            var y = layers[index].Y;
+            return float.IsFinite(y) ? y : fallbackY;
+        }
+        return float.IsFinite(_bounds.Y) ? _bounds.Y : fallbackY;
+    }
+
     private void RecordZone(AOEIPCShapeType shape, WPos origin, Angle rotation, uint color, float p1 = 0, float p2 = 0, float p3 = 0)
     {
-        // default color = standard AOE fill; Danger = about-to-resolve highlight; SafeFromAOE =
-        // a safe zone players must stand in (e.g. GenericWildCharge rects, Ex7Zeromus SableThread).
-        // Any other explicit color (melee-range indicator, waymark helpers...) is not a mechanic.
-        if (color != default && color != Colors.AOE && color != Colors.Danger && color != Colors.SafeFromAOE)
+        if (_externalZones == null || !_externalProjection.Visible || (color != default && color != Colors.AOE && color != Colors.Danger && color != Colors.SafeFromAOE))
             return;
-        DrawnZones.Add(new((int)shape, origin, rotation, p1, p2, p3, color == Colors.Danger, _batch, color == Colors.SafeFromAOE));
+
+        var zone = new DrawnZone((int)shape, origin, rotation, p1, p2, p3, color != default && color == Colors.Danger, _batch,
+            color != default && color == Colors.SafeFromAOE, ExternalZoneHeight(_externalProjection.Layer, _externalPlayerY));
+        if (_externalProjection.AllLayers && _bounds is ArenaBoundsCustom { WorldProjectionLayers.Length: > 0 } custom)
+        {
+            var first = _externalZones.Count;
+            for (var i = 0; i < custom.WorldProjectionLayers.Length; ++i)
+            {
+                var y = ExternalZoneHeight(i, _externalPlayerY);
+                if (_externalZones.FindIndex(first, z => z.OriginY == y) < 0)
+                    _externalZones.Add(zone with { OriginY = y });
+            }
+        }
+        else
+        {
+            _externalZones.Add(zone);
+        }
     }
 
     public static readonly BossModuleConfig Config = Service.Config.Get<BossModuleConfig>();
@@ -459,6 +515,14 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
             return default;
         }
 
+        if (_externalZones != null)
+        {
+            var previous = _externalProjection;
+            _externalProjection = new(allLayers ? previous.Layer : index, allLayers,
+                previous.Visible && (restrictToArenaProjectionLayer != true || _externalPlayerLayer == index));
+            return new(this, previous);
+        }
+
         var scope = new WorldProjectionLayerScope(this, _frameWorldProjectionY, _frameWorldBorderY, _frameWorldProjectionHeight, _frameWorldProjectionHoleFillRadius,
             _frameWorldProjectionArenaClip, _frameArenaStencilShape, _frameSuppress2DZoneRendering);
         if (allLayers)
@@ -531,6 +595,13 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
         private readonly RelSimplifiedComplexPolygon? _stencilShape;
         private readonly bool _suppress2D;
         private readonly Camera.WorldProjectionLayer[]? _worldProjectionLayers;
+        private readonly ExternalZoneProjection? _externalProjection;
+
+        internal WorldProjectionLayerScope(MiniArena arena, ExternalZoneProjection projection)
+        {
+            _arena = arena;
+            _externalProjection = projection;
+        }
 
         internal WorldProjectionLayerScope(MiniArena arena, float projectionY, float borderY, float projectionHeight, float holeFillRadius,
             RelSimplifiedComplexPolygon? arenaClip, RelSimplifiedComplexPolygon? stencilShape, bool suppress2D)
@@ -548,6 +619,11 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
 
         public void Dispose()
         {
+            if (_externalProjection is { } projection)
+            {
+                _arena!._externalProjection = projection;
+                return;
+            }
             if (_arena != null)
             {
                 if (_stencilShape != null && !ReferenceEquals(_arena._frameArenaStencilShape, _stencilShape))
@@ -641,6 +717,8 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
 
     public void ArenaOutline(uint color, float thickness = 2f)
     {
+        if (_externalZones != null)
+            return;
         Dx11ArenaRenderer.AppendArenaOutline(color, thickness);
         WorldArenaOutline(color, thickness);
     }
@@ -953,6 +1031,8 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PathStroke(bool closed, uint color = default, float thickness = 1f)
     {
+        if (_externalZones != null)
+            return;
         var actualColor = color != default ? color : Colors.Danger;
         var drew2D = false;
         if (!_frameSuppress2DZoneRendering)
@@ -1137,6 +1217,12 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
         }
     }
 
+    internal void ZoneTriCone(WPos origin, Angle direction, float sideLength, Angle halfAngle, uint color)
+    {
+        RecordZone(AOEIPCShapeType.TriCone, origin, direction, color, sideLength, halfAngle.Rad);
+        ZoneTri(origin, origin + sideLength * (direction + halfAngle).ToDirection(), origin + sideLength * (direction - halfAngle).ToDirection(), color);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ZoneIsoscelesTri(WPos apex, WDir height, WDir halfBase, uint color)
     {
@@ -1156,7 +1242,7 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ZoneIsoscelesTri(WPos apex, Angle direction, Angle halfAngle, float height, uint color)
     {
-        RecordZone(AOEIPCShapeType.TriCone, apex, direction, color, height, halfAngle.Rad);
+        RecordZone(AOEIPCShapeType.TriCone, apex, direction, color, height / halfAngle.Cos(), halfAngle.Rad);
         var a = apex - _center;
         var dir = direction.ToDirection();
         var h = height * dir;
@@ -1176,6 +1262,8 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ZoneRect(WPos origin, WDir direction, float lenFront, float lenBack, float halfWidth, uint color)
     {
+        if (_externalZones != null)
+            RecordZone(AOEIPCShapeType.Rect, origin, direction.ToAngle(), color, lenFront, lenBack, halfWidth);
         var actualColor = color != default ? color : Colors.AOE;
         if (!_frameSuppress2DZoneRendering)
         {
@@ -1214,6 +1302,8 @@ public sealed partial class MiniArena(WPos center, ArenaBounds bounds, Func<Acto
         {
             var actualColor = color != default ? color : Colors.AOE;
             var direction = dir / len;
+            if (_externalZones != null)
+                RecordZone(AOEIPCShapeType.Rect, start, direction.ToAngle(), color, len, 0f, halfWidth);
             if (!_frameSuppress2DZoneRendering)
             {
                 Dx11ArenaRenderer.AppendRect(start - _center, direction, len, 0f, halfWidth, actualColor);

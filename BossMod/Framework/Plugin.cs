@@ -327,6 +327,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         _wsSync.Update(_prevUpdateTime);
         _partyRoles.Update();
         _bossmod.Update();
+        _bossmod.UpdateExternalAOEs();
         _zonemod.ActiveModule?.Update();
         _hintsBuilder.Update(_hints, PartyState.PlayerSlot, moveImminent);
         _amex.QueueManualActions();

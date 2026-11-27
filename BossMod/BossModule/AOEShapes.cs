@@ -361,7 +361,8 @@ public sealed class AOEShapeTriCone(float sideLength, Angle halfAngle, Angle dir
 
     public override string ToString() => $"TriCone: side={SideLength:f3}, angle={HalfAngle * 2f}, off={DirectionOffset}, ifz={InvertForbiddenZone}";
     public override bool Check(WPos position, WPos origin, Angle rotation) => position.InTri(origin, origin + SideLength * (rotation + DirectionOffset + HalfAngle).ToDirection(), origin + SideLength * (rotation + DirectionOffset - HalfAngle).ToDirection());
-    public override void Draw(MiniArena arena, WPos origin, Angle rotation, uint color = default) => arena.ZoneTri(origin, origin + SideLength * (rotation + DirectionOffset + HalfAngle).ToDirection(), origin + SideLength * (rotation + DirectionOffset - HalfAngle).ToDirection(), color);
+    public override void Draw(MiniArena arena, WPos origin, Angle rotation, uint color = default) =>
+        arena.ZoneTriCone(origin, rotation + DirectionOffset, SideLength, HalfAngle, color);
     public override void Outline(MiniArena arena, WPos origin, Angle rotation, uint color = default, float thickness = 1f) => arena.ZoneTriOutline(origin, origin + SideLength * (rotation + DirectionOffset + HalfAngle).ToDirection(), origin + SideLength * (rotation + DirectionOffset - HalfAngle).ToDirection(), color, thickness);
 
     public override ShapeDistance Distance(WPos origin, Angle rotation)

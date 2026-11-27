@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text.Json;
 using BossMod.Components;
 
@@ -20,7 +19,7 @@ public enum AOEIPCShapeType : byte
     Stack,   // ground circle on a stack target (friendly), P1=radius
     Spread,  // ground circle on a spread target (danger), P1=radius
     Tower,   // RESERVED - no longer sent (tower drawing was removed); value kept so later members keep their wire values
-    FriendlyRect, // stack line (LineStack), P1=lenFront P2=lenBack P3=halfWidth
+    FriendlyRect, // stack line (LineStack), P1=lenFront P2=halfWidth P3=lenBack
     Knockback, // knockback arrow on the local player: Origin=push start, Rotation=push direction, P1=distance
 }
 
@@ -50,23 +49,23 @@ public sealed class AOEIPCDto
 
 public static class AOEIPC
 {
-    public static string CollectActiveAOEs(BossModuleManager bossmod)
-    {
-        var module = bossmod.ActiveModule;
-        if (module == null)
-        {
-            return "[]";
-        }
+    public static string CollectActiveAOEs(BossModuleManager bossmod) => bossmod.GetExternalAOEs();
 
+    internal static string CollectActiveAOEs(BossModule module, Actor pc)
+    {
         var list = new List<AOEIPCDto>(16);
-        var defaultY = Service.ObjectTable.LocalPlayer?.Position.Y ?? 0f;
-        foreach (var zone in MiniArena.DrawnZones)
+        var playerY = module.Arena.ExternalZoneHeight(module.ResolveArenaProjectionLayer(pc), pc.PosRot.Y);
+        foreach (var zone in module.CaptureExternalZones(PartyState.PlayerSlot, pc))
         {
-            if (ConvertZone(zone, defaultY) is { } dto)
+            if (ConvertZone(zone) is { } dto)
             {
                 list.Add(dto);
             }
         }
+        var capturedCount = list.Count;
+
+        bool MatchesFloor(int? layer, bool? restrict) => module.ActorMatchesArenaProjectionLayer(pc, layer, restrict);
+        float TargetHeight(Actor target, int? layer) => module.Arena.ExternalZoneHeight(layer, target.PosRot.Y);
 
         // stacks & spreads: GenericStackSpread components draw them as arena outlines, which never
         // enter DrawnZones (only filled danger zones do), so expose them explicitly here.
@@ -78,14 +77,15 @@ public static class AOEIPC
                 continue;
             foreach (var s in ss.Stacks)
             {
-                if (!ss.IncludeDeadTargets && s.Target.IsDead)
+                var layer = s.ResolveArenaProjectionLayer(module);
+                if ((!ss.IncludeDeadTargets && s.Target.IsDead) || !MatchesFloor(layer, s.RestrictToArenaProjectionLayer))
                     continue;
                 list.Add(new AOEIPCDto
                 {
                     ShapeType = (int)AOEIPCShapeType.Stack,
                     OriginX = s.Target.Position.X,
                     OriginZ = s.Target.Position.Z,
-                    OriginY = defaultY,
+                    OriginY = TargetHeight(s.Target, layer),
                     Rotation = 0,
                     P1 = s.Radius,
                     IsDanger = true,
@@ -94,14 +94,15 @@ public static class AOEIPC
             }
             foreach (var sp in ss.Spreads)
             {
-                if (!ss.IncludeDeadTargets && sp.Target.IsDead)
+                var layer = sp.ResolveArenaProjectionLayer(module);
+                if ((!ss.IncludeDeadTargets && sp.Target.IsDead) || !MatchesFloor(layer, sp.RestrictToArenaProjectionLayer))
                     continue;
                 list.Add(new AOEIPCDto
                 {
                     ShapeType = (int)AOEIPCShapeType.Spread,
                     OriginX = sp.Target.Position.X,
                     OriginZ = sp.Target.Position.Z,
-                    OriginY = defaultY,
+                    OriginY = TargetHeight(sp.Target, layer),
                     Rotation = 0,
                     P1 = sp.Radius,
                     IsDanger = true,
@@ -121,63 +122,35 @@ public static class AOEIPC
             if (comp is not GenericBaitAway ba)
                 continue;
             var isStack = comp is GenericBaitStack;
-            // non-stack baits are filled with the AOE color, so their zone already entered
-            // DrawnZones under this same component batch; skip the explicit copy to avoid drawing
-            // the same overlay twice (mirror of the reflect bridge's AlreadyInDrawnZones).
-            bool AlreadyInDrawnZones(AOEIPCDto dto) => MiniArena.DrawnZones.Any(z => z.Batch == batch
-                && z.Shape == dto.ShapeType
-                && MathF.Abs(z.Origin.X - dto.OriginX) < 0.01f
-                && MathF.Abs(z.Origin.Z - dto.OriginZ) < 0.01f);
             foreach (var b in ba.ActiveBaits)
             {
-                var origin = (ba.CenterAtTarget ? b.Target : b.Source).Position + b.Offset;
-                if (isStack)
+                var layer = b.ResolveArenaProjectionLayer(module);
+                if (!MatchesFloor(layer, b.RestrictToArenaProjectionLayer))
+                    continue;
+                var originActor = ba.CenterAtTarget ? b.Target : b.Source;
+                if (ConvertShape(b.Shape, originActor.Position + b.Offset, b.Rotation, module.Arena.ExternalZoneHeight(layer, playerY)) is not { } dto)
+                    continue;
+                dto.Batch = batch;
+                var capturedIndex = FindCapturedZone(list, capturedCount, dto);
+                if (isStack && capturedIndex >= 0)
                 {
-                    switch (b.Shape)
+                    list[capturedIndex].IsFriendly = true;
+                    list[capturedIndex].IsDanger = true;
+                }
+                else if (isStack)
+                {
+                    // Preserve the established wire values for circle and line stacks.
+                    dto.IsFriendly = true;
+                    dto.ShapeType = (AOEIPCShapeType)dto.ShapeType switch
                     {
-                        case AOEShapeRect rect:
-                            list.Add(new AOEIPCDto
-                            {
-                                ShapeType = (int)AOEIPCShapeType.FriendlyRect,
-                                OriginX = origin.X,
-                                OriginZ = origin.Z,
-                                OriginY = defaultY,
-                                Rotation = (b.Rotation + rect.DirectionOffset).Rad,
-                                P1 = rect.LengthFront,
-                                P2 = rect.HalfWidth,
-                                P3 = rect.LengthBack,
-                                IsDanger = true, // keep fully visible like Stack
-                                Batch = batch,
-                            });
-                            break;
-                        case AOEShapeCircle circle:
-                            list.Add(new AOEIPCDto
-                            {
-                                ShapeType = (int)AOEIPCShapeType.Stack,
-                                OriginX = origin.X,
-                                OriginZ = origin.Z,
-                                OriginY = defaultY,
-                                P1 = circle.Radius,
-                                IsDanger = true,
-                                Batch = batch,
-                            });
-                            break;
-                        default:
-                            if (ConvertShape(b.Shape, origin, b.Rotation, defaultY) is { } dto)
-                            {
-                                dto.Batch = batch;
-                                if (!AlreadyInDrawnZones(dto))
-                                    list.Add(dto);
-                            }
-                            break;
-                    }
+                        AOEIPCShapeType.Rect => (int)AOEIPCShapeType.FriendlyRect,
+                        AOEIPCShapeType.Circle => (int)AOEIPCShapeType.Stack,
+                        _ => dto.ShapeType,
+                    };
+                    list.Add(dto);
                 }
-                else if (ConvertShape(b.Shape, origin, b.Rotation, defaultY) is { } dto)
-                {
-                    dto.Batch = batch;
-                    if (!AlreadyInDrawnZones(dto))
-                        list.Add(dto);
-                }
+                else if (capturedIndex < 0)
+                    list.Add(dto);
             }
         }
 
@@ -201,18 +174,16 @@ public static class AOEIPC
             var tgt = SharedTgtField?.GetValue(st) as Actor;
             if (src == null || tgt == null)
                 continue;
-            var origin = st.OriginAtTarget ? tgt.Position : src.Position;
+            var layer = module.ResolveTargetArenaProjectionLayer(tgt, st.ArenaProjectionLayer, st.RestrictToArenaProjectionLayer);
+            if (!MatchesFloor(layer, st.RestrictToArenaProjectionLayer))
+                continue;
+            var origin = st.OriginAtTarget ? tgt : src;
             var rot = st.OriginAtTarget ? default : Angle.FromDirection(tgt.Position - src.Position);
-            var dto = ConvertShape(st.Shape, origin, rot, defaultY);
+            var dto = ConvertShape(st.Shape, origin.Position, rot, module.Arena.ExternalZoneHeight(layer, playerY));
             if (dto == null)
                 continue;
             dto.Batch = batch;
-            if (MiniArena.DrawnZones.Any(z => z.Batch == batch
-                && z.Shape == dto.ShapeType
-                && MathF.Abs(z.Origin.X - dto.OriginX) < 0.01f
-                && MathF.Abs(z.Origin.Z - dto.OriginZ) < 0.01f
-                && MathF.Abs(z.P1 - dto.P1) < 0.01f
-                && MathF.Abs(z.P2 - dto.P2) < 0.01f))
+            if (FindCapturedZone(list, capturedCount, dto) >= 0)
                 continue;
             list.Add(dto);
         }
@@ -223,63 +194,67 @@ public static class AOEIPC
         // kind (away / towards / directional), the shape containment test, knockback immunity (Arm's
         // Length & friends) and the StopAtWall/StopAfterWall arena clamps are all inherited from
         // BossMod - no per-mechanic guessing here.
-        var pc = module.WorldState.Party.Player();
-        if (pc != null)
+        batch = 0;
+        foreach (var comp in module.Components)
         {
-            batch = 0;
-            foreach (var comp in module.Components)
+            ++batch;
+            if (comp is not GenericKnockback kb)
+                continue;
+            var movements = kb.CalculateMovements(PartyState.PlayerSlot, pc);
+            foreach (var (from, to) in movements)
             {
-                ++batch;
-                if (comp is not GenericKnockback kb)
+                var dir = to - from;
+                var distance = dir.Length();
+                if (distance < 0.1f)
                     continue;
-                var movements = kb.CalculateMovements(PartyState.PlayerSlot, pc);
-                var count = movements.Count;
-                for (var i = 0; i < count; ++i)
+                list.Add(new AOEIPCDto
                 {
-                    var (from, to) = movements[i];
-                    var dir = to - from;
-                    var distance = dir.Length();
-                    if (distance < 0.1f)
-                        continue; // no actual movement (inside min distance / blocked by a wall)
-                    list.Add(new AOEIPCDto
-                    {
-                        ShapeType = (int)AOEIPCShapeType.Knockback,
-                        OriginX = from.X,
-                        OriginZ = from.Z,
-                        OriginY = defaultY,
-                        Rotation = Angle.FromDirection(dir).Rad,
-                        P1 = distance,
-                        Batch = batch,
-                    });
-                }
+                    ShapeType = (int)AOEIPCShapeType.Knockback,
+                    OriginX = from.X,
+                    OriginZ = from.Z,
+                    OriginY = playerY,
+                    Rotation = Angle.FromDirection(dir).Rad,
+                    P1 = distance,
+                    Batch = batch,
+                });
             }
         }
 
-        var sig = string.Join(",", list.Select(d => $"{(AOEIPCShapeType)d.ShapeType}@({d.OriginX:0},{d.OriginZ:0}){(d.IsDanger ? "*" : "")}"));
-        if (list.Count != _lastSentCount || sig != _lastSentSig)
-        {
-            DebugLog($"[BossMod] zones {_lastSentCount} -> {list.Count} [{sig}]");
-            _lastSentCount = list.Count;
-            _lastSentSig = sig;
-        }
+        list.RemoveAll(static dto => !float.IsFinite(dto.OriginX) || !float.IsFinite(dto.OriginY) || !float.IsFinite(dto.OriginZ)
+            || !float.IsFinite(dto.Rotation) || !float.IsFinite(dto.P1) || !float.IsFinite(dto.P2) || !float.IsFinite(dto.P3));
         return JsonSerializer.Serialize(list);
     }
 
-    private static int _lastSentCount = -1;
-    private static string? _lastSentSig;
+    private static int FindCapturedZone(List<AOEIPCDto> list, int count, AOEIPCDto dto)
+    {
+        for (var i = 0; i < count; ++i)
+        {
+            var zone = list[i];
+            if (zone.Batch == dto.Batch && zone.ShapeType == dto.ShapeType
+                && MathF.Abs(zone.OriginX - dto.OriginX) < 0.01f
+                && MathF.Abs(zone.OriginY - dto.OriginY) < 0.01f
+                && MathF.Abs(zone.OriginZ - dto.OriginZ) < 0.01f
+                && MathF.Abs(zone.P1 - dto.P1) < 0.01f
+                && MathF.Abs(zone.P2 - dto.P2) < 0.01f
+                && MathF.Abs(zone.P3 - dto.P3) < 0.01f
+                && MathF.Abs(MathF.IEEERemainder(zone.Rotation - dto.Rotation, MathF.Tau)) < 0.001f)
+                return i;
+        }
+        return -1;
+    }
 
     // GenericSharedTankbuster keeps Source/Target protected; read them via cached reflection.
     private static readonly System.Reflection.FieldInfo? SharedSrcField = typeof(GenericSharedTankbuster).GetField("Source", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
     private static readonly System.Reflection.FieldInfo? SharedTgtField = typeof(GenericSharedTankbuster).GetField("Target", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-    private static AOEIPCDto? ConvertZone(in MiniArena.DrawnZone zone, float defaultY)
+    private static AOEIPCDto? ConvertZone(in MiniArena.DrawnZone zone)
     {
         var dto = new AOEIPCDto
         {
             ShapeType = zone.Shape,
             OriginX = zone.Origin.X,
             OriginZ = zone.Origin.Z,
-            OriginY = defaultY,
+            OriginY = zone.OriginY,
             Rotation = zone.Rotation.Rad,
             IsDanger = zone.IsDanger,
             IsFriendly = zone.IsFriendly,
@@ -388,46 +363,5 @@ public static class AOEIPC
                 return null; // ArcCapsule / Custom: not expressible via native omen
         }
         return dto;
-    }
-
-    // standalone debug log for the BossMod<->NyaDraw AOE bridge; kept out of the game's main log so
-    // it can be collected continuously while playing and handed over for diagnosis.
-    private static string? _debugLogPath;
-    private static long _debugLogSize;
-    private static string DebugLogPath
-    {
-        get
-        {
-            if (_debugLogPath == null)
-            {
-                try
-                {
-                    _debugLogPath = Path.Combine(Service.PluginInterface.ConfigDirectory.FullName, "AOEIPCDebug.log");
-                }
-                catch
-                {
-                    _debugLogPath = Path.Combine(Path.GetTempPath(), "AOEIPCDebug.log");
-                }
-            }
-            return _debugLogPath;
-        }
-    }
-
-    private static void DebugLog(string msg)
-    {
-        try
-        {
-            var path = DebugLogPath;
-            _debugLogSize += msg.Length + 2;
-            if (_debugLogSize > 5 * 1024 * 1024)
-            {
-                File.WriteAllText(path, "");
-                _debugLogSize = 0;
-            }
-            File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}\n");
-        }
-        catch
-        {
-        }
     }
 }

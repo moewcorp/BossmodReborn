@@ -307,17 +307,7 @@ public abstract class BossModule : IDisposable
 
     public virtual void DrawArena(int pcSlot, Actor pc, bool haveRisks)
     {
-        MiniArena.ResetDrawnZones();
-        Arena.SetBatch(0); // module-own drawing (background/borders/waymarks/party...) batch 0
-        // draw background
-        DrawArenaBackground(pcSlot, pc);
-
-        var count = Components.Count;
-        for (var i = 0; i < count; ++i)
-        {
-            Arena.SetBatch(i + 1);
-            Components[i].DrawArenaBackground(pcSlot, pc);
-        }
+        DrawArenaMechanics(pcSlot, pc, foreground: false);
 
         // draw borders
         var arenaBorderColor = haveRisks && WindowConfig.ShowBorderRisk ? Colors.Enemy : Colors.Border;
@@ -348,14 +338,7 @@ public abstract class BossModule : IDisposable
         // draw non-player alive party members
         DrawPartyMembers(pcSlot, pc);
 
-        // draw foreground
-        Arena.SetBatch(0);
-        DrawArenaForeground(pcSlot, pc);
-        for (var i = 0; i < count; ++i)
-        {
-            Arena.SetBatch(i + 1);
-            Components[i].DrawArenaForeground(pcSlot, pc);
-        }
+        DrawArenaMechanics(pcSlot, pc, foreground: true);
 
         if (WindowConfig.ShowMeleeRangeIndicator)
         {
@@ -370,6 +353,30 @@ public abstract class BossModule : IDisposable
         // draw enemies & player
         DrawEnemies(pcSlot, pc);
         Arena.Actor(pc, Colors.PC, true, drawWorld: WindowConfig.ShowActorTrianglesIn3DWorld);
+    }
+
+    internal List<MiniArena.DrawnZone> CaptureExternalZones(int pcSlot, Actor pc) => Arena.CaptureExternalZones(pc, ResolveArenaProjectionLayer(pc), () =>
+    {
+        DrawArenaMechanics(pcSlot, pc, foreground: false);
+        DrawArenaMechanics(pcSlot, pc, foreground: true);
+    });
+
+    private void DrawArenaMechanics(int pcSlot, Actor pc, bool foreground)
+    {
+        Arena.SetBatch(0);
+        if (foreground)
+            DrawArenaForeground(pcSlot, pc);
+        else
+            DrawArenaBackground(pcSlot, pc);
+
+        for (var i = 0; i < Components.Count; ++i)
+        {
+            Arena.SetBatch(i + 1);
+            if (foreground)
+                Components[i].DrawArenaForeground(pcSlot, pc);
+            else
+                Components[i].DrawArenaBackground(pcSlot, pc);
+        }
     }
 
     public BossComponent.TextHints CalculateHintsForRaidMember(int slot, Actor actor)

@@ -20,6 +20,36 @@ public sealed class BossModuleManager : IDisposable
     // but it can theoretically happen e.g. around checkpoints and in typically trivial outdoor content
     private BossModule? _activeModule;
     private bool _activeModuleOverridden;
+    private int _externalAoeRequested;
+    private ExternalAoeSnapshot? _externalAoes;
+    private sealed record ExternalAoeSnapshot(BossModule Module, string Payload);
+
+    // Both IPC and reflection read this immutable snapshot. Capture takes place in the live update.
+    public string GetExternalAOEs()
+    {
+        System.Threading.Interlocked.Exchange(ref _externalAoeRequested, 1);
+        var snapshot = System.Threading.Volatile.Read(ref _externalAoes);
+        return snapshot != null && ReferenceEquals(snapshot.Module, ActiveModule) ? snapshot.Payload : "[]";
+    }
+
+    internal void UpdateExternalAOEs()
+    {
+        ExternalAoeSnapshot? snapshot = null;
+        if (System.Threading.Interlocked.Exchange(ref _externalAoeRequested, 0) != 0
+            && ActiveModule is { } module && WorldState.Party.Player() is { } player)
+        {
+            try
+            {
+                snapshot = new(module, AOEIPC.CollectActiveAOEs(module, player));
+            }
+            catch (Exception ex)
+            {
+                Service.Log($"Boss module external AoE capture failed: {ex}");
+            }
+        }
+        System.Threading.Volatile.Write(ref _externalAoes, snapshot);
+    }
+
     public BossModule? ActiveModule
     {
         get => _activeModule;
@@ -52,6 +82,7 @@ public sealed class BossModuleManager : IDisposable
     public void Dispose()
     {
         _activeModule = null;
+        _externalAoes = null;
         foreach (var m in LoadedModules)
         {
             m.Dispose();
